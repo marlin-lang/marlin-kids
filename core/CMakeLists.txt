@@ -1,6 +1,6 @@
-set(HEADER document.hpp source.hpp)
+add_subdirectory(ast)
+
+add_subdirectory(control)
 
 add_library(${PROJECT_NAME}.core INTERFACE)
-target_compile_features(${PROJECT_NAME}.core INTERFACE cxx_std_17)
-
-target_include_directories(${PROJECT_NAME}.core INTERFACE .)
+target_link_libraries(${PROJECT_NAME}.core INTERFACE ${PROJECT_NAME}.core.ast ${PROJECT_NAME}.core.control)

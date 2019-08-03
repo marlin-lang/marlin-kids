@@ -4,7 +4,7 @@
 #import "SourceViewController.h"
 
 @interface Document () {
-  marlin::document _content;
+  marlin::control::document _content;
 }
 
 @end
@@ -21,7 +21,7 @@
   return YES;
 }
 
-- (marlin::document &)content {
+- (marlin::control::document &)content {
   return _content;
 }
 
@@ -55,7 +55,7 @@
 
 - (BOOL)readFromData:(NSData *)data ofType:(NSString *)typeName error:(NSError **)outError {
   NSString *source = [[NSString alloc] initWithData:data encoding:NSASCIIStringEncoding];
-  _content = marlin::document{source.UTF8String};
+  _content = marlin::control::document{source.UTF8String};
   [self update];
   return YES;
 }

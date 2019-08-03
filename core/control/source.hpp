@@ -1,12 +1,12 @@
-#ifndef marlin_source_hpp
-#define marlin_source_hpp
+#ifndef marlin_control_source_hpp
+#define marlin_control_source_hpp
 
 #include <cassert>
 #include <cstddef>
 #include <string>
 #include <vector>
 
-namespace marlin {
+namespace marlin::control {
 
 struct source {
   explicit source(std::string str) noexcept : _str{std::move(str)} {
@@ -31,6 +31,6 @@ struct source {
   std::vector<size_t> _begin_of_lines;
 };
 
-}  // namespace marlin
+}  // namespace marlin::control
 
-#endif  // marlin_source_hpp
+#endif  // marlin_control_source_hpp

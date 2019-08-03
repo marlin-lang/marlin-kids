@@ -4,7 +4,7 @@
 
 @interface SourceTextView : NSTextView
 
-@property (weak) id<SourceTextViewDataSource> dataSource;
+@property(weak) id<SourceTextViewDataSource> dataSource;
 
 @end
 

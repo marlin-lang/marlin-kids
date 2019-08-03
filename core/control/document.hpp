@@ -1,12 +1,14 @@
-#ifndef marlin_document_hpp
-#define marlin_document_hpp
+#ifndef marlin_control_document_hpp
+#define marlin_control_document_hpp
 
 #include <optional>
 #include <string>
 
+#include "ast.hpp"
+
 #include "source.hpp"
 
-namespace marlin {
+namespace marlin::control {
 
 struct document {
   explicit document(std::string str = "") noexcept : _source{std::move(str)} {}
@@ -22,6 +24,6 @@ struct document {
   std::string _output;
 };
 
-}  // namespace marlin
+}  // namespace marlin::control
 
-#endif  // marlin_document_hpp
+#endif  // marlin_control_document_hpp

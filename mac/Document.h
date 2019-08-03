@@ -6,6 +6,6 @@
 
 @interface Document : NSDocument
 
-- (marlin::document&)content;
+- (marlin::control::document&)content;
 
 @end
