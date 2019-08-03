@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<document type="com.apple.InterfaceBuilder3.Cocoa.XIB" version="3.0" toolsVersion="14490.70" targetRuntime="MacOSX.Cocoa" propertyAccessControl="none" useAutolayout="YES" customObjectInstantitationMethod="direct">
+    <dependencies>
+        <plugIn identifier="com.apple.InterfaceBuilder.CocoaPlugin" version="14490.70"/>
+        <capability name="documents saved in the Xcode 8 format" minToolsVersion="8.0"/>
+    </dependencies>
+    <objects>
+        <customObject id="-2" userLabel="File's Owner" customClass="ToolBoxItem">
+            <connections>
+                <outlet property="textField" destination="AXx-C2-5ND" id="WVc-YN-QAb"/>
+                <outlet property="view" destination="Hz6-mo-xeY" id="0bl-1N-x8E"/>
+            </connections>
+        </customObject>
+        <customObject id="-1" userLabel="First Responder" customClass="FirstResponder"/>
+        <customObject id="-3" userLabel="Application" customClass="NSObject"/>
+        <customView id="Hz6-mo-xeY">
+            <rect key="frame" x="0.0" y="0.0" width="480" height="31"/>
+            <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
+            <subviews>
+                <textField horizontalHuggingPriority="251" verticalHuggingPriority="750" translatesAutoresizingMaskIntoConstraints="NO" id="AXx-C2-5ND">
+                    <rect key="frame" x="-2" y="0.0" width="484" height="31"/>
+                    <textFieldCell key="cell" lineBreakMode="clipping" alignment="center" id="5YB-Lo-bcz">
+                        <font key="font" size="25" name="Courier"/>
+                        <color key="textColor" name="labelColor" catalog="System" colorSpace="catalog"/>
+                        <color key="backgroundColor" name="textBackgroundColor" catalog="System" colorSpace="catalog"/>
+                    </textFieldCell>
+                </textField>
+            </subviews>
+            <constraints>
+                <constraint firstItem="AXx-C2-5ND" firstAttribute="top" secondItem="Hz6-mo-xeY" secondAttribute="top" id="Kxi-E3-ffY"/>
+                <constraint firstAttribute="bottom" secondItem="AXx-C2-5ND" secondAttribute="bottom" id="PFj-A2-02r"/>
+                <constraint firstAttribute="trailing" secondItem="AXx-C2-5ND" secondAttribute="trailing" id="cIe-U0-yyJ"/>
+                <constraint firstItem="AXx-C2-5ND" firstAttribute="leading" secondItem="Hz6-mo-xeY" secondAttribute="leading" id="jyT-2i-72d"/>
+            </constraints>
+            <point key="canvasLocation" x="119" y="84"/>
+        </customView>
+    </objects>
+</document>
