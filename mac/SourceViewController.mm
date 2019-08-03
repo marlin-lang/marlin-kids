@@ -2,11 +2,13 @@
 
 #import "Document.h"
 #import "SourceTheme.h"
+#import "ToolBoxItem.h"
 
 @interface SourceViewController ()
 
-@property(nonatomic, weak) IBOutlet SourceTextView *sourceTextView;
-@property(nonatomic, weak) IBOutlet NSTextField *outputTextField;
+@property(weak) IBOutlet NSCollectionView *toolBoxView;
+@property(weak) IBOutlet SourceTextView *sourceTextView;
+@property(weak) IBOutlet NSTextField *outputTextField;
 
 @end
 
@@ -14,6 +16,7 @@
 
 - (void)viewDidLoad {
   [super viewDidLoad];
+
   self.sourceTextView.dataSource = self;
 }
 
@@ -37,6 +40,25 @@
   doc.execute();
   self.outputTextField.stringValue = [NSString stringWithCString:doc.output().c_str()
                                                         encoding:NSUTF8StringEncoding];
+}
+
+- (NSInteger)collectionView:(NSCollectionView *)collectionView
+     numberOfItemsInSection:(NSInteger)section {
+  return 2;
+}
+
+- (NSCollectionViewItem *)collectionView:(NSCollectionView *)collectionView
+     itemForRepresentedObjectAtIndexPath:(NSIndexPath *)indexPath {
+  ToolBoxItem *item = [collectionView makeItemWithIdentifier:@"ToolBoxItem" forIndexPath:indexPath];
+  NSArray *names = @[ @"let", @"+" ];
+  item.textField.stringValue = names[indexPath.item];
+  return item;
+}
+
+- (NSSize)collectionView:(NSCollectionView *)collectionView
+                    layout:(NSCollectionViewLayout *)collectionViewLayout
+    sizeForItemAtIndexPath:(NSIndexPath *)indexPath {
+  return NSMakeSize(collectionView.bounds.size.width - 40, 30);
 }
 
 - (NSRange)textView:(SourceTextView *)textView selectRageContainsIndex:(NSUInteger)index {

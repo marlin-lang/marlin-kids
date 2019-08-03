@@ -4,7 +4,8 @@ set(HEADERS
     NSObject+Casting.h
     SourceTextView.h
     SourceTheme.h
-    SourceViewController.h)
+    SourceViewController.h
+    ToolBoxItem.h)
 
 set(SOURCES
     AppDelegate.mm
@@ -13,13 +14,16 @@ set(SOURCES
     NSObject+Casting.mm
     SourceTextView.mm
     SourceTheme.mm
-    SourceViewController.mm)
+    SourceViewController.mm
+    ToolBoxItem.mm)
 
 set(RESOURCES
+    ${STORYBOARDS}
     Info.plist
     marlin.entitlements
     Assets.xcassets
-    Base.lproj/Main.storyboard)
+    Base.lproj/Main.storyboard
+    ToolBoxItem.xib)
 
 add_executable(${PROJECT_NAME}.mac MACOSX_BUNDLE ${HEADERS} ${SOURCES}
                                                  ${RESOURCES})
