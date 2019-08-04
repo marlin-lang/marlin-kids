@@ -10,6 +10,6 @@
 
 @protocol SourceTextViewDataSource
 
-- (NSRange)textView:(SourceTextView*)textView selectRageContainsIndex:(NSUInteger)index;
+- (NSRange)textView:(SourceTextView*)textView selectRangeContainsIndex:(NSUInteger)index;
 
 @end

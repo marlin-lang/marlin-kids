@@ -23,7 +23,7 @@
   auto eventLocation = [theEvent locationInWindow];
   auto loc = [self convertPoint:eventLocation fromView:nil];
   auto index = [self characterIndexForInsertionAtPoint:loc];
-  _selectionRange = [self.dataSource textView:self selectRageContainsIndex:index];
+  _selectionRange = [self.dataSource textView:self selectRangeContainsIndex:index];
   [self setNeedsDisplayInRect:self.bounds avoidAdditionalLayout:YES];
 }
 
@@ -33,7 +33,8 @@
 
 - (void)interpretKeyEvents:(NSArray<NSEvent*>*)eventArray {
   NSLog(@"events: %lu", eventArray.count);
-    [self.textStorage replaceCharactersInRange:NSMakeRange(0, self.textStorage.string.length) withString:@"5 + 6"];
+  [self.textStorage replaceCharactersInRange:NSMakeRange(0, self.textStorage.string.length)
+                                  withString:@"5 + 6"];
 }
 
 - (void)drawInsertionPointInRect:(NSRect)rect color:(NSColor*)color turnedOn:(BOOL)flag {

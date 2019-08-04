@@ -1,28 +1,40 @@
 #import "Document.h"
 
+#import <optional>
+
 #import "NSObject+Casting.h"
 #import "SourceViewController.h"
 
 @interface Document () {
-  marlin::control::document _content;
+  std::optional<marlin::control::document> _content;
 }
+
+@property(nonatomic, strong) NSData *initialData;
 
 @end
 
 @implementation Document
 
-- (instancetype)init {
-  if (self = [super init]) {
-  }
-  return self;
-}
-
 + (BOOL)autosavesInPlace {
   return YES;
 }
 
+- (instancetype)init {
+  if (self = [super init]) {
+    self.initialData = nil;
+  }
+  return self;
+}
+
+- (marlin::control::source_initialization)initialize {
+  auto [doc, source] = marlin::control::document::make_document(nullptr, 0);
+  self.initialData = nil;
+  _content = std::move(doc);
+  return source;
+}
+
 - (marlin::control::document &)content {
-  return _content;
+  return *_content;
 }
 
 - (void)makeWindowControllers {
@@ -31,15 +43,6 @@
   [self addWindowController:controller];
   if (auto *vc = [SourceViewController cast:controller.contentViewController]) {
     vc.document = self;
-    [vc setNeedsUpdate];
-  }
-}
-
-- (void)update {
-  for (NSWindowController *controller in self.windowControllers) {
-    if (auto *vc = [SourceViewController cast:controller.contentViewController]) {
-      [vc setNeedsUpdate];
-    }
   }
 }
 
@@ -54,9 +57,10 @@
 }
 
 - (BOOL)readFromData:(NSData *)data ofType:(NSString *)typeName error:(NSError **)outError {
-  NSString *source = [[NSString alloc] initWithData:data encoding:NSASCIIStringEncoding];
-  _content = marlin::control::document{source.UTF8String};
-  [self update];
+  self.initialData = data;
+  // NSString *source = [[NSString alloc] initWithData:data encoding:NSASCIIStringEncoding];
+  // _content = marlin::control::document{source.UTF8String};
+  // [self update];
   return YES;
 }
 
