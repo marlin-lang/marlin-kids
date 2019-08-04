@@ -15,6 +15,6 @@
 
 - (void)applyTo:(NSTextStorage*)textStorage
              range:(NSRange)range
- withHighlights:(const std::vector<marlin::control::highlight_token>&)highlights;
+    withHighlights:(const std::vector<marlin::control::highlight_token>&)highlights;
 
 @end

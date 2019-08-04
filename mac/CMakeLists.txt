@@ -18,7 +18,6 @@ set(SOURCES
     ToolBoxItem.mm)
 
 set(RESOURCES
-    ${STORYBOARDS}
     Info.plist
     marlin.entitlements
     Assets.xcassets

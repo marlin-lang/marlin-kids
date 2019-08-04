@@ -715,7 +715,7 @@
                                     <rect key="frame" x="0.0" y="0.0" width="776" height="698"/>
                                     <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                                     <subviews>
-                                        <textView verticallyResizable="YES" usesFontPanel="YES" findStyle="bar" allowsCharacterPickerTouchBarItem="NO" allowsDocumentBackgroundColorChange="YES" allowsUndo="YES" usesRuler="YES" textCompletion="NO" id="ZTq-1x-bO0" customClass="SourceTextView">
+                                        <textView verticallyResizable="YES" findStyle="bar" allowsCharacterPickerTouchBarItem="NO" allowsDocumentBackgroundColorChange="YES" allowsUndo="YES" textCompletion="NO" id="ZTq-1x-bO0" customClass="SourceTextView">
                                             <rect key="frame" x="0.0" y="0.0" width="776" height="698"/>
                                             <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                                             <color key="textColor" white="0.0" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
@@ -749,7 +749,7 @@
                                     <rect key="frame" x="1" y="1" width="198" height="726"/>
                                     <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                                     <subviews>
-                                        <collectionView id="OcT-XB-QHc">
+                                        <collectionView selectable="YES" id="OcT-XB-QHc">
                                             <rect key="frame" x="0.0" y="0.0" width="198" height="158"/>
                                             <autoresizingMask key="autoresizingMask" widthSizable="YES"/>
                                             <collectionViewFlowLayout key="collectionViewLayout" minimumInteritemSpacing="10" minimumLineSpacing="10" id="AbC-fm-Amc">

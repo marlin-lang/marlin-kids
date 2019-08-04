@@ -211,7 +211,7 @@ struct base::impl : base {
     std::get<index>(_subs).index = _children.size();
     if (store0.has_value()) {
       std::get<index>(_subs).has_value = true;
-      _children.emplace_back(std::move(store0).value());
+      _children.emplace_back(*std::move(store0));
     } else {
       std::get<index>(_subs).has_value = false;
     }

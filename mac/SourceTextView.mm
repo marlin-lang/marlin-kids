@@ -2,13 +2,9 @@
 
 #import "SourceTheme.h"
 
-@interface SourceTextView () {
+@implementation SourceTextView {
   NSRange _selectionRange;
 }
-
-@end
-
-@implementation SourceTextView
 
 - (instancetype)initWithCoder:(NSCoder*)coder {
   if (self = [super initWithCoder:coder]) {
@@ -38,7 +34,6 @@
 }
 
 - (void)drawInsertionPointInRect:(NSRect)rect color:(NSColor*)color turnedOn:(BOOL)flag {
-  // don't draw insertion point
 }
 
 - (void)drawViewBackgroundInRect:(NSRect)rect {
@@ -83,6 +78,29 @@
   rect.origin.y += self.textContainerOrigin.y;
   return NSMakeRect(rect.origin.x - oneCharSize.width * 0.25, rect.origin.y + 1,
                     rect.size.width + oneCharSize.width * 0.5, rect.size.height);
+}
+
+@end
+
+@implementation SourceTextView (DragAndDrop)
+
+- (NSDragOperation)draggingEntered:(id<NSDraggingInfo>)sender {
+  return YES;
+}
+
+- (NSDragOperation)draggingUpdated:(id<NSDraggingInfo>)sender {
+  return YES;
+}
+
+- (void)draggingExited:(id<NSDraggingInfo>)sender {
+}
+
+- (BOOL)performDragOperation:(id<NSDraggingInfo>)sender {
+  auto* theme = [SourceTheme new];
+  auto string = [sender.draggingPasteboard stringForType:NSPasteboardTypeString];
+  [self.textStorage replaceCharactersInRange:NSMakeRange(0, 0) withString:string];
+  [self.textStorage setAttributes:theme.allAttrs range:NSMakeRange(0, string.length)];
+  return YES;
 }
 
 @end

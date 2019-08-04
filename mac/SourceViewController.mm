@@ -65,4 +65,20 @@
   return NSMakeRange(0, 0);
 }
 
+- (BOOL)collectionView:(NSCollectionView *)collectionView
+    canDragItemsAtIndexPaths:(NSSet<NSIndexPath *> *)indexPaths
+                   withEvent:(NSEvent *)event {
+  return YES;
+}
+
+- (BOOL)collectionView:(NSCollectionView *)collectionView
+    writeItemsAtIndexPaths:(NSSet<NSIndexPath *> *)indexPaths
+              toPasteboard:(NSPasteboard *)pasteboard {
+  return [pasteboard writeObjects:@[ @"let @variable = @value\n" ]];
+}
+
+- (NSRange)textView:(SourceTextView *)textView selectRageContainsIndex:(NSUInteger)index {
+  return NSMakeRange(0, 0);
+}
+
 @end
