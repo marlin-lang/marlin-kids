@@ -12,4 +12,8 @@
 
 - (NSRange)textView:(SourceTextView*)textView selectRangeContainsIndex:(NSUInteger)index;
 
+- (NSString*)textView:(SourceTextView*)textView
+    insertStatementByIndex:(NSUInteger)index
+                    atLine:(NSUInteger)line;
+
 @end

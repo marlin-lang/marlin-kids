@@ -105,6 +105,16 @@
                     rect.size.width + oneCharSize.width * 0.5, rect.size.height);
 }
 
+- (uint)lineContainsIndex:(NSUInteger)index {
+  NSUInteger numberOfLines = 0;
+  for (NSUInteger indexOfGlyph = 0; indexOfGlyph < index; numberOfLines++) {
+    NSRange lineRange;
+    [self.layoutManager lineFragmentRectForGlyphAtIndex:indexOfGlyph effectiveRange:&lineRange];
+    indexOfGlyph = NSMaxRange(lineRange);
+  }
+  return numberOfLines + 1;
+}
+
 @end
 
 @implementation SourceTextView (DragAndDrop)
@@ -128,7 +138,9 @@
 
 - (BOOL)performDragOperation:(id<NSDraggingInfo>)sender {
   auto* theme = [SourceTheme new];
-  auto string = [sender.draggingPasteboard stringForType:NSPasteboardTypeString];
+  auto index = [sender.draggingPasteboard stringForType:NSPasteboardTypeString].integerValue;
+  auto line = [self lineContainsIndex:_statementInsertionPoint];
+  auto string = [self.dataSource textView:self insertStatementByIndex:index atLine:line];
   [self.textStorage replaceCharactersInRange:NSMakeRange(_statementInsertionPoint, 0)
                                   withString:string];
   [self.textStorage setAttributes:theme.allAttrs

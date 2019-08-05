@@ -65,6 +65,14 @@
   return NSMakeRange(0, 0);
 }
 
+- (NSString *)textView:(SourceTextView *)textView
+    insertStatementByIndex:(NSUInteger)index
+                    atLine:(NSUInteger)line {
+  auto loc = _document.content.find_statement_insert_location(line);
+  auto update = _document.content.insert_statement(*loc, marlin::control::statement_prototypes[0]);
+  return [NSString stringWithCString:update.source.c_str() encoding:NSUTF8StringEncoding];
+}
+
 - (BOOL)collectionView:(NSCollectionView *)collectionView
     canDragItemsAtIndexPaths:(NSSet<NSIndexPath *> *)indexPaths
                    withEvent:(NSEvent *)event {
@@ -74,8 +82,8 @@
 - (BOOL)collectionView:(NSCollectionView *)collectionView
     writeItemsAtIndexPaths:(NSSet<NSIndexPath *> *)indexPaths
               toPasteboard:(NSPasteboard *)pasteboard {
-  auto *texts = @[ @"let @variable = @value\n", @"@left + @right\n" ];
-  return [pasteboard writeObjects:@[ texts[indexPaths.anyObject.item] ]];
+  return [pasteboard setString:[NSString stringWithFormat:@"%ld", indexPaths.anyObject.item]
+                       forType:NSPasteboardTypeString];
 }
 
 - (NSRange)textView:(SourceTextView *)textView selectRageContainsIndex:(NSUInteger)index {
