@@ -4,9 +4,18 @@
 #include <string>
 #include <vector>
 
+#include "utils.hpp"
+
 namespace marlin::control {
 
-enum class highlight_token_type { keyword, op, boolean, number, string };
+enum class highlight_token_type {
+  keyword,
+  op,
+  boolean,
+  number,
+  string,
+  placeholder
+};
 
 struct highlight_token {
   highlight_token_type type;
@@ -24,6 +33,18 @@ struct source_initialization {
   source_initialization(std::string _source,
                         std::vector<highlight_token> _highlights)
       : source{std::move(_source)}, highlights{std::move(_highlights)} {}
+};
+
+struct source_insertion {
+  source_loc loc;
+  std::string source;
+  std::vector<highlight_token> highlights;
+
+  source_insertion(source_loc _loc, std::string _source,
+                   std::vector<highlight_token> _highlights)
+      : loc{_loc},
+        source{std::move(_source)},
+        highlights{std::move(_highlights)} {}
 };
 
 }  // namespace marlin::control

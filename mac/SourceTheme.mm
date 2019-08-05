@@ -19,6 +19,8 @@
         @{NSFontAttributeName : font, NSForegroundColorAttributeName : NSColor.greenColor};
     _stringAttrs =
         @{NSFontAttributeName : font, NSForegroundColorAttributeName : NSColor.cyanColor};
+    _placeholderAttrs =
+        @{NSFontAttributeName : font, NSForegroundColorAttributeName : NSColor.grayColor};
   }
   return self;
 }
@@ -45,7 +47,8 @@
       case marlin::control::highlight_token_type::string:
         [textStorage setAttributes:self.stringAttrs range:highlight_range];
         break;
-      default:
+      case marlin::control::highlight_token_type::placeholder:
+        [textStorage setAttributes:self.placeholderAttrs range:highlight_range];
         break;
     }
   }

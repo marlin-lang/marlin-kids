@@ -28,6 +28,7 @@ struct type_map {
 
 #define ASTS(X)             \
   X(program)                \
+  X(on_start)               \
   X(variable_declaration)   \
   X(variable_placeholder)   \
   X(variable_name)          \

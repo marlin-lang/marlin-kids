@@ -24,7 +24,7 @@
 }
 
 - (void)mouseMoved:(NSEvent*)event {
-  [[NSCursor arrowCursor] set];
+  [NSCursor.arrowCursor set];
 }
 
 - (void)interpretKeyEvents:(NSArray<NSEvent*>*)eventArray {

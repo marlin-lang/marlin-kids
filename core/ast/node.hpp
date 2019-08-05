@@ -3,9 +3,7 @@
 
 #include <memory>
 
-namespace marlin {
-
-namespace ast {
+namespace marlin::ast {
 
 struct base;
 
@@ -15,10 +13,11 @@ struct base_deleter {
 
 using node = std::unique_ptr<base, base_deleter>;
 
-}  // namespace ast
+template <typename node_type, typename... arg_type>
+node make(arg_type &&... args) {
+  return node{new node_type{std::forward<arg_type>(args)...}};
+}
 
-using code = ast::node;
-
-}  // namespace marlin
+}  // namespace marlin::ast
 
 #endif  // marlin_ast_node_hpp

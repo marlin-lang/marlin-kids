@@ -46,6 +46,7 @@ struct vector_view {
   void emplace(size_type pos, arg_type&&... args) const {
     _data().emplace(_data().begin() + _vec.index + pos,
                     std::forward<arg_type>(args)...);
+    (*this)[pos]->_parent = &_base;
     _vec.size++;
     _base.apply_update_subnode_refs();
   }
@@ -58,6 +59,7 @@ struct vector_view {
   value_type pop(size_type pos) const {
     auto it = _data().begin() + _vec.index + pos;
     auto item = std::move(*it);
+    item->_parent = nullptr;
     _data().erase(it);
     _vec.size--;
     _base.apply_update_subnode_refs();

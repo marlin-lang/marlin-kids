@@ -12,6 +12,7 @@
 @property(readonly) NSDictionary* booleanAttrs;
 @property(readonly) NSDictionary* numberAttrs;
 @property(readonly) NSDictionary* stringAttrs;
+@property(readonly) NSDictionary* placeholderAttrs;
 
 - (void)applyTo:(NSTextStorage*)textStorage
              range:(NSRange)range

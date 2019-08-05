@@ -116,12 +116,12 @@ struct type_config<subnode::concrete> {
 
 template <>
 struct type_config<subnode::optional> {
-  using store = std::vector<node>;
+  using store = std::optional<node>;
 };
 
 template <>
 struct type_config<subnode::vector> {
-  using store = std::optional<node>;
+  using store = std::vector<node>;
 };
 
 template <typename... subnode_types>
@@ -164,6 +164,9 @@ struct base::impl : base {
       typename base_utils::type_config<subnode_types>::store... stores)
       : base{get_typeid<node_type>(), count_subnodes(stores...)} {
     init<0>(std::move(stores)...);
+    for (auto &child : children()) {
+      child->_parent = this;
+    }
   }
 
  protected:
