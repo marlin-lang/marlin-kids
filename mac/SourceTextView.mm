@@ -4,11 +4,13 @@
 
 @implementation SourceTextView {
   NSRange _selectionRange;
+  NSInteger _statementInsertionPoint;
 }
 
 - (instancetype)initWithCoder:(NSCoder*)coder {
   if (self = [super initWithCoder:coder]) {
     _selectionRange = NSMakeRange(0, 0);
+    _statementInsertionPoint = -1;
   }
   return self;
 }
@@ -28,12 +30,32 @@
 }
 
 - (void)interpretKeyEvents:(NSArray<NSEvent*>*)eventArray {
-  NSLog(@"events: %lu", eventArray.count);
   [self.textStorage replaceCharactersInRange:NSMakeRange(0, self.textStorage.string.length)
                                   withString:@"5 + 6"];
 }
 
 - (void)drawInsertionPointInRect:(NSRect)rect color:(NSColor*)color turnedOn:(BOOL)flag {
+}
+
+- (void)drawStatementInsertionPoint {
+  CGFloat y = 0;
+  if (_statementInsertionPoint < self.textStorage.string.length) {
+    auto rect = [self.layoutManager lineFragmentRectForGlyphAtIndex:_statementInsertionPoint
+                                                     effectiveRange:nil];
+    y = rect.origin.y;
+  } else {
+    auto rect = [self.layoutManager lineFragmentRectForGlyphAtIndex:_statementInsertionPoint - 1
+                                                     effectiveRange:nil];
+    y = rect.origin.y + rect.size.height;
+  }
+  [NSGraphicsContext saveGraphicsState];
+  NSBezierPath* line = [NSBezierPath bezierPath];
+  [line moveToPoint:NSMakePoint(0 + self.textContainer.lineFragmentPadding, y)];
+  [line lineToPoint:NSMakePoint(200, y)];
+  [line setLineWidth:5.0];
+  [[NSColor blueColor] set];
+  [line stroke];
+  [NSGraphicsContext restoreGraphicsState];
 }
 
 - (void)drawViewBackgroundInRect:(NSRect)rect {
@@ -65,6 +87,9 @@
     [path stroke];
     [NSGraphicsContext restoreGraphicsState];
   }
+  if (_statementInsertionPoint >= 0) {
+    [self drawStatementInsertionPoint];
+  }
 }
 
 - (NSRect)selectionRect {
@@ -89,17 +114,27 @@
 }
 
 - (NSDragOperation)draggingUpdated:(id<NSDraggingInfo>)sender {
+  auto location = [self convertPoint:sender.draggingLocation fromView:nil];
+  auto index = [self characterIndexForInsertionAtPoint:location];
+  auto range = [self.textStorage.string lineRangeForRange:NSMakeRange(index, 0)];
+  _statementInsertionPoint = range.location;
+  [self setNeedsDisplayInRect:self.bounds avoidAdditionalLayout:NO];
   return YES;
 }
 
 - (void)draggingExited:(id<NSDraggingInfo>)sender {
+  _statementInsertionPoint = -1;
 }
 
 - (BOOL)performDragOperation:(id<NSDraggingInfo>)sender {
   auto* theme = [SourceTheme new];
   auto string = [sender.draggingPasteboard stringForType:NSPasteboardTypeString];
-  [self.textStorage replaceCharactersInRange:NSMakeRange(0, 0) withString:string];
-  [self.textStorage setAttributes:theme.allAttrs range:NSMakeRange(0, string.length)];
+  [self.textStorage replaceCharactersInRange:NSMakeRange(_statementInsertionPoint, 0)
+                                  withString:string];
+  [self.textStorage setAttributes:theme.allAttrs
+                            range:NSMakeRange(_statementInsertionPoint, string.length)];
+  _statementInsertionPoint = -1;
+  [self setNeedsDisplayInRect:self.bounds avoidAdditionalLayout:YES];
   return YES;
 }
 

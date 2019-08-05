@@ -50,7 +50,7 @@
 - (NSCollectionViewItem *)collectionView:(NSCollectionView *)collectionView
      itemForRepresentedObjectAtIndexPath:(NSIndexPath *)indexPath {
   ToolBoxItem *item = [collectionView makeItemWithIdentifier:@"ToolBoxItem" forIndexPath:indexPath];
-  NSArray *names = @[ @"let", @"+" ];
+  auto *names = @[ @"let", @"+" ];
   item.textField.stringValue = names[indexPath.item];
   return item;
 }
@@ -74,7 +74,8 @@
 - (BOOL)collectionView:(NSCollectionView *)collectionView
     writeItemsAtIndexPaths:(NSSet<NSIndexPath *> *)indexPaths
               toPasteboard:(NSPasteboard *)pasteboard {
-  return [pasteboard writeObjects:@[ @"let @variable = @value\n" ]];
+  auto *texts = @[ @"let @variable = @value\n", @"@left + @right\n" ];
+  return [pasteboard writeObjects:@[ texts[indexPaths.anyObject.item] ]];
 }
 
 - (NSRange)textView:(SourceTextView *)textView selectRageContainsIndex:(NSUInteger)index {
