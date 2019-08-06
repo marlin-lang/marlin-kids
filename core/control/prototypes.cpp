@@ -57,7 +57,7 @@ const std::array<statement_prototype, 2> statement_prototypes = {
             ast::make<ast::expression_placeholder>("value"))};
         node->source_code_range = {{line, indent},
                                    {line, indent + source_template_length}};
-        node->as<ast::variable_declaration>().value()->source_code_range = {
+        node->as<ast::print_statement>().value()->source_code_range = {
             {line, indent + value_start}, {line, indent + value_end}};
 
         std::string source;

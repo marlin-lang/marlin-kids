@@ -16,7 +16,7 @@ namespace marlin::control {
 
 struct document {
   struct statement_insert_location {
-    ast::base& parent;
+    ast::base* parent;
     ast::subnode::vector_view<ast::base> block;
     size_t index;
     size_t line;
@@ -24,7 +24,7 @@ struct document {
     statement_insert_location(ast::base& _parent,
                               ast::subnode::vector_view<ast::base> _block,
                               size_t _index, size_t _line)
-        : parent{_parent}, block{_block}, index{_index}, line{_line} {}
+        : parent{&_parent}, block{_block}, index{_index}, line{_line} {}
   };
 
   static std::pair<document, source_initialization> make_document(
@@ -54,7 +54,7 @@ struct document {
   source_insertion insert_statement(statement_insert_location loc,
                                     const statement_prototype& prototype) {
     auto indent{0};
-    auto* curr{&loc.parent};
+    auto* curr{loc.parent};
     while (curr->has_parent()) {
       indent += 1;
       curr = &curr->parent();
@@ -67,7 +67,7 @@ struct document {
     loc.block.emplace(loc.index, std::move(node));
 
     // Update statements below insert location
-    curr = &loc.parent;
+    curr = loc.parent;
     auto* target{loc.block[loc.index].get()};
     while (curr) {
       bool target_passed{false};
@@ -127,7 +127,7 @@ struct document {
   find_statement_insert_location_in_vector(
       size_t line, ast::base& parent,
       ast::subnode::vector_view<ast::base> vector) {
-    for (size_t i = 0; i < vector.size(); i++) {
+    for (size_t i{0}; i < vector.size(); i++) {
       if (line <= vector[i]->source_code_range.begin.line) {
         if constexpr (vector_is_block) {
           return statement_insert_location{parent, vector, i, line};
