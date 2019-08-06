@@ -110,11 +110,17 @@
 }
 
 - (uint)lineContainsIndex:(NSUInteger)index {
+  NSUInteger indexOfGlyph = 0;
   NSUInteger numberOfLines = 0;
-  for (NSUInteger indexOfGlyph = 0; indexOfGlyph <= index; numberOfLines++) {
-    NSRange lineRange;
-    [self.layoutManager lineFragmentRectForGlyphAtIndex:indexOfGlyph effectiveRange:&lineRange];
-    indexOfGlyph = NSMaxRange(lineRange);
+  while (indexOfGlyph <= index) {
+    ++numberOfLines;
+    if (indexOfGlyph < self.textStorage.string.length) {
+      NSRange lineRange;
+      [self.layoutManager lineFragmentRectForGlyphAtIndex:indexOfGlyph effectiveRange:&lineRange];
+      indexOfGlyph = NSMaxRange(lineRange);
+    } else {
+      break;
+    }
   }
   return numberOfLines;
 }
@@ -152,16 +158,15 @@
 }
 
 - (BOOL)performDragOperation:(id<NSDraggingInfo>)sender {
-  auto* theme = [SourceTheme new];
   auto index = [sender.draggingPasteboard stringForType:NSPasteboardTypeString].integerValue;
   if (_statementInserter.has_value() && _statementInserter->can_insert()) {
     auto source = _statementInserter->insert(marlin::control::statement_prototypes[index]);
     NSString* string = [NSString stringWithCString:source.source.c_str()
                                           encoding:NSUTF8StringEncoding];
-    [self.textStorage replaceCharactersInRange:NSMakeRange(_statementInsertionPoint, 0)
-                                    withString:string];
-    [self.textStorage setAttributes:theme.allAttrs
-                              range:NSMakeRange(_statementInsertionPoint, string.length)];
+    auto range = NSMakeRange(_statementInsertionPoint, 0);
+    [self.textStorage replaceCharactersInRange:range withString:string];
+    [[SourceTheme new] applyTo:self.textStorage range:range withHighlights:source.highlights];
+
     _statementInsertionPoint = -1;
     [self setNeedsDisplayInRect:self.bounds avoidAdditionalLayout:YES];
     return YES;
