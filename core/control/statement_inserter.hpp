@@ -6,23 +6,24 @@
 namespace marlin::control {
 
 struct statement_inserter {
-  statement_inserter(document& doc) : _doc{doc} {}
+  statement_inserter(document& doc) : _doc{&doc} {}
 
   bool can_insert() const noexcept { return _loc.has_value(); }
 
   void move_to_line(size_t line) {
     if (_line == 0 || line != _line) {
-      _loc = _doc.find_statement_insert_location(line);
+      _loc = _doc->find_statement_insert_location(line);
+      _line = line;
     }
   }
 
   source_insertion insert(const statement_prototype& prototype) {
     assert(_loc.has_value());
-    return _doc.insert_statement(*_loc, prototype);
+    return _doc->insert_statement(*_loc, prototype);
   }
 
  private:
-  document& _doc;
+  document* _doc;
   size_t _line{0};
   std::optional<document::statement_insert_location> _loc;
 };

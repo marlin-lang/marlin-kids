@@ -1,10 +1,10 @@
 #import "SourceViewController.h"
 
+#import "prototypes.hpp"
+
 #import "Document.h"
 #import "SourceTheme.h"
 #import "ToolBoxItem.h"
-
-#import <iostream>
 
 @interface SourceViewController ()
 
@@ -50,8 +50,9 @@
 - (NSCollectionViewItem *)collectionView:(NSCollectionView *)collectionView
      itemForRepresentedObjectAtIndexPath:(NSIndexPath *)indexPath {
   ToolBoxItem *item = [collectionView makeItemWithIdentifier:@"ToolBoxItem" forIndexPath:indexPath];
-  auto *names = @[ @"let", @"+" ];
-  item.textField.stringValue = names[indexPath.item];
+  const auto &name = marlin::control::statement_prototypes[indexPath.item].name;
+  item.textField.stringValue = [NSString stringWithCString:name.c_str()
+                                                  encoding:NSUTF8StringEncoding];
   return item;
 }
 
@@ -65,12 +66,8 @@
   return NSMakeRange(0, 0);
 }
 
-- (NSString *)textView:(SourceTextView *)textView
-    insertStatementByIndex:(NSUInteger)index
-                    atLine:(NSUInteger)line {
-  auto loc = _document.content.find_statement_insert_location(line);
-  auto update = _document.content.insert_statement(*loc, marlin::control::statement_prototypes[0]);
-  return [NSString stringWithCString:update.source.c_str() encoding:NSUTF8StringEncoding];
+- (marlin::control::statement_inserter)statementInserterForTextView:(SourceTextView *)textView {
+  return marlin::control::statement_inserter{_document.content};
 }
 
 - (BOOL)collectionView:(NSCollectionView *)collectionView

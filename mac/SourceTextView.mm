@@ -1,8 +1,11 @@
 #import "SourceTextView.h"
 
+#import <optional>
+
 #import "SourceTheme.h"
 
 @implementation SourceTextView {
+  std::optional<marlin::control::statement_inserter> _statementInserter;
   NSRange _selectionRange;
   NSInteger _statementInsertionPoint;
 }
@@ -87,7 +90,8 @@
     [path stroke];
     [NSGraphicsContext restoreGraphicsState];
   }
-  if (_statementInsertionPoint >= 0) {
+  if (_statementInsertionPoint >= 0 && _statementInserter.has_value() &&
+      _statementInserter->can_insert()) {
     [self drawStatementInsertionPoint];
   }
 }
@@ -107,12 +111,12 @@
 
 - (uint)lineContainsIndex:(NSUInteger)index {
   NSUInteger numberOfLines = 0;
-  for (NSUInteger indexOfGlyph = 0; indexOfGlyph < index; numberOfLines++) {
+  for (NSUInteger indexOfGlyph = 0; indexOfGlyph <= index; numberOfLines++) {
     NSRange lineRange;
     [self.layoutManager lineFragmentRectForGlyphAtIndex:indexOfGlyph effectiveRange:&lineRange];
     indexOfGlyph = NSMaxRange(lineRange);
   }
-  return numberOfLines + 1;
+  return numberOfLines;
 }
 
 @end
@@ -120,34 +124,50 @@
 @implementation SourceTextView (DragAndDrop)
 
 - (NSDragOperation)draggingEntered:(id<NSDraggingInfo>)sender {
-  return YES;
+  _statementInserter = [self.dataSource statementInserterForTextView:self];
+  return NSDragOperationCopy;
 }
 
 - (NSDragOperation)draggingUpdated:(id<NSDraggingInfo>)sender {
   auto location = [self convertPoint:sender.draggingLocation fromView:nil];
   auto index = [self characterIndexForInsertionAtPoint:location];
-  auto range = [self.textStorage.string lineRangeForRange:NSMakeRange(index, 0)];
-  _statementInsertionPoint = range.location;
+  if (_statementInserter.has_value()) {
+    auto line = [self lineContainsIndex:index];
+    _statementInserter->move_to_line(line);
+    if (_statementInserter->can_insert()) {
+      auto range = [self.textStorage.string lineRangeForRange:NSMakeRange(index, 0)];
+      _statementInsertionPoint = range.location;
+      [self setNeedsDisplayInRect:self.bounds avoidAdditionalLayout:NO];
+      return NSDragOperationCopy;
+    }
+  }
   [self setNeedsDisplayInRect:self.bounds avoidAdditionalLayout:NO];
-  return YES;
+  return NSDragOperationNone;
 }
 
 - (void)draggingExited:(id<NSDraggingInfo>)sender {
+  _statementInserter = std::nullopt;
   _statementInsertionPoint = -1;
+  [self setNeedsDisplayInRect:self.bounds avoidAdditionalLayout:YES];
 }
 
 - (BOOL)performDragOperation:(id<NSDraggingInfo>)sender {
   auto* theme = [SourceTheme new];
   auto index = [sender.draggingPasteboard stringForType:NSPasteboardTypeString].integerValue;
-  auto line = [self lineContainsIndex:_statementInsertionPoint];
-  auto string = [self.dataSource textView:self insertStatementByIndex:index atLine:line];
-  [self.textStorage replaceCharactersInRange:NSMakeRange(_statementInsertionPoint, 0)
-                                  withString:string];
-  [self.textStorage setAttributes:theme.allAttrs
-                            range:NSMakeRange(_statementInsertionPoint, string.length)];
-  _statementInsertionPoint = -1;
+  if (_statementInserter.has_value() && _statementInserter->can_insert()) {
+    auto source = _statementInserter->insert(marlin::control::statement_prototypes[index]);
+    NSString* string = [NSString stringWithCString:source.source.c_str()
+                                          encoding:NSUTF8StringEncoding];
+    [self.textStorage replaceCharactersInRange:NSMakeRange(_statementInsertionPoint, 0)
+                                    withString:string];
+    [self.textStorage setAttributes:theme.allAttrs
+                              range:NSMakeRange(_statementInsertionPoint, string.length)];
+    _statementInsertionPoint = -1;
+    [self setNeedsDisplayInRect:self.bounds avoidAdditionalLayout:YES];
+    return YES;
+  }
   [self setNeedsDisplayInRect:self.bounds avoidAdditionalLayout:YES];
-  return YES;
+  return NO;
 }
 
 @end

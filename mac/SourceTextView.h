@@ -1,5 +1,7 @@
 #import <Cocoa/Cocoa.h>
 
+#import "statement_inserter.hpp"
+
 @protocol SourceTextViewDataSource;
 
 @interface SourceTextView : NSTextView
@@ -12,8 +14,6 @@
 
 - (NSRange)textView:(SourceTextView*)textView selectRangeContainsIndex:(NSUInteger)index;
 
-- (NSString*)textView:(SourceTextView*)textView
-    insertStatementByIndex:(NSUInteger)index
-                    atLine:(NSUInteger)line;
+- (marlin::control::statement_inserter)statementInserterForTextView:(SourceTextView*)textView;
 
 @end
