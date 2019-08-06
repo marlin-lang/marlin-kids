@@ -20,7 +20,7 @@ struct statement_prototype {
       : name{std::move(_name)}, construct{_construct} {}
 };
 
-extern const std::array<statement_prototype, 1> statement_prototypes;
+extern const std::array<statement_prototype, 2> statement_prototypes;
 
 }  // namespace marlin::control
 

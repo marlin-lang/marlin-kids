@@ -30,6 +30,7 @@ struct type_map {
   X(program)                \
   X(on_start)               \
   X(variable_declaration)   \
+  X(print_statement)        \
   X(variable_placeholder)   \
   X(variable_name)          \
   X(expression_placeholder) \

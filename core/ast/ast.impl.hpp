@@ -38,6 +38,14 @@ struct variable_declaration
   using base_type::impl;
 };
 
+struct print_statement : base::impl<print_statement, subnode::concrete>,
+                         statement {
+  [[nodiscard]] decltype(auto) value() { return get_subnode<0>(); }
+  [[nodiscard]] decltype(auto) value() const { return get_subnode<0>(); }
+
+  using base_type::impl;
+};
+
 struct variable_placeholder : base::impl<variable_placeholder> {
   std::string name;
 
@@ -61,16 +69,16 @@ struct unary_expression : base::impl<unary_expression, subnode::concrete>,
                           expression {
   unary_op op;
 
-  [[nodiscard]] inline node &argument() { return get_subnode<0>(); }
-  [[nodiscard]] inline const node &argument() const { return get_subnode<0>(); }
+  [[nodiscard]] decltype(auto) argument() { return get_subnode<0>(); }
+  [[nodiscard]] decltype(auto) argument() const { return get_subnode<0>(); }
 
-  [[nodiscard]] inline source_range op_range() const noexcept {
+  [[nodiscard]] source_range op_range() const noexcept {
     const auto start{source_code_range.begin};
     const auto length{length_of(op)};
     return {start, {start.line, start.column + length}};
   }
 
-  explicit inline unary_expression(unary_op _op, node _arg)
+  explicit unary_expression(unary_op _op, node _arg)
       : base_type{std::move(_arg)}, op{_op} {}
 };
 
@@ -81,17 +89,17 @@ struct binary_expression
 
   source_loc op_loc;
 
-  [[nodiscard]] inline node &left() { return get_subnode<0>(); }
-  [[nodiscard]] inline const node &left() const { return get_subnode<0>(); }
-  [[nodiscard]] inline node &right() { return get_subnode<1>(); }
-  [[nodiscard]] inline const node &right() const { return get_subnode<1>(); }
+  [[nodiscard]] decltype(auto) left() { return get_subnode<0>(); }
+  [[nodiscard]] decltype(auto) left() const { return get_subnode<0>(); }
+  [[nodiscard]] decltype(auto) right() { return get_subnode<1>(); }
+  [[nodiscard]] decltype(auto) right() const { return get_subnode<1>(); }
 
-  [[nodiscard]] inline source_range op_range() const noexcept {
+  [[nodiscard]] source_range op_range() const noexcept {
     const auto length{length_of(op)};
     return {op_loc, {op_loc.line, op_loc.column + length}};
   }
 
-  explicit inline binary_expression(node _l, binary_op _op, node _r)
+  explicit binary_expression(node _l, binary_op _op, node _r)
       : base_type{std::move(_l), std::move(_r)}, op{_op} {}
 };
 

@@ -1,6 +1,7 @@
 #ifndef marlin_ast_subnode_views_hpp
 #define marlin_ast_subnode_views_hpp
 
+#include <memory>
 #include <vector>
 
 #include "node.hpp"
@@ -9,6 +10,63 @@
 namespace marlin::ast::subnode {
 
 using data_vector = std::vector<node>;
+
+template <typename base_type>
+struct concrete_view {
+  using value_type = typename data_vector::value_type;
+
+  concrete_view(base_type& base, concrete& con) : _base{base}, _con{con} {}
+
+  void operator=(value_type other) {
+    auto& ref = _data()[_con.index];
+    ref = std::move(other);
+    ref->_parent = &_base;
+  }
+
+  decltype(auto) operator*() const { return *(_data()[_con.index]); }
+  decltype(auto) operator-> () const noexcept { return get(); }
+
+  [[nodiscard]] decltype(auto) get() const noexcept {
+    return _data()[_con.index].get();
+  }
+
+  value_type replace(value_type other) const {
+    auto ref = _data()[_con.index];
+    auto item = std::move(ref);
+    item->_parent = nullptr;
+    ref = std::move(other);
+    ref->_parent = &_base;
+    return item;
+  }
+
+ private:
+  base_type& _base;
+  concrete& _con;
+
+  data_vector& _data() const noexcept { return _base._children; }
+};
+
+template <typename base_type>
+struct const_concrete_view {
+  using value_type = typename data_vector::value_type;
+  using pointer_type = typename value_type::pointer;
+
+  const_concrete_view(const base_type& base, const concrete& con)
+      : _base{base}, _con{con} {}
+
+  decltype(auto) operator*() const { return *(_data()[_con.index]); }
+  decltype(auto) operator-> () const noexcept { return get(); }
+
+  [[nodiscard]] decltype(auto) get() const noexcept {
+    return _data()[_con.index].get();
+  }
+
+ private:
+  const base_type& _base;
+  const concrete& _con;
+
+  const data_vector& _data() const noexcept { return _base._children; }
+};
 
 template <typename base_type>
 struct vector_view {
@@ -63,6 +121,15 @@ struct vector_view {
     _data().erase(it);
     _vec.size--;
     _base.apply_update_subnode_refs();
+    return item;
+  }
+
+  value_type replace(size_type pos, value_type other) const {
+    auto ref = _data()[_vec.index + pos];
+    auto item = std::move(ref);
+    item->_parent = nullptr;
+    ref = std::move(other);
+    ref->_parent = &_base;
     return item;
   }
 

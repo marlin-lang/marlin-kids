@@ -14,6 +14,7 @@
 namespace marlin::ast {
 
 struct base {
+  friend subnode::concrete_view<base>;
   friend subnode::vector_view<base>;
 
   template <typename node_type, typename... subnode_types>
@@ -88,9 +89,12 @@ struct base {
     apply<void>([](auto &n) { n.update_subnode_refs(); });
   }
 
-  node &get_subnode_by_ref(subnode::concrete &r) { return _children[r.index]; }
-  const node &get_subnode_by_ref(const subnode::concrete &r) const {
-    return _children[r.index];
+  subnode::concrete_view<base> get_subnode_by_ref(subnode::concrete &r) {
+    return {*this, r};
+  }
+  subnode::const_concrete_view<base> get_subnode_by_ref(
+      const subnode::concrete &r) const {
+    return {*this, r};
   }
   subnode::vector_view<base> get_subnode_by_ref(subnode::vector &v) {
     return {*this, v};
