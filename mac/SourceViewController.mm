@@ -44,7 +44,7 @@
 
 - (NSInteger)collectionView:(NSCollectionView *)collectionView
      numberOfItemsInSection:(NSInteger)section {
-  return 2;
+  return marlin::control::statement_prototypes.size();
 }
 
 - (NSCollectionViewItem *)collectionView:(NSCollectionView *)collectionView

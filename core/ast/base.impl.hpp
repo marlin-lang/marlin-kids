@@ -241,7 +241,8 @@ struct base::impl : base {
   template <size_t index>
   void update_subnodes(size_t target) noexcept {
     if constexpr (index < base_utils::type_counter<subnode_types...>::count) {
-      update_subnodes<index + 1>(update_subnode(std::get<index>(_subs)));
+      update_subnodes<index + 1>(
+          update_subnode(std::get<index>(_subs), target));
     }
   }
   size_t update_subnode(subnode::concrete &var, size_t target) noexcept {

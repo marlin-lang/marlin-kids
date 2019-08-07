@@ -31,6 +31,8 @@ struct type_map {
   X(on_start)               \
   X(variable_declaration)   \
   X(print_statement)        \
+  X(if_statement)           \
+  X(if_else_statement)      \
   X(variable_placeholder)   \
   X(variable_name)          \
   X(expression_placeholder) \

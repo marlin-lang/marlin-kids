@@ -46,6 +46,35 @@ struct print_statement : base::impl<print_statement, subnode::concrete>,
   using base_type::impl;
 };
 
+struct if_statement
+    : base::impl<if_statement, subnode::concrete, subnode::vector>,
+      statement {
+  [[nodiscard]] decltype(auto) condition() { return get_subnode<0>(); }
+  [[nodiscard]] decltype(auto) condition() const { return get_subnode<0>(); }
+
+  [[nodiscard]] decltype(auto) statements() { return get_subnode<1>(); }
+  [[nodiscard]] decltype(auto) statements() const { return get_subnode<1>(); }
+
+  using base_type::impl;
+};
+
+struct if_else_statement : base::impl<if_else_statement, subnode::concrete,
+                                      subnode::vector, subnode::vector>,
+                           statement {
+  source_loc else_loc;
+
+  [[nodiscard]] decltype(auto) condition() { return get_subnode<0>(); }
+  [[nodiscard]] decltype(auto) condition() const { return get_subnode<0>(); }
+
+  [[nodiscard]] decltype(auto) consequence() { return get_subnode<1>(); }
+  [[nodiscard]] decltype(auto) consequence() const { return get_subnode<1>(); }
+
+  [[nodiscard]] decltype(auto) alternate() { return get_subnode<2>(); }
+  [[nodiscard]] decltype(auto) alternate() const { return get_subnode<2>(); }
+
+  using base_type::impl;
+};
+
 struct variable_placeholder : base::impl<variable_placeholder> {
   std::string name;
 
@@ -72,12 +101,6 @@ struct unary_expression : base::impl<unary_expression, subnode::concrete>,
   [[nodiscard]] decltype(auto) argument() { return get_subnode<0>(); }
   [[nodiscard]] decltype(auto) argument() const { return get_subnode<0>(); }
 
-  [[nodiscard]] source_range op_range() const noexcept {
-    const auto start{source_code_range.begin};
-    const auto length{length_of(op)};
-    return {start, {start.line, start.column + length}};
-  }
-
   explicit unary_expression(unary_op _op, node _arg)
       : base_type{std::move(_arg)}, op{_op} {}
 };
@@ -87,17 +110,10 @@ struct binary_expression
       expression {
   binary_op op;
 
-  source_loc op_loc;
-
   [[nodiscard]] decltype(auto) left() { return get_subnode<0>(); }
   [[nodiscard]] decltype(auto) left() const { return get_subnode<0>(); }
   [[nodiscard]] decltype(auto) right() { return get_subnode<1>(); }
   [[nodiscard]] decltype(auto) right() const { return get_subnode<1>(); }
-
-  [[nodiscard]] source_range op_range() const noexcept {
-    const auto length{length_of(op)};
-    return {op_loc, {op_loc.line, op_loc.column + length}};
-  }
 
   explicit binary_expression(node _l, binary_op _op, node _r)
       : base_type{std::move(_l), std::move(_r)}, op{_op} {}
