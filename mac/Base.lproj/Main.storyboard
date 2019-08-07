@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <document type="com.apple.InterfaceBuilder3.Cocoa.Storyboard.XIB" version="3.0" toolsVersion="14490.70" targetRuntime="MacOSX.Cocoa" propertyAccessControl="none" useAutolayout="YES">
     <dependencies>
+        <deployment identifier="macosx"/>
         <plugIn identifier="com.apple.InterfaceBuilder.CocoaPlugin" version="14490.70"/>
         <capability name="documents saved in the Xcode 8 format" minToolsVersion="8.0"/>
     </dependencies>
@@ -701,6 +702,53 @@
             </objects>
             <point key="canvasLocation" x="75" y="250"/>
         </scene>
+        <!--Editor View Controller-->
+        <scene sceneID="lhX-jc-yF0">
+            <objects>
+                <viewController storyboardIdentifier="EditorViewController" id="4i3-Bv-Vby" customClass="EditorViewController" sceneMemberID="viewController">
+                    <view key="view" id="VRC-G5-jHx">
+                        <rect key="frame" x="0.0" y="0.0" width="354" height="72"/>
+                        <autoresizingMask key="autoresizingMask"/>
+                        <subviews>
+                            <textField verticalHuggingPriority="750" translatesAutoresizingMaskIntoConstraints="NO" id="qmm-Wt-gtk">
+                                <rect key="frame" x="20" y="20" width="259" height="32"/>
+                                <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" selectable="YES" editable="YES" sendsActionOnEndEditing="YES" borderStyle="bezel" drawsBackground="YES" id="OQN-pQ-L4F">
+                                    <font key="font" size="22" name="Courier"/>
+                                    <color key="textColor" name="controlTextColor" catalog="System" colorSpace="catalog"/>
+                                    <color key="backgroundColor" name="textBackgroundColor" catalog="System" colorSpace="catalog"/>
+                                </textFieldCell>
+                            </textField>
+                            <button verticalHuggingPriority="750" translatesAutoresizingMaskIntoConstraints="NO" id="xyi-eb-Mef">
+                                <rect key="frame" x="281" y="18" width="59" height="32"/>
+                                <buttonCell key="cell" type="push" title="OK" bezelStyle="rounded" alignment="center" borderStyle="border" imageScaling="proportionallyDown" inset="2" id="xrW-tL-mbE">
+                                    <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
+                                    <font key="font" metaFont="system"/>
+                                    <string key="keyEquivalent" base64-UTF8="YES">
+DQ
+</string>
+                                </buttonCell>
+                                <connections>
+                                    <action selector="okButtonPressed:" target="4i3-Bv-Vby" id="HR9-cs-ZHt"/>
+                                </connections>
+                            </button>
+                        </subviews>
+                        <constraints>
+                            <constraint firstItem="qmm-Wt-gtk" firstAttribute="centerY" secondItem="xyi-eb-Mef" secondAttribute="centerY" id="2jh-gT-v3V"/>
+                            <constraint firstAttribute="trailing" secondItem="xyi-eb-Mef" secondAttribute="trailing" constant="20" symbolic="YES" id="Ayy-ve-oXj"/>
+                            <constraint firstItem="xyi-eb-Mef" firstAttribute="leading" secondItem="qmm-Wt-gtk" secondAttribute="trailing" constant="8" symbolic="YES" id="OWQ-wP-hSk"/>
+                            <constraint firstItem="qmm-Wt-gtk" firstAttribute="leading" secondItem="VRC-G5-jHx" secondAttribute="leading" constant="20" symbolic="YES" id="bUO-Jh-AWS"/>
+                            <constraint firstItem="qmm-Wt-gtk" firstAttribute="top" secondItem="VRC-G5-jHx" secondAttribute="top" constant="20" symbolic="YES" id="qm7-H3-IGa"/>
+                            <constraint firstAttribute="bottom" secondItem="qmm-Wt-gtk" secondAttribute="bottom" constant="20" symbolic="YES" id="vcF-3Y-mon"/>
+                        </constraints>
+                    </view>
+                    <connections>
+                        <outlet property="editorTextField" destination="qmm-Wt-gtk" id="Wsf-6F-0dt"/>
+                    </connections>
+                </viewController>
+                <customObject id="hQs-OE-asr" userLabel="First Responder" customClass="NSResponder" sceneMemberID="firstResponder"/>
+            </objects>
+            <point key="canvasLocation" x="605" y="235"/>
+        </scene>
         <!--Source View Controller-->
         <scene sceneID="hIz-AP-VOD">
             <objects>
@@ -726,11 +774,11 @@
                                         </textView>
                                     </subviews>
                                 </clipView>
-                                <scroller key="horizontalScroller" hidden="YES" wantsLayer="YES" verticalHuggingPriority="750" horizontal="YES" id="LdF-Xh-0GU">
+                                <scroller key="horizontalScroller" hidden="YES" verticalHuggingPriority="750" horizontal="YES" id="LdF-Xh-0GU">
                                     <rect key="frame" x="-100" y="-100" width="240" height="16"/>
                                     <autoresizingMask key="autoresizingMask"/>
                                 </scroller>
-                                <scroller key="verticalScroller" wantsLayer="YES" verticalHuggingPriority="750" horizontal="NO" id="Mne-rt-Wtk">
+                                <scroller key="verticalScroller" verticalHuggingPriority="750" horizontal="NO" id="Mne-rt-Wtk">
                                     <rect key="frame" x="760" y="0.0" width="16" height="698"/>
                                     <autoresizingMask key="autoresizingMask"/>
                                 </scroller>
@@ -745,7 +793,7 @@
                             </textField>
                             <scrollView wantsLayer="YES" autohidesScrollers="YES" horizontalLineScroll="10" horizontalPageScroll="10" verticalLineScroll="10" verticalPageScroll="10" usesPredominantAxisScrolling="NO" translatesAutoresizingMaskIntoConstraints="NO" id="VIg-S4-rMI">
                                 <rect key="frame" x="20" y="20" width="200" height="728"/>
-                                <clipView key="contentView" id="spr-Yh-tHV">
+                                <clipView key="contentView" drawsBackground="NO" id="spr-Yh-tHV">
                                     <rect key="frame" x="1" y="1" width="198" height="726"/>
                                     <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                                     <subviews>
@@ -766,11 +814,11 @@
                                 <constraints>
                                     <constraint firstAttribute="width" constant="200" id="FUc-yw-ZMi"/>
                                 </constraints>
-                                <scroller key="horizontalScroller" hidden="YES" wantsLayer="YES" verticalHuggingPriority="750" horizontal="YES" id="Wdm-OH-luN">
+                                <scroller key="horizontalScroller" hidden="YES" verticalHuggingPriority="750" horizontal="YES" id="Wdm-OH-luN">
                                     <rect key="frame" x="1" y="669" width="198" height="16"/>
                                     <autoresizingMask key="autoresizingMask"/>
                                 </scroller>
-                                <scroller key="verticalScroller" hidden="YES" wantsLayer="YES" verticalHuggingPriority="750" doubleValue="1" horizontal="NO" id="W8a-PB-Uia">
+                                <scroller key="verticalScroller" hidden="YES" verticalHuggingPriority="750" doubleValue="1" horizontal="NO" id="W8a-PB-Uia">
                                     <rect key="frame" x="234" y="1" width="15" height="143"/>
                                     <autoresizingMask key="autoresizingMask"/>
                                 </scroller>

@@ -2,9 +2,11 @@
 
 #import "statement_inserter.hpp"
 
+#import "EditorViewController.h"
+
 @protocol SourceTextViewDataSource;
 
-@interface SourceTextView : NSTextView
+@interface SourceTextView : NSTextView<EditorViewControllerDelegate>
 
 @property(weak) id<SourceTextViewDataSource> dataSource;
 

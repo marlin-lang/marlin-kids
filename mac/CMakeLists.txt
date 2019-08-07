@@ -1,6 +1,7 @@
 set(HEADERS
     AppDelegate.h
     Document.h
+    EditorViewController.h
     NSObject+Casting.h
     SourceTextView.h
     SourceTheme.h
@@ -10,6 +11,7 @@ set(HEADERS
 set(SOURCES
     AppDelegate.mm
     Document.mm
+    EditorViewController.mm
     main.mm
     NSObject+Casting.mm
     SourceTextView.mm

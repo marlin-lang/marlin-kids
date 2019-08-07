@@ -4,6 +4,12 @@
 
 #import "SourceTheme.h"
 
+@interface SourceTextView ()
+
+@property(nonatomic, strong) NSPopover* popover;
+
+@end
+
 @implementation SourceTextView {
   std::optional<marlin::control::statement_inserter> _statementInserter;
   NSRange _selectionRange;
@@ -20,12 +26,16 @@
 
 - (void)mouseDown:(NSEvent*)theEvent {
   [super mouseDown:theEvent];
-
-  auto eventLocation = [theEvent locationInWindow];
-  auto loc = [self convertPoint:eventLocation fromView:nil];
-  auto index = [self characterIndexForInsertionAtPoint:loc];
-  _selectionRange = [self.dataSource textView:self selectRangeContainsIndex:index];
-  [self setNeedsDisplayInRect:self.bounds avoidAdditionalLayout:YES];
+  self.popover = [NSPopover new];
+  self.popover.behavior = NSPopoverBehaviorApplicationDefined;
+  NSStoryboard* storyboard = [NSStoryboard storyboardWithName:@"Main" bundle:nil];
+  EditorViewController* vc =
+      [storyboard instantiateControllerWithIdentifier:@"EditorViewController"];
+  vc.delegate = self;
+  self.popover.contentViewController = vc;
+  [self.popover showRelativeToRect:NSMakeRect(100, 100, 100, 100)
+                            ofView:self
+                     preferredEdge:NSMinYEdge];
 }
 
 - (void)mouseMoved:(NSEvent*)event {
@@ -123,6 +133,10 @@
     }
   }
   return numberOfLines;
+}
+
+- (void)viewController:(EditorViewController*)vc finishEditWithString:(NSString*)string {
+  [self.popover close];
 }
 
 @end
