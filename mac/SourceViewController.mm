@@ -80,7 +80,7 @@
     writeItemsAtIndexPaths:(NSSet<NSIndexPath *> *)indexPaths
               toPasteboard:(NSPasteboard *)pasteboard {
   return [pasteboard setString:[NSString stringWithFormat:@"%ld", indexPaths.anyObject.item]
-                       forType:NSPasteboardTypeString];
+                       forType:@"marlin.statement"];
 }
 
 - (NSRange)textView:(SourceTextView *)textView selectRageContainsIndex:(NSUInteger)index {

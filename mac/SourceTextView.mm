@@ -149,12 +149,16 @@
 
 @implementation SourceTextView (DragAndDrop)
 
+- (NSArray<NSPasteboardType>*)acceptableDragTypes {
+  return @[ @"marlin.statement" ];
+}
+
+- (NSArray<NSPasteboardType>*)readablePasteboardTypes {
+  return @[ @"marlin.statement" ];
+}
+
 - (NSDragOperation)dragOperationForDraggingInfo:(id<NSDraggingInfo>)dragInfo
                                            type:(NSPasteboardType)type {
-  if (type != NSStringPboardType) {
-    return NSDragOperationNone;
-  }
-
   if (!_statementInserter.has_value()) {
     _statementInserter = [self.dataSource statementInserterForTextView:self];
   }
@@ -177,7 +181,7 @@
 
 - (BOOL)performDragOperation:(id<NSDraggingInfo>)sender {
   if (_statementInserter.has_value() && _statementInserter->can_insert()) {
-    auto index = [sender.draggingPasteboard stringForType:NSPasteboardTypeString].integerValue;
+    auto index = [sender.draggingPasteboard stringForType:@"marlin.statement"].integerValue;
     auto source = _statementInserter->insert(marlin::control::statement_prototypes[index]);
     NSString* string = [NSString stringWithCString:source.source.c_str()
                                           encoding:NSUTF8StringEncoding];
