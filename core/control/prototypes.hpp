@@ -9,6 +9,8 @@
 
 namespace marlin::control {
 
+static constexpr size_t indent_space_count{2};
+
 struct statement_prototype {
   std::string name;
   std::pair<ast::node, source_insertion> (*construct)(size_t line,
