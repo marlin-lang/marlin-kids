@@ -6,7 +6,7 @@
 
 @protocol SourceTextViewDataSource;
 
-@interface SourceTextView : NSTextView<EditorViewControllerDelegate>
+@interface SourceTextView : NSTextView <EditorViewControllerDelegate>
 
 @property(weak) id<SourceTextViewDataSource> dataSource;
 

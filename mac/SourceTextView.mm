@@ -43,11 +43,17 @@
 }
 
 - (void)interpretKeyEvents:(NSArray<NSEvent*>*)eventArray {
-  [self.textStorage replaceCharactersInRange:NSMakeRange(0, self.textStorage.string.length)
-                                  withString:@"5 + 6"];
+  // [self.textStorage replaceCharactersInRange:NSMakeRange(0, self.textStorage.string.length)
+  //                                 withString:@"5 + 6"];
 }
 
-- (void)drawInsertionPointInRect:(NSRect)rect color:(NSColor*)color turnedOn:(BOOL)flag {
+- (BOOL)shouldDrawInsertionPoint {
+  return false;
+}
+
+- (NSRange)selectionRangeForProposedRange:(NSRange)proposedCharRange
+                              granularity:(NSSelectionGranularity)granularity {
+  return NSMakeRange(0, 0);
 }
 
 - (void)drawStatementInsertionPoint {
@@ -143,37 +149,35 @@
 
 @implementation SourceTextView (DragAndDrop)
 
-- (NSDragOperation)draggingEntered:(id<NSDraggingInfo>)sender {
-  _statementInserter = [self.dataSource statementInserterForTextView:self];
-  return NSDragOperationCopy;
-}
-
-- (NSDragOperation)draggingUpdated:(id<NSDraggingInfo>)sender {
-  auto location = [self convertPoint:sender.draggingLocation fromView:nil];
-  auto index = [self characterIndexForInsertionAtPoint:location];
-  if (_statementInserter.has_value()) {
-    auto line = [self lineContainsIndex:index];
-    _statementInserter->move_to_line(line);
-    if (_statementInserter->can_insert()) {
-      auto range = [self.textStorage.string lineRangeForRange:NSMakeRange(index, 0)];
-      _statementInsertionPoint = range.location;
-      [self setNeedsDisplayInRect:self.bounds avoidAdditionalLayout:NO];
-      return NSDragOperationCopy;
-    }
+- (NSDragOperation)dragOperationForDraggingInfo:(id<NSDraggingInfo>)dragInfo
+                                           type:(NSPasteboardType)type {
+  if (type != NSStringPboardType) {
+    return NSDragOperationNone;
   }
-  [self setNeedsDisplayInRect:self.bounds avoidAdditionalLayout:NO];
-  return NSDragOperationNone;
-}
 
-- (void)draggingExited:(id<NSDraggingInfo>)sender {
-  _statementInserter = std::nullopt;
-  _statementInsertionPoint = -1;
-  [self setNeedsDisplayInRect:self.bounds avoidAdditionalLayout:YES];
+  if (!_statementInserter.has_value()) {
+    _statementInserter = [self.dataSource statementInserterForTextView:self];
+  }
+
+  auto location = [self convertPoint:dragInfo.draggingLocation fromView:nil];
+  auto index = [self characterIndexForInsertionAtPoint:location];
+  auto line = [self lineContainsIndex:index];
+  _statementInserter->move_to_line(line);
+  if (_statementInserter->can_insert()) {
+    auto range = [self.textStorage.string lineRangeForRange:NSMakeRange(index, 0)];
+    _statementInsertionPoint = range.location;
+    [self setNeedsDisplayInRect:self.bounds avoidAdditionalLayout:NO];
+    return NSDragOperationCopy;
+  } else {
+    _statementInsertionPoint = -1;
+    [self setNeedsDisplayInRect:self.bounds avoidAdditionalLayout:NO];
+    return NSDragOperationNone;
+  }
 }
 
 - (BOOL)performDragOperation:(id<NSDraggingInfo>)sender {
-  auto index = [sender.draggingPasteboard stringForType:NSPasteboardTypeString].integerValue;
   if (_statementInserter.has_value() && _statementInserter->can_insert()) {
+    auto index = [sender.draggingPasteboard stringForType:NSPasteboardTypeString].integerValue;
     auto source = _statementInserter->insert(marlin::control::statement_prototypes[index]);
     NSString* string = [NSString stringWithCString:source.source.c_str()
                                           encoding:NSUTF8StringEncoding];
@@ -184,9 +188,15 @@
     _statementInsertionPoint = -1;
     [self setNeedsDisplayInRect:self.bounds avoidAdditionalLayout:YES];
     return YES;
+  } else {
+    return NO;
   }
+}
+
+- (void)cleanUpAfterDragOperation {
+  _statementInserter = std::nullopt;
+  _statementInsertionPoint = -1;
   [self setNeedsDisplayInRect:self.bounds avoidAdditionalLayout:YES];
-  return NO;
 }
 
 @end

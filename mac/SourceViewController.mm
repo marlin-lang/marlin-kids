@@ -67,7 +67,7 @@
 }
 
 - (marlin::control::statement_inserter)statementInserterForTextView:(SourceTextView *)textView {
-  return marlin::control::statement_inserter{_document.content};
+  return {_document.content};
 }
 
 - (BOOL)collectionView:(NSCollectionView *)collectionView
