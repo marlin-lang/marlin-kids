@@ -66,10 +66,6 @@
   return NSMakeRange(0, 0);
 }
 
-- (marlin::control::statement_inserter)statementInserterForTextView:(SourceTextView *)textView {
-  return {_document.content};
-}
-
 - (BOOL)collectionView:(NSCollectionView *)collectionView
     canDragItemsAtIndexPaths:(NSSet<NSIndexPath *> *)indexPaths
                    withEvent:(NSEvent *)event {
@@ -83,8 +79,15 @@
                        forType:@"marlin.statement"];
 }
 
-- (NSRange)textView:(SourceTextView *)textView selectRageContainsIndex:(NSUInteger)index {
-  return NSMakeRange(0, 0);
+#pragma mark - implement SourceTextViewDataSource
+
+- (marlin::control::statement_inserter)statementInserterForTextView:(SourceTextView *)textView {
+  return {_document.content};
+}
+
+- (marlin::ast::base &)textView:(SourceTextView *)textView
+          nodeContainsSourceLoc:(marlin::source_loc)loc {
+  return _document.content.locate(loc);
 }
 
 @end

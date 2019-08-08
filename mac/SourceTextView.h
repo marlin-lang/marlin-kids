@@ -1,5 +1,6 @@
 #import <Cocoa/Cocoa.h>
 
+#import "base.hpp"
 #import "statement_inserter.hpp"
 
 #import "EditorViewController.h"
@@ -14,8 +15,9 @@
 
 @protocol SourceTextViewDataSource
 
-- (NSRange)textView:(SourceTextView*)textView selectRangeContainsIndex:(NSUInteger)index;
-
 - (marlin::control::statement_inserter)statementInserterForTextView:(SourceTextView*)textView;
+
+- (marlin::ast::base&)textView:(SourceTextView*)textView
+         nodeContainsSourceLoc:(marlin::source_loc)loc;
 
 @end

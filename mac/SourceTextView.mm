@@ -1,6 +1,7 @@
 #import "SourceTextView.h"
 
 #import <optional>
+#import <utility>
 
 #import "SourceTheme.h"
 
@@ -26,25 +27,28 @@
 
 - (void)mouseDown:(NSEvent*)theEvent {
   [super mouseDown:theEvent];
-  self.popover = [NSPopover new];
-  self.popover.behavior = NSPopoverBehaviorApplicationDefined;
-  NSStoryboard* storyboard = [NSStoryboard storyboardWithName:@"Main" bundle:nil];
-  EditorViewController* vc =
-      [storyboard instantiateControllerWithIdentifier:@"EditorViewController"];
-  vc.delegate = self;
-  self.popover.contentViewController = vc;
-  [self.popover showRelativeToRect:NSMakeRect(100, 100, 100, 100)
-                            ofView:self
-                     preferredEdge:NSMinYEdge];
+
+  auto location = [self convertPoint:theEvent.locationInWindow fromView:nil];
+  auto index = [self characterIndexForInsertionAtPoint:location];
+  auto sourceLoc = [self sourceLocOfIndex:index];
+  auto& node = [self.dataSource textView:self nodeContainsSourceLoc:sourceLoc];
+  if (node.is<marlin::ast::expression_placeholder>()) {
+    self.popover = [NSPopover new];
+    self.popover.behavior = NSPopoverBehaviorApplicationDefined;
+    NSStoryboard* storyboard = [NSStoryboard storyboardWithName:@"Main" bundle:nil];
+    EditorViewController* vc =
+        [storyboard instantiateControllerWithIdentifier:@"EditorViewController"];
+    vc.delegate = self;
+    self.popover.contentViewController = vc;
+    auto begin = [self indexOfSourceLoc:node.source_code_range.begin];
+    auto end = [self indexOfSourceLoc:node.source_code_range.end];
+    auto rect = [self rectOfRange:NSMakeRange(begin, end - begin + 1)];
+    [self.popover showRelativeToRect:rect ofView:self preferredEdge:NSMinYEdge];
+  }
 }
 
 - (void)mouseMoved:(NSEvent*)event {
   [NSCursor.arrowCursor set];
-}
-
-- (void)interpretKeyEvents:(NSArray<NSEvent*>*)eventArray {
-  // [self.textStorage replaceCharactersInRange:NSMakeRange(0, self.textStorage.string.length)
-  //                                 withString:@"5 + 6"];
 }
 
 - (BOOL)shouldDrawInsertionPoint {
@@ -54,6 +58,10 @@
 - (NSRange)selectionRangeForProposedRange:(NSRange)proposedCharRange
                               granularity:(NSSelectionGranularity)granularity {
   return NSMakeRange(0, 0);
+}
+
+- (void)viewController:(EditorViewController*)vc finishEditWithString:(NSString*)string {
+  [self.popover close];
 }
 
 - (void)drawStatementInsertionPoint {
@@ -80,7 +88,7 @@
 - (void)drawViewBackgroundInRect:(NSRect)rect {
   [super drawViewBackgroundInRect:rect];
   if (_selectionRange.length > 0) {
-    auto selectionRect = self.selectionRect;
+    auto selectionRect = [self rectOfRange:_selectionRange];
     [NSGraphicsContext saveGraphicsState];
     NSBezierPath* path = [NSBezierPath bezierPathWithRoundedRect:selectionRect
                                                          xRadius:5.0f
@@ -112,12 +120,12 @@
   }
 }
 
-- (NSRect)selectionRect {
+- (NSRect)rectOfRange:(NSRange)range {
   auto* theme = [SourceTheme new];
   NSSize oneCharSize = [@"a" sizeWithAttributes:theme.allAttrs];
-  NSRange range = [self.layoutManager glyphRangeForCharacterRange:_selectionRange
-                                             actualCharacterRange:NULL];
-  NSRect rect = [self.layoutManager boundingRectForGlyphRange:range
+  NSRange glyphRange = [self.layoutManager glyphRangeForCharacterRange:range
+                                                  actualCharacterRange:NULL];
+  NSRect rect = [self.layoutManager boundingRectForGlyphRange:glyphRange
                                               inTextContainer:self.textContainer];
   rect.origin.x += self.textContainerOrigin.x;
   rect.origin.y += self.textContainerOrigin.y;
@@ -125,24 +133,35 @@
                     rect.size.width + oneCharSize.width * 0.5, rect.size.height);
 }
 
-- (uint)lineContainsIndex:(NSUInteger)index {
-  NSUInteger indexOfGlyph = 0;
+- (marlin::source_loc)sourceLocOfIndex:(NSUInteger)index {
+  NSUInteger currentLineIndex = 0;
+  NSUInteger previousLineIndex = 0;
   NSUInteger numberOfLines = 0;
-  while (indexOfGlyph <= index) {
+  while (currentLineIndex <= index) {
     ++numberOfLines;
-    if (indexOfGlyph < self.textStorage.string.length) {
+    if (currentLineIndex < self.textStorage.string.length) {
       NSRange lineRange;
-      [self.layoutManager lineFragmentRectForGlyphAtIndex:indexOfGlyph effectiveRange:&lineRange];
-      indexOfGlyph = NSMaxRange(lineRange);
+      [self.layoutManager lineFragmentRectForGlyphAtIndex:currentLineIndex
+                                           effectiveRange:&lineRange];
+      previousLineIndex = currentLineIndex;
+      currentLineIndex = NSMaxRange(lineRange);
     } else {
       break;
     }
   }
-  return numberOfLines;
+  return {numberOfLines, index - previousLineIndex + 1};
 }
 
-- (void)viewController:(EditorViewController*)vc finishEditWithString:(NSString*)string {
-  [self.popover close];
+- (NSUInteger)indexOfSourceLoc:(marlin::source_loc)loc {
+  NSUInteger currentLineIndex = 0;
+  NSUInteger numberOfLines = 1;
+  while (numberOfLines < loc.line) {
+    ++numberOfLines;
+    NSRange lineRange;
+    [self.layoutManager lineFragmentRectForGlyphAtIndex:currentLineIndex effectiveRange:&lineRange];
+    currentLineIndex = NSMaxRange(lineRange);
+  }
+  return currentLineIndex + loc.column - 1;
 }
 
 @end
@@ -165,7 +184,7 @@
 
   auto location = [self convertPoint:dragInfo.draggingLocation fromView:nil];
   auto index = [self characterIndexForInsertionAtPoint:location];
-  auto line = [self lineContainsIndex:index];
+  auto [line, column]{[self sourceLocOfIndex:index]};
   _statementInserter->move_to_line(line);
   if (_statementInserter->can_insert()) {
     auto range = [self.textStorage.string lineRangeForRange:NSMakeRange(index, 0)];

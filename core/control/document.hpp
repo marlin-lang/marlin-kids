@@ -41,6 +41,13 @@ struct document {
   explicit document(ast::node program) noexcept
       : _program(std::move(program)) {}
 
+  [[nodiscard]] ast::base& locate(source_loc loc) {
+    return _program->locate(loc);
+  }
+  [[nodiscard]] const ast::base& locate(source_loc loc) const {
+    return _program->locate(loc);
+  }
+
   const auto& output() const noexcept { return _output; }
 
   void execute() { _output.clear(); }
