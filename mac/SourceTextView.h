@@ -1,6 +1,7 @@
 #import <Cocoa/Cocoa.h>
 
 #import "base.hpp"
+#import "source_modifications.hpp"
 #import "statement_inserter.hpp"
 
 #import "EditorViewController.h"
@@ -19,5 +20,9 @@
 
 - (marlin::ast::base&)textView:(SourceTextView*)textView
          nodeContainsSourceLoc:(marlin::source_loc)loc;
+
+- (marlin::control::source_replacement)textView:(SourceTextView*)textView
+                           replacePlaceholderAt:(marlin::source_loc)loc
+                                     withString:(NSString*)string;
 
 @end

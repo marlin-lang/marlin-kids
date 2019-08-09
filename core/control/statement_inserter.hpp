@@ -26,7 +26,7 @@ struct statement_inserter {
 
   bool can_insert() const noexcept { return _loc.has_value(); }
   source_loc get_insert_location() const noexcept {
-    return {_loc->line, _loc->indent * indent_space_count};
+    return {_loc->line, _loc->indent * indent_space_count + 1};
   }
 
   void move_to_line(size_t line) {

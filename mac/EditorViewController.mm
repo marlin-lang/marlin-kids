@@ -1,39 +1,8 @@
 #import "EditorViewController.h"
 
-@interface TestFormater : NSFormatter
-
-@end
-
-@implementation TestFormater
-
-- (NSString *)stringForObjectValue:(id)obj {
-  return @"";
-}
-
-- (BOOL)getObjectValue:(out id _Nullable __autoreleasing *)obj
-             forString:(NSString *)string
-      errorDescription:(out NSString *__autoreleasing _Nullable *)error {
-  return YES;
-}
-
-- (BOOL)isPartialStringValid:(NSString *)partialString
-            newEditingString:(NSString *__autoreleasing _Nullable *)newString
-            errorDescription:(NSString *__autoreleasing _Nullable *)error {
-  for (auto i = 0; i < partialString.length; ++i) {
-    auto ch = [partialString characterAtIndex:i];
-    if (ch < '0' || ch > '9') {
-      NSBeep();
-      return NO;
-    }
-  }
-  return YES;
-}
-
-@end
-
 @interface EditorViewController ()
 
-@property(weak) IBOutlet NSTextField *editorTextField;
+@property(weak) IBOutlet NSTextField* editorTextField;
 
 @end
 
@@ -42,7 +11,10 @@
 - (void)viewDidLoad {
   [super viewDidLoad];
 
-  self.editorTextField.cell.formatter = [TestFormater new];
+  NSNumberFormatter* formatter = [NSNumberFormatter new];
+  formatter.minimumFractionDigits = 0;
+  formatter.maximumFractionDigits = 10;
+  self.editorTextField.cell.formatter = formatter;
   self.editorTextField.placeholderString = @"Please input number";
 }
 

@@ -15,12 +15,14 @@
   std::optional<marlin::control::statement_inserter> _statementInserter;
   NSRange _selectionRange;
   NSInteger _statementInsertionPoint;
+  marlin::source_loc _expression_loc;
 }
 
 - (instancetype)initWithCoder:(NSCoder*)coder {
   if (self = [super initWithCoder:coder]) {
     _selectionRange = NSMakeRange(0, 0);
     _statementInsertionPoint = -1;
+    _expression_loc = {0, 0};
   }
   return self;
 }
@@ -30,8 +32,8 @@
 
   auto location = [self convertPoint:theEvent.locationInWindow fromView:nil];
   auto index = [self characterIndexForInsertionAtPoint:location];
-  auto sourceLoc = [self sourceLocOfIndex:index];
-  auto& node = [self.dataSource textView:self nodeContainsSourceLoc:sourceLoc];
+  _expression_loc = [self sourceLocOfIndex:index];
+  auto& node = [self.dataSource textView:self nodeContainsSourceLoc:_expression_loc];
   if (node.is<marlin::ast::expression_placeholder>()) {
     self.popover = [NSPopover new];
     self.popover.behavior = NSPopoverBehaviorApplicationDefined;
@@ -42,7 +44,7 @@
     self.popover.contentViewController = vc;
     auto begin = [self indexOfSourceLoc:node.source_code_range.begin];
     auto end = [self indexOfSourceLoc:node.source_code_range.end];
-    auto rect = [self rectOfRange:NSMakeRange(begin, end - begin + 1)];
+    auto rect = [self rectOfRange:NSMakeRange(begin, end - begin)];
     [self.popover showRelativeToRect:rect ofView:self preferredEdge:NSMinYEdge];
   }
 }
@@ -60,29 +62,31 @@
   return NSMakeRange(0, 0);
 }
 
-- (void)viewController:(EditorViewController*)vc finishEditWithString:(NSString*)string {
-  [self.popover close];
-}
-
 - (void)drawStatementInsertionPoint {
-  CGFloat y = 0;
-  if (_statementInsertionPoint < self.textStorage.string.length) {
-    auto rect = [self.layoutManager lineFragmentRectForGlyphAtIndex:_statementInsertionPoint
-                                                     effectiveRange:nil];
-    y = rect.origin.y;
-  } else {
-    auto rect = [self.layoutManager lineFragmentRectForGlyphAtIndex:_statementInsertionPoint - 1
-                                                     effectiveRange:nil];
-    y = rect.origin.y + rect.size.height;
+  if (_statementInsertionPoint >= 0 && _statementInserter.has_value() &&
+      _statementInserter->can_insert()) {
+    auto* theme = [SourceTheme new];
+    NSSize oneCharSize = [@"a" sizeWithAttributes:theme.allAttrs];
+    CGFloat x = oneCharSize.width * (_statementInserter->get_insert_location().column - 1);
+    CGFloat y = 0;
+    if (_statementInsertionPoint < self.textStorage.string.length) {
+      auto rect = [self.layoutManager lineFragmentRectForGlyphAtIndex:_statementInsertionPoint
+                                                       effectiveRange:nil];
+      y = rect.origin.y;
+    } else {
+      auto rect = [self.layoutManager lineFragmentRectForGlyphAtIndex:_statementInsertionPoint - 1
+                                                       effectiveRange:nil];
+      y = rect.origin.y + rect.size.height;
+    }
+    [NSGraphicsContext saveGraphicsState];
+    NSBezierPath* line = [NSBezierPath bezierPath];
+    [line moveToPoint:NSMakePoint(x + self.textContainer.lineFragmentPadding, y)];
+    [line lineToPoint:NSMakePoint(x + 200, y)];
+    [line setLineWidth:5.0];
+    [[NSColor blueColor] set];
+    [line stroke];
+    [NSGraphicsContext restoreGraphicsState];
   }
-  [NSGraphicsContext saveGraphicsState];
-  NSBezierPath* line = [NSBezierPath bezierPath];
-  [line moveToPoint:NSMakePoint(0 + self.textContainer.lineFragmentPadding, y)];
-  [line lineToPoint:NSMakePoint(200, y)];
-  [line setLineWidth:5.0];
-  [[NSColor blueColor] set];
-  [line stroke];
-  [NSGraphicsContext restoreGraphicsState];
 }
 
 - (void)drawViewBackgroundInRect:(NSRect)rect {
@@ -114,10 +118,7 @@
     [path stroke];
     [NSGraphicsContext restoreGraphicsState];
   }
-  if (_statementInsertionPoint >= 0 && _statementInserter.has_value() &&
-      _statementInserter->can_insert()) {
-    [self drawStatementInsertionPoint];
-  }
+  [self drawStatementInsertionPoint];
 }
 
 - (NSRect)rectOfRange:(NSRange)range {
@@ -162,6 +163,25 @@
     currentLineIndex = NSMaxRange(lineRange);
   }
   return currentLineIndex + loc.column - 1;
+}
+
+#pragma mark - EditorViewControllerDelegate implementation
+
+- (void)viewController:(EditorViewController*)vc finishEditWithString:(NSString*)string {
+  [self.popover close];
+  auto update = [self.dataSource textView:self
+                     replacePlaceholderAt:_expression_loc
+                               withString:string];
+  auto begin = [self indexOfSourceLoc:update.range.begin];
+  auto end = [self indexOfSourceLoc:update.range.end];
+  auto range = NSMakeRange(begin, end - begin);
+  NSString* updatedString = [NSString stringWithCString:update.source.c_str()
+                                               encoding:NSUTF8StringEncoding];
+  [self.textStorage replaceCharactersInRange:range withString:updatedString];
+  [[SourceTheme new] applyTo:self.textStorage
+                       range:NSMakeRange(begin, updatedString.length)
+              withHighlights:update.highlights];
+  _expression_loc = {0, 0};
 }
 
 @end

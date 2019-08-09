@@ -79,7 +79,7 @@
                        forType:@"marlin.statement"];
 }
 
-#pragma mark - implement SourceTextViewDataSource
+#pragma mark - SourceTextViewDataSource implementation
 
 - (marlin::control::statement_inserter)statementInserterForTextView:(SourceTextView *)textView {
   return {_document.content};
@@ -88,6 +88,13 @@
 - (marlin::ast::base &)textView:(SourceTextView *)textView
           nodeContainsSourceLoc:(marlin::source_loc)loc {
   return _document.content.locate(loc);
+}
+
+- (marlin::control::source_replacement)textView:(SourceTextView *)textView
+                           replacePlaceholderAt:(marlin::source_loc)loc
+                                     withString:(NSString *)string {
+  auto &node = _document.content.locate(loc);
+  return _document.content.replace_placeholder_with_number_literal(node, {string.UTF8String});
 }
 
 @end
