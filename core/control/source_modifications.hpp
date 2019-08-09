@@ -47,6 +47,18 @@ struct source_insertion {
         highlights{std::move(_highlights)} {}
 };
 
+struct source_replacement {
+  source_range range;
+  std::string source;
+  std::vector<highlight_token> highlights;
+
+  source_replacement(source_range _range, std::string _source,
+                     std::vector<highlight_token> _highlights)
+      : range{_range},
+        source{std::move(_source)},
+        highlights{std::move(_highlights)} {}
+};
+
 }  // namespace marlin::control
 
 #endif  // marlin_control_source_modifications_hpp

@@ -32,10 +32,13 @@ TEST_CASE("control::Insert number literal to placeholder", "[control]") {
 
   auto &placeholder = document.locate({2, 20});
   REQUIRE(placeholder.is<marlin::ast::expression_placeholder>());
-  auto literal = marlin::ast::make<marlin::ast::number_literal>("12");
-  literal->source_code_range = {{2, 19}, {2, 21}};
-  auto replaced = document.replace_expression(placeholder, std::move(literal));
-  REQUIRE(replaced->is<marlin::ast::expression_placeholder>());
+  auto update =
+      document.replace_placeholder_with_number_literal(placeholder, "12");
+  REQUIRE(update.source == "12");
+  REQUIRE(update.range.begin.line == 2);
+  REQUIRE(update.range.begin.column == 19);
+  REQUIRE(update.range.begin.line == 2);
+  REQUIRE(update.range.begin.column == 21);
 
   auto &declaration = document.locate({2, 3});
   REQUIRE(declaration.is<marlin::ast::variable_declaration>());

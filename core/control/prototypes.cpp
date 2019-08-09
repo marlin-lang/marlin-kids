@@ -48,14 +48,14 @@ const std::array<statement_prototype, 4> statement_prototypes = {
         auto node{ast::make<ast::variable_declaration>(
             ast::make<ast::variable_placeholder>("variable"),
             ast::make<ast::expression_placeholder>("value"))};
-        node->source_code_range = {{line, indent_length},
-                                   {line, indent_length + final_line_end}};
+        node->source_code_range = {{line, 1 + indent_length},
+                                   {line, 1 + indent_length + final_line_end}};
         node->as<ast::variable_declaration>().variable()->source_code_range = {
-            {line, indent_length + variable_start},
-            {line, indent_length + variable_end}};
+            {line, 1 + indent_length + variable_start},
+            {line, 1 + indent_length + variable_end}};
         node->as<ast::variable_declaration>().value()->source_code_range = {
-            {line, indent_length + value_start},
-            {line, indent_length + value_end}};
+            {line, 1 + indent_length + value_start},
+            {line, 1 + indent_length + value_end}};
 
         std::vector<highlight_token> highlights{
             highlight_token{highlight_token_type::keyword, indent_length, 3},
@@ -83,11 +83,11 @@ const std::array<statement_prototype, 4> statement_prototypes = {
 
         auto node{ast::make<ast::print_statement>(
             ast::make<ast::expression_placeholder>("value"))};
-        node->source_code_range = {{line, indent_length},
-                                   {line, indent_length + final_line_end}};
+        node->source_code_range = {{line, 1 + indent_length},
+                                   {line, 1 + indent_length + final_line_end}};
         node->as<ast::print_statement>().value()->source_code_range = {
-            {line, indent_length + value_start},
-            {line, indent_length + value_end}};
+            {line, 1 + indent_length + value_start},
+            {line, 1 + indent_length + value_end}};
 
         std::vector<highlight_token> highlights{highlight_token{
             highlight_token_type::placeholder, indent_length + value_start,
@@ -111,11 +111,11 @@ const std::array<statement_prototype, 4> statement_prototypes = {
         auto node{ast::make<ast::if_statement>(
             ast::make<ast::expression_placeholder>("value"),
             std::vector<ast::node>{})};
-        node->source_code_range = {{line, indent_length},
-                                   {line + 1, indent_length + 1}};
+        node->source_code_range = {{line, 1 + indent_length},
+                                   {line + 1, 1 + indent_length + 1}};
         node->as<ast::if_statement>().condition()->source_code_range = {
-            {line, indent_length + condition_start},
-            {line, indent_length + condition_end}};
+            {line, 1 + indent_length + condition_start},
+            {line, 1 + indent_length + condition_end}};
 
         std::vector<highlight_token> highlights{
             highlight_token{highlight_token_type::keyword, indent_length, 2},
@@ -141,11 +141,11 @@ const std::array<statement_prototype, 4> statement_prototypes = {
         auto node{ast::make<ast::if_else_statement>(
             ast::make<ast::expression_placeholder>("value"),
             std::vector<ast::node>{}, std::vector<ast::node>{})};
-        node->source_code_range = {{line, indent_length},
-                                   {line + 2, indent_length + 1}};
+        node->source_code_range = {{line, 1 + indent_length},
+                                   {line + 2, 1 + indent_length + 1}};
         node->as<ast::if_else_statement>().condition()->source_code_range = {
-            {line, indent_length + condition_start},
-            {line, indent_length + condition_end}};
+            {line, 1 + indent_length + condition_start},
+            {line, 1 + indent_length + condition_end}};
 
         std::vector<highlight_token> highlights{
             highlight_token{highlight_token_type::keyword, indent_length, 2},

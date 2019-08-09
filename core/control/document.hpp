@@ -5,9 +5,6 @@
 #include <string>
 #include <utility>
 
-// Testing
-#include <iostream>
-
 #include "base.hpp"
 #include "prototypes.hpp"
 #include "source_modifications.hpp"
@@ -46,6 +43,20 @@ struct document {
   }
   [[nodiscard]] const ast::base& locate(source_loc loc) const {
     return _program->locate(loc);
+  }
+
+  source_replacement replace_placeholder_with_number_literal(
+      ast::base& placeholder, std::string number) {
+    source_range original{placeholder.source_code_range};
+    auto element{ast::make<ast::number_literal>(number)};
+    element->source_code_range = {
+        {original.begin.line, original.begin.column},
+        {original.begin.line, original.begin.column + number.size()}};
+    replace_expression(placeholder, std::move(element));
+
+    std::vector<highlight_token> highlights{
+        {highlight_token_type::number, 0, number.size()}};
+    return {original, std::move(number), highlights};
   }
 
   ast::node replace_expression(ast::base& existing, ast::node replacement) {
