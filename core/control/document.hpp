@@ -48,6 +48,24 @@ struct document {
     return _program->locate(loc);
   }
 
+  ast::node replace_expression(ast::base& existing, ast::node replacement) {
+    assert(existing.has_parent());
+    assert(existing.source_code_range.end.line ==
+           replacement->source_code_range.end.line);
+
+    auto offset =
+        static_cast<ptrdiff_t>(replacement->source_code_range.end.column) -
+        static_cast<ptrdiff_t>(existing.source_code_range.end.column);
+    auto& placed = *replacement;
+
+    auto result{
+        existing.parent().replace_child(existing, std::move(replacement))};
+    if (offset != 0) {
+      update_source_column_after_node(placed, offset);
+    }
+    return result;
+  }
+
   const auto& output() const noexcept { return _output; }
 
   void execute() { _output.clear(); }
@@ -56,17 +74,46 @@ struct document {
   ast::node _program;
   std::string _output;
 
-  void update_source_line_after_node(ast::base& node, ptrdiff_t line_offset) {
-    auto* curr{&node.parent()};
-    auto* target{&node};
-    while (true) {
-      update_source_line_after_subnode(*curr, *target, line_offset);
-      if (curr->has_parent()) {
-        target = curr;
-        curr = &curr->parent();
-      } else {
-        return;
+  void update_source_column_after_node(ast::base& node,
+                                       ptrdiff_t column_offset) {
+    auto* curr{&node};
+    while (curr->has_parent()) {
+      auto* target{curr};
+      curr = &curr->parent();
+      bool target_passed{false};
+      for (auto& child : curr->children()) {
+        if (child.get() == target) {
+          target_passed = true;
+        } else if (target_passed) {
+          if (child->source_code_range.begin.line ==
+              node.source_code_range.begin.line) {
+            update_source_column(*child, target_passed);
+          } else {
+            break;
+          }
+        }
       }
+      curr->source_code_range.end.column += column_offset;
+      if (curr->inherits<ast::statement>()) {
+        break;
+      }
+    }
+  }
+
+  void update_source_column(ast::base& node, ptrdiff_t column_offset) {
+    node.source_code_range.begin.column += column_offset;
+    for (auto& child : node.children()) {
+      update_source_column(*child, column_offset);
+    }
+    node.source_code_range.end.column += column_offset;
+  }
+
+  void update_source_line_after_node(ast::base& node, ptrdiff_t line_offset) {
+    auto* curr{&node};
+    while (curr->has_parent()) {
+      auto* target{curr};
+      curr = &curr->parent();
+      update_source_line_after_subnode(*curr, *target, line_offset);
     }
   }
 
@@ -81,13 +128,8 @@ struct document {
   void update_source_line_after_subnode(node_type& node, ast::base& subnode,
                                         ptrdiff_t line_offset) {
     bool target_passed{false};
-    for (auto& child : node.children()) {
-      if (child.get() == &subnode) {
-        target_passed = true;
-      } else if (target_passed) {
-        update_source_line(*child, line_offset);
-      }
-    }
+    update_source_line_in_vector_after_subnode(node.children(), subnode,
+                                               line_offset, target_passed);
     node.source_code_range.end.line += line_offset;
   }
 

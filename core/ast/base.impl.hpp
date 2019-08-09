@@ -73,6 +73,24 @@ struct base {
   }
   [[nodiscard]] const std::vector<node> &children() const { return _children; }
 
+  node replace_child(base &existing, node replacement) {
+    size_t i{0};
+    while (i < _children.size() && _children[i].get() != &existing) {
+      i++;
+    }
+    if (i < _children.size()) {
+      auto result{std::move(_children[i])};
+      result->_parent = nullptr;
+      replacement->_parent = this;
+      _children[i] = std::move(replacement);
+      return result;
+    } else {
+      /* should not occur */
+      assert(false);
+      return replacement;
+    }
+  }
+
  private:
   size_t _typeid;
 
