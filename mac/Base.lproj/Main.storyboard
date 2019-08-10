@@ -706,7 +706,7 @@
             <objects>
                 <viewController storyboardIdentifier="EditorViewController" id="4i3-Bv-Vby" customClass="EditorViewController" sceneMemberID="viewController">
                     <view key="view" id="VRC-G5-jHx">
-                        <rect key="frame" x="0.0" y="0.0" width="354" height="72"/>
+                        <rect key="frame" x="0.0" y="0.0" width="354" height="101"/>
                         <autoresizingMask key="autoresizingMask"/>
                         <subviews>
                             <textField verticalHuggingPriority="750" translatesAutoresizingMaskIntoConstraints="NO" id="qmm-Wt-gtk">
@@ -730,23 +730,35 @@ DQ
                                     <action selector="okButtonPressed:" target="4i3-Bv-Vby" id="HR9-cs-ZHt"/>
                                 </connections>
                             </button>
+                            <segmentedControl verticalHuggingPriority="750" translatesAutoresizingMaskIntoConstraints="NO" id="SYm-sg-hJ1">
+                                <rect key="frame" x="166" y="58" width="22" height="24"/>
+                                <segmentedCell key="cell" borderStyle="border" alignment="left" segmentDistribution="fillEqually" style="rounded" trackingMode="selectOne" id="vOc-rD-gO6">
+                                    <font key="font" metaFont="system"/>
+                                    <segments>
+                                        <segment/>
+                                    </segments>
+                                </segmentedCell>
+                            </segmentedControl>
                         </subviews>
                         <constraints>
                             <constraint firstItem="qmm-Wt-gtk" firstAttribute="centerY" secondItem="xyi-eb-Mef" secondAttribute="centerY" id="2jh-gT-v3V"/>
                             <constraint firstAttribute="trailing" secondItem="xyi-eb-Mef" secondAttribute="trailing" constant="20" symbolic="YES" id="Ayy-ve-oXj"/>
+                            <constraint firstItem="qmm-Wt-gtk" firstAttribute="top" secondItem="SYm-sg-hJ1" secondAttribute="bottom" constant="8" symbolic="YES" id="Cqj-Wp-dbE"/>
+                            <constraint firstItem="SYm-sg-hJ1" firstAttribute="centerX" secondItem="VRC-G5-jHx" secondAttribute="centerX" id="MBM-0g-Vvj"/>
                             <constraint firstItem="xyi-eb-Mef" firstAttribute="leading" secondItem="qmm-Wt-gtk" secondAttribute="trailing" constant="8" symbolic="YES" id="OWQ-wP-hSk"/>
+                            <constraint firstItem="SYm-sg-hJ1" firstAttribute="top" secondItem="VRC-G5-jHx" secondAttribute="top" constant="20" symbolic="YES" id="WXg-SU-8Rg"/>
                             <constraint firstItem="qmm-Wt-gtk" firstAttribute="leading" secondItem="VRC-G5-jHx" secondAttribute="leading" constant="20" symbolic="YES" id="bUO-Jh-AWS"/>
-                            <constraint firstItem="qmm-Wt-gtk" firstAttribute="top" secondItem="VRC-G5-jHx" secondAttribute="top" constant="20" symbolic="YES" id="qm7-H3-IGa"/>
                             <constraint firstAttribute="bottom" secondItem="qmm-Wt-gtk" secondAttribute="bottom" constant="20" symbolic="YES" id="vcF-3Y-mon"/>
                         </constraints>
                     </view>
                     <connections>
                         <outlet property="editorTextField" destination="qmm-Wt-gtk" id="Wsf-6F-0dt"/>
+                        <outlet property="typeSegmentControl" destination="SYm-sg-hJ1" id="gg7-a2-RL3"/>
                     </connections>
                 </viewController>
                 <customObject id="hQs-OE-asr" userLabel="First Responder" customClass="NSResponder" sceneMemberID="firstResponder"/>
             </objects>
-            <point key="canvasLocation" x="605" y="235"/>
+            <point key="canvasLocation" x="605" y="254.5"/>
         </scene>
         <!--Source View Controller-->
         <scene sceneID="hIz-AP-VOD">

@@ -46,6 +46,7 @@
     auto end = [self indexOfSourceLoc:node.source_code_range.end];
     auto rect = [self rectOfRange:NSMakeRange(begin, end - begin)];
     [self.popover showRelativeToRect:rect ofView:self preferredEdge:NSMinYEdge];
+    [vc setForNumber];
   }
 }
 

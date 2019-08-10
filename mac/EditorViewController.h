@@ -6,6 +6,10 @@
 
 @property(weak) id<EditorViewControllerDelegate> delegate;
 
+- (void)setForNumber;
+- (void)setForString;
+- (void)setForVariable;
+
 @end
 
 @protocol EditorViewControllerDelegate<NSObject>
