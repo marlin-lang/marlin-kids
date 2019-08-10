@@ -34,8 +34,10 @@
   auto index = [self characterIndexForInsertionAtPoint:location];
   _expression_loc = [self sourceLocOfIndex:index];
   auto& node = [self.dataSource textView:self nodeContainsSourceLoc:_expression_loc];
-  if (node.is<marlin::ast::expression_placeholder>() ||
-      node.is<marlin::ast::variable_placeholder>()) {
+  if (node.is<marlin::ast::variable_placeholder>() ||
+      node.is<marlin::ast::expression_placeholder>() || node.is<marlin::ast::variable_name>() ||
+      node.is<marlin::ast::number_literal>() || node.is<marlin::ast::string_literal>() ||
+      node.is<marlin::ast::identifier>()) {
     self.popover = [NSPopover new];
     self.popover.behavior = NSPopoverBehaviorTransient;
     NSStoryboard* storyboard = [NSStoryboard storyboardWithName:@"Main" bundle:nil];
@@ -47,10 +49,31 @@
     auto end = [self indexOfSourceLoc:node.source_code_range.end];
     auto rect = [self rectOfRange:NSMakeRange(begin, end - begin)];
     [self.popover showRelativeToRect:rect ofView:self preferredEdge:NSMinYEdge];
-    if (node.is<marlin::ast::expression_placeholder>()) {
-      vc.type = EditorType::Number;
-    } else if (node.is<marlin::ast::variable_placeholder>()) {
+
+    if (node.is<marlin::ast::variable_placeholder>()) {
       vc.type = EditorType::Variable;
+    } else if (node.is<marlin::ast::expression_placeholder>()) {
+      vc.type = EditorType::Number;
+    } else if (node.is<marlin::ast::number_literal>()) {
+      vc.type = EditorType::Number;
+      vc.editorTextField.stringValue =
+          [NSString stringWithCString:node.as<marlin::ast::number_literal>().value.c_str()
+                             encoding:NSUTF8StringEncoding];
+    } else if (node.is<marlin::ast::variable_name>()) {
+      vc.type = EditorType::Variable;
+      vc.editorTextField.stringValue =
+          [NSString stringWithCString:node.as<marlin::ast::variable_name>().name.c_str()
+                             encoding:NSUTF8StringEncoding];
+    } else if (node.is<marlin::ast::string_literal>()) {
+      vc.type = EditorType::String;
+      vc.editorTextField.stringValue =
+          [NSString stringWithCString:node.as<marlin::ast::string_literal>().value.c_str()
+                             encoding:NSUTF8StringEncoding];
+    } else if (node.is<marlin::ast::identifier>()) {
+      vc.type = EditorType::Identifier;
+      vc.editorTextField.stringValue =
+          [NSString stringWithCString:node.as<marlin::ast::identifier>().name.c_str()
+                             encoding:NSUTF8StringEncoding];
     }
   }
 }

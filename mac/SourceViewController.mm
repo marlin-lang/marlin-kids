@@ -92,17 +92,19 @@
 
 - (marlin::control::source_replacement)textView:(SourceTextView *)textView
                            replacePlaceholderAt:(marlin::source_loc)loc
-     type:(EditorType)type
+                                           type:(EditorType)type
                                      withString:(NSString *)string {
   auto &node = _document.content.locate(loc);
-    switch (type) {
-        case EditorType::Number:
-            return _document.content.replace_expression_with_number_literal(node, {string.UTF8String});
-        case EditorType::String:
-            return _document.content.replace_expression_with_string_literal(node, {string.UTF8String});
-        case EditorType::Variable:
-            return _document.content.replace_variable_name(node, {string.UTF8String});
-    }
+  switch (type) {
+    case EditorType::Variable:
+      return _document.content.replace_variable_name(node, {string.UTF8String});
+    case EditorType::Number:
+      return _document.content.replace_expression_with_number_literal(node, {string.UTF8String});
+    case EditorType::String:
+      return _document.content.replace_expression_with_string_literal(node, {string.UTF8String});
+    case EditorType::Identifier:
+      return _document.content.replace_expression_with_identifier(node, {string.UTF8String});
+  }
 }
 
 @end

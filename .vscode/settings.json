@@ -1,7 +1,8 @@
 {
     "files.associations": {
-        "SConscript": "python",
         "SConstruct": "python",
+        "Sconscript": "python",
+        "SConscript": "python",
         "__locale": "cpp",
         "iosfwd": "cpp",
         "__bit_reference": "cpp",
@@ -78,7 +79,19 @@
         "complex": "cpp",
         "__functional_base_03": "cpp",
         "__hash_table": "cpp",
-        "unordered_map": "cpp"
+        "unordered_map": "cpp",
+        "clocale": "cpp",
+        "codecvt": "cpp",
+        "condition_variable": "cpp",
+        "csetjmp": "cpp",
+        "csignal": "cpp",
+        "shared_mutex": "cpp",
+        "*.tcc": "cpp",
+        "cfenv": "cpp",
+        "cinttypes": "cpp",
+        "hashtable": "cpp",
+        "bit": "cpp",
+        "memory_resource": "cpp"
     },
     "C_Cpp.default.configurationProvider": "vector-of-bool.cmake-tools"
 }
