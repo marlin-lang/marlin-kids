@@ -113,7 +113,7 @@ struct document {
         } else if (target_passed) {
           if (child->source_code_range.begin.line ==
               node.source_code_range.begin.line) {
-            update_source_column(*child, target_passed);
+            update_source_column(*child, column_offset);
           } else {
             break;
           }
