@@ -11,6 +11,8 @@ namespace marlin {
 using jsast::source_loc;
 using jsast::source_range;
 
+using jsast::utils::quoted;
+
 namespace utils {
 
 template <typename vector>

@@ -131,6 +131,12 @@ struct number_literal : base::impl<number_literal>, expression {
   explicit number_literal(std::string _value) : value{std::move(_value)} {}
 };
 
+struct string_literal : base::impl<string_literal>, expression {
+  std::string value;
+
+  explicit string_literal(std::string _value) : value{std::move(_value)} {}
+};
+
 }  // namespace marlin::ast
 
 #endif  // marlin_ast_ast_impl

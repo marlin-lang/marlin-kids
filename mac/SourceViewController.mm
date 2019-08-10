@@ -94,7 +94,7 @@
                            replacePlaceholderAt:(marlin::source_loc)loc
                                      withString:(NSString *)string {
   auto &node = _document.content.locate(loc);
-  return _document.content.replace_placeholder_with_number_literal(node, {string.UTF8String});
+  return _document.content.replace_expression_with_number_literal(node, {string.UTF8String});
 }
 
 @end

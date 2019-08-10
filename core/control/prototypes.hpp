@@ -24,6 +24,23 @@ struct statement_prototype {
 
 extern const std::array<statement_prototype, 4> statement_prototypes;
 
+template <typename container_type, typename element_type>
+struct prototype_container {
+  friend element_type;
+
+  static const std::vector<const element_type*> elements() { return _elements; }
+
+ private:
+  inline static std::vector<const element_type*> _elements;
+
+  static void register_elem(const element_type& elem) {
+    _elements.emplace_back(&elem);
+  }
+};
+
+struct new_statement_prototypes
+    : prototype_container<new_statement_prototypes, statement_prototype> {};
+
 }  // namespace marlin::control
 
 #endif  // marlin_control_prototypes_hpp

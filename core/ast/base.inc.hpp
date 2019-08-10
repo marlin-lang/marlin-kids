@@ -39,7 +39,8 @@ struct type_map {
   X(unary_expression)       \
   X(binary_expression)      \
   X(identifier)             \
-  X(number_literal)
+  X(number_literal)         \
+  X(string_literal)
 
 #define _LIST_TEMPLATE(NAME) NAME,
 

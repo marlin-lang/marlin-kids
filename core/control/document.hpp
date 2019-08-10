@@ -45,18 +45,33 @@ struct document {
     return _program->locate(loc);
   }
 
-  source_replacement replace_placeholder_with_number_literal(
-      ast::base& placeholder, std::string number) {
-    source_range original{placeholder.source_code_range};
+  source_replacement replace_expression_with_number_literal(
+      ast::base& expression, std::string number) {
+    source_range original{expression.source_code_range};
     auto element{ast::make<ast::number_literal>(number)};
     element->source_code_range = {
         {original.begin.line, original.begin.column},
         {original.begin.line, original.begin.column + number.size()}};
-    replace_expression(placeholder, std::move(element));
+    replace_expression(expression, std::move(element));
 
     std::vector<highlight_token> highlights{
         {highlight_token_type::number, 0, number.size()}};
     return {original, std::move(number), highlights};
+  }
+
+  source_replacement replace_expression_with_string_literal(
+      ast::base& expression, std::string string) {
+    source_range original{expression.source_code_range};
+    auto quoted_string = quoted(string);
+    auto element{ast::make<ast::string_literal>(std::move(string))};
+    element->source_code_range = {
+        {original.begin.line, original.begin.column},
+        {original.begin.line, original.begin.column + quoted_string.size()}};
+    replace_expression(expression, std::move(element));
+
+    std::vector<highlight_token> highlights{
+        {highlight_token_type::string, 0, quoted_string.size()}};
+    return {original, std::move(quoted_string), highlights};
   }
 
   ast::node replace_expression(ast::base& existing, ast::node replacement) {
