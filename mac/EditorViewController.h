@@ -2,11 +2,13 @@
 
 @protocol EditorViewControllerDelegate;
 
-enum class EditorType { Number, String, Variable };
+enum class EditorType { Variable, Number, String, Identifier };
 
 @interface EditorViewController : NSViewController <NSTextFieldDelegate>
 
 @property(nonatomic) EditorType type;
+
+@property(weak) IBOutlet NSTextField *editorTextField;
 
 @property(weak) id<EditorViewControllerDelegate> delegate;
 
@@ -14,6 +16,6 @@ enum class EditorType { Number, String, Variable };
 
 @protocol EditorViewControllerDelegate <NSObject>
 
-- (void)viewController:(EditorViewController*)vc finishEditWithString:(NSString*)string;
+- (void)viewController:(EditorViewController *)vc finishEditWithString:(NSString *)string;
 
 @end

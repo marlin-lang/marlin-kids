@@ -45,6 +45,18 @@ struct document {
     return _program->locate(loc);
   }
 
+  source_replacement replace_variable_name(ast::base& variable,
+                                           std::string name) {
+    source_range original{variable.source_code_range};
+    auto element{ast::make<ast::variable_name>(name)};
+    element->source_code_range = {
+        {original.begin.line, original.begin.column},
+        {original.begin.line, original.begin.column + name.size()}};
+    replace_expression(variable, std::move(element));
+
+    return {original, std::move(name), {}};
+  }
+
   source_replacement replace_expression_with_number_literal(
       ast::base& expression, std::string number) {
     source_range original{expression.source_code_range};
@@ -74,15 +86,14 @@ struct document {
     return {original, std::move(quoted_string), std::move(highlights)};
   }
 
-  source_replacement replace_variable_name(ast::base& variable,
-                                           std::string name) {
-    source_range original{variable.source_code_range};
-    auto element{ast::make<ast::variable_name>(name)};
+  source_replacement replace_expression_with_identifier(ast::base& expression,
+                                                        std::string name) {
+    source_range original{expression.source_code_range};
+    auto element{ast::make<ast::identifier>(name)};
     element->source_code_range = {
         {original.begin.line, original.begin.column},
         {original.begin.line, original.begin.column + name.size()}};
-    replace_expression(variable, std::move(element));
-
+    replace_expression(expression, std::move(element));
     return {original, std::move(name), {}};
   }
 
