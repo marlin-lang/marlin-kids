@@ -23,6 +23,7 @@
 
 - (marlin::control::source_replacement)textView:(SourceTextView*)textView
                            replacePlaceholderAt:(marlin::source_loc)loc
+                                           type:(EditorType)type
                                      withString:(NSString*)string;
 
 @end

@@ -56,7 +56,7 @@ struct document {
 
     std::vector<highlight_token> highlights{
         {highlight_token_type::number, 0, number.size()}};
-    return {original, std::move(number), highlights};
+    return {original, std::move(number), std::move(highlights)};
   }
 
   source_replacement replace_expression_with_string_literal(
@@ -71,7 +71,19 @@ struct document {
 
     std::vector<highlight_token> highlights{
         {highlight_token_type::string, 0, quoted_string.size()}};
-    return {original, std::move(quoted_string), highlights};
+    return {original, std::move(quoted_string), std::move(highlights)};
+  }
+
+  source_replacement replace_variable_name(ast::base& variable,
+                                           std::string name) {
+    source_range original{variable.source_code_range};
+    auto element{ast::make<ast::variable_name>(name)};
+    element->source_code_range = {
+        {original.begin.line, original.begin.column},
+        {original.begin.line, original.begin.column + name.size()}};
+    replace_expression(variable, std::move(element));
+
+    return {original, std::move(name), {}};
   }
 
   ast::node replace_expression(ast::base& existing, ast::node replacement) {

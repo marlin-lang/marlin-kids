@@ -37,7 +37,7 @@
   if (node.is<marlin::ast::expression_placeholder>() ||
       node.is<marlin::ast::variable_placeholder>()) {
     self.popover = [NSPopover new];
-    self.popover.behavior = NSPopoverBehaviorApplicationDefined;
+    self.popover.behavior = NSPopoverBehaviorTransient;
     NSStoryboard* storyboard = [NSStoryboard storyboardWithName:@"Main" bundle:nil];
     EditorViewController* vc =
         [storyboard instantiateControllerWithIdentifier:@"EditorViewController"];
@@ -48,9 +48,9 @@
     auto rect = [self rectOfRange:NSMakeRange(begin, end - begin)];
     [self.popover showRelativeToRect:rect ofView:self preferredEdge:NSMinYEdge];
     if (node.is<marlin::ast::expression_placeholder>()) {
-      [vc setForNumber];
+      vc.type = EditorType::Number;
     } else if (node.is<marlin::ast::variable_placeholder>()) {
-      [vc setForVariable];
+      vc.type = EditorType::Variable;
     }
   }
 }
@@ -178,6 +178,7 @@
   if (string.length > 0) {
     auto update = [self.dataSource textView:self
                        replacePlaceholderAt:_expression_loc
+                                       type:vc.type
                                  withString:string];
     auto begin = [self indexOfSourceLoc:update.range.begin];
     auto end = [self indexOfSourceLoc:update.range.end];
