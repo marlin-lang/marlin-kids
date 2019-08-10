@@ -13,7 +13,21 @@ static constexpr size_t indent_space_count{2};
 
 template <typename container_type, typename element_type>
 struct prototype_container {
-  friend element_type;
+  template <typename concrete_type>
+  struct element {
+    static size_t index() { return _index; }
+
+   protected:
+    element() { _index = container_type::register_elem(_singleton); }
+
+   private:
+    template <concrete_type&>
+    struct proto_ref {};
+
+    inline static size_t _index;
+    inline static concrete_type _singleton;
+    inline static proto_ref<_singleton> _ref;
+  };
 
   [[nodiscard]] static constexpr std::vector<const element_type*>& elements() {
     return _elements;
@@ -42,19 +56,12 @@ struct statement_prototype
 };
 
 template <typename prototype>
-struct statement_prototype::impl : statement_prototype {
-  static size_t index() { return _index; }
-
- protected:
-  impl() { _index = statement_prototype::register_elem(_singleton); }
-
- private:
-  template <prototype&>
-  struct proto_ref {};
-
-  inline static size_t _index;
-  inline static prototype _singleton;
-  inline static proto_ref<_singleton> _ref;
+struct statement_prototype::impl : statement_prototype,
+                                   statement_prototype::element<prototype> {
+  [[nodiscard]] std::pair<ast::node, source_insertion> construct(
+      size_t line, size_t indent) const override {
+    return prototype::generator.construct(line, indent);
+  }
 };
 
 inline static constexpr auto& statement_prototypes =
