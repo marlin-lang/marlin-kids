@@ -181,16 +181,46 @@ struct statement_generator {
   inner_type _inner;
 };
 
+template <typename inner_type,
+          typename = std::enable_if_t<std::is_base_of_v<base, inner_type> &&
+                                      inner_type::nodes == 1>>
+struct expression_generator {
+  expression_generator(inner_type inner) : _inner{std::move(inner)} {}
+
+  std::pair<ast::node, source_replacement> construct(
+      source_range original) const {
+    source_loc loc{original.begin};
+    size_t offset{0};
+    std::vector<highlight_token> highlights;
+    ast::node node;
+    ast::node* target{&node};
+    auto result = _inner.construct_all(0, loc, offset, target, highlights);
+    return std::make_pair(
+        std::move(node),
+        source_replacement{original, std::move(result), std::move(highlights)});
+  }
+
+ private:
+  inner_type _inner;
+};
+
 }  // namespace proto_gen
 
-template <
-    typename inner_type,
-    typename = std::enable_if_t<std::is_base_of_v<proto_gen::base, inner_type>>>
+template <typename inner_type>
 inline auto keyword(inner_type inner) {
   return proto_gen::highlight{highlight_token_type::keyword, std::move(inner)};
 }
-inline auto keyword(std::string inner) {
-  return proto_gen::highlight{highlight_token_type::keyword, std::move(inner)};
+template <typename inner_type>
+inline auto number(inner_type inner) {
+  return proto_gen::highlight{highlight_token_type::number, std::move(inner)};
+}
+template <typename inner_type>
+inline auto string(inner_type inner) {
+  return proto_gen::highlight{highlight_token_type::string, std::move(inner)};
+}
+template <typename inner_type>
+inline auto op(inner_type inner) {
+  return proto_gen::highlight{highlight_token_type::op, std::move(inner)};
 }
 
 inline auto variable_placeholder(std::string name) {
