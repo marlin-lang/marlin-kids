@@ -753,6 +753,7 @@ DQ
                     </view>
                     <connections>
                         <outlet property="editorTextField" destination="qmm-Wt-gtk" id="Wsf-6F-0dt"/>
+                        <outlet property="okButton" destination="xyi-eb-Mef" id="Lg6-eZ-XdH"/>
                         <outlet property="typeSegmentControl" destination="SYm-sg-hJ1" id="gg7-a2-RL3"/>
                     </connections>
                 </viewController>

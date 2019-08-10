@@ -2,7 +2,7 @@
 
 @protocol EditorViewControllerDelegate;
 
-@interface EditorViewController : NSViewController
+@interface EditorViewController : NSViewController<NSTextFieldDelegate>
 
 @property(weak) id<EditorViewControllerDelegate> delegate;
 
