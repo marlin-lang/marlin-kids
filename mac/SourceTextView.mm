@@ -34,7 +34,8 @@
   auto index = [self characterIndexForInsertionAtPoint:location];
   _expression_loc = [self sourceLocOfIndex:index];
   auto& node = [self.dataSource textView:self nodeContainsSourceLoc:_expression_loc];
-  if (node.is<marlin::ast::expression_placeholder>()) {
+  if (node.is<marlin::ast::expression_placeholder>() ||
+      node.is<marlin::ast::variable_placeholder>()) {
     self.popover = [NSPopover new];
     self.popover.behavior = NSPopoverBehaviorApplicationDefined;
     NSStoryboard* storyboard = [NSStoryboard storyboardWithName:@"Main" bundle:nil];
@@ -46,7 +47,11 @@
     auto end = [self indexOfSourceLoc:node.source_code_range.end];
     auto rect = [self rectOfRange:NSMakeRange(begin, end - begin)];
     [self.popover showRelativeToRect:rect ofView:self preferredEdge:NSMinYEdge];
-    [vc setForNumber];
+    if (node.is<marlin::ast::expression_placeholder>()) {
+      [vc setForNumber];
+    } else if (node.is<marlin::ast::variable_placeholder>()) {
+      [vc setForVariable];
+    }
   }
 }
 
@@ -170,19 +175,21 @@
 
 - (void)viewController:(EditorViewController*)vc finishEditWithString:(NSString*)string {
   [self.popover close];
-  auto update = [self.dataSource textView:self
-                     replacePlaceholderAt:_expression_loc
-                               withString:string];
-  auto begin = [self indexOfSourceLoc:update.range.begin];
-  auto end = [self indexOfSourceLoc:update.range.end];
-  auto range = NSMakeRange(begin, end - begin);
-  NSString* updatedString = [NSString stringWithCString:update.source.c_str()
-                                               encoding:NSUTF8StringEncoding];
-  [self.textStorage replaceCharactersInRange:range withString:updatedString];
-  [[SourceTheme new] applyTo:self.textStorage
-                       range:NSMakeRange(begin, updatedString.length)
-              withHighlights:update.highlights];
-  _expression_loc = {0, 0};
+  if (string.length > 0) {
+    auto update = [self.dataSource textView:self
+                       replacePlaceholderAt:_expression_loc
+                                 withString:string];
+    auto begin = [self indexOfSourceLoc:update.range.begin];
+    auto end = [self indexOfSourceLoc:update.range.end];
+    auto range = NSMakeRange(begin, end - begin);
+    NSString* updatedString = [NSString stringWithCString:update.source.c_str()
+                                                 encoding:NSUTF8StringEncoding];
+    [self.textStorage replaceCharactersInRange:range withString:updatedString];
+    [[SourceTheme new] applyTo:self.textStorage
+                         range:NSMakeRange(begin, updatedString.length)
+                withHighlights:update.highlights];
+    _expression_loc = {0, 0};
+  }
 }
 
 @end
