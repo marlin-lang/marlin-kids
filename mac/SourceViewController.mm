@@ -50,7 +50,7 @@
 - (NSCollectionViewItem *)collectionView:(NSCollectionView *)collectionView
      itemForRepresentedObjectAtIndexPath:(NSIndexPath *)indexPath {
   ToolBoxItem *item = [collectionView makeItemWithIdentifier:@"ToolBoxItem" forIndexPath:indexPath];
-  const auto &name = marlin::control::statement_prototypes[indexPath.item].name;
+  const auto &name = marlin::control::statement_prototypes[indexPath.item]->name();
   item.textField.stringValue = [NSString stringWithCString:name.c_str()
                                                   encoding:NSUTF8StringEncoding];
   return item;

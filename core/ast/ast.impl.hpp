@@ -26,8 +26,8 @@ struct on_start : base::impl<on_start, subnode::vector> {
   using base_type::impl;
 };
 
-struct variable_declaration
-    : base::impl<variable_declaration, subnode::concrete, subnode::concrete>,
+struct assignment
+    : base::impl<assignment, subnode::concrete, subnode::concrete>,
       statement {
   [[nodiscard]] decltype(auto) variable() { return get_subnode<0>(); }
   [[nodiscard]] decltype(auto) variable() const { return get_subnode<0>(); }

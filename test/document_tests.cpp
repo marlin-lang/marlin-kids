@@ -18,8 +18,10 @@ TEST_CASE("control::Insert statement in empty document", "[control]") {
 
   inserter.move_to_line(2);
   REQUIRE(inserter.can_insert());
-  auto update = inserter.insert(marlin::control::statement_prototypes[0]);
-  CHECK(update.source == "  let @variable = @value;\n");
+  auto update =
+      inserter.insert(*marlin::control::statement_prototypes
+                          [marlin::control::assignment_prototype::index()]);
+  CHECK(update.source == "  @variable = @value;\n");
 }
 
 TEST_CASE("control::Insert number literal to placeholder", "[control]") {
@@ -28,7 +30,8 @@ TEST_CASE("control::Insert number literal to placeholder", "[control]") {
   auto inserter = marlin::control::statement_inserter{document};
   inserter.move_to_line(2);
   REQUIRE(inserter.can_insert());
-  inserter.insert(marlin::control::statement_prototypes[0]);
+  inserter.insert(*marlin::control::statement_prototypes
+                      [marlin::control::assignment_prototype::index()]);
 
   auto &placeholder = document.locate({2, 20});
   REQUIRE(placeholder.is<marlin::ast::expression_placeholder>());
@@ -36,13 +39,13 @@ TEST_CASE("control::Insert number literal to placeholder", "[control]") {
       document.replace_expression_with_number_literal(placeholder, "12");
   REQUIRE(update.source == "12");
   REQUIRE(update.range.begin.line == 2);
-  REQUIRE(update.range.begin.column == 19);
+  REQUIRE(update.range.begin.column == 15);
   REQUIRE(update.range.end.line == 2);
-  REQUIRE(update.range.end.column == 25);
+  REQUIRE(update.range.end.column == 21);
 
-  auto &declaration = document.locate({2, 3});
-  REQUIRE(declaration.is<marlin::ast::variable_declaration>());
-  REQUIRE(declaration.source_code_range.end.column == 22);
+  auto &declaration = document.locate({2, 13});
+  REQUIRE(declaration.is<marlin::ast::assignment>());
+  REQUIRE(declaration.source_code_range.end.column == 18);
 }
 
 TEST_CASE("control::Insert string literal to placeholder", "[control]") {
@@ -51,7 +54,8 @@ TEST_CASE("control::Insert string literal to placeholder", "[control]") {
   auto inserter = marlin::control::statement_inserter{document};
   inserter.move_to_line(2);
   REQUIRE(inserter.can_insert());
-  inserter.insert(marlin::control::statement_prototypes[0]);
+  inserter.insert(*marlin::control::statement_prototypes
+                      [marlin::control::assignment_prototype::index()]);
 
   auto &placeholder = document.locate({2, 20});
   REQUIRE(placeholder.is<marlin::ast::expression_placeholder>());
@@ -59,11 +63,11 @@ TEST_CASE("control::Insert string literal to placeholder", "[control]") {
       document.replace_expression_with_string_literal(placeholder, "12");
   REQUIRE(update.source == "\"12\"");
   REQUIRE(update.range.begin.line == 2);
-  REQUIRE(update.range.begin.column == 19);
+  REQUIRE(update.range.begin.column == 15);
   REQUIRE(update.range.end.line == 2);
-  REQUIRE(update.range.end.column == 25);
+  REQUIRE(update.range.end.column == 21);
 
-  auto &declaration = document.locate({2, 3});
-  REQUIRE(declaration.is<marlin::ast::variable_declaration>());
-  REQUIRE(declaration.source_code_range.end.column == 24);
+  auto &declaration = document.locate({2, 13});
+  REQUIRE(declaration.is<marlin::ast::assignment>());
+  REQUIRE(declaration.source_code_range.end.column == 20);
 }

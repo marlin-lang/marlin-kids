@@ -29,7 +29,7 @@ struct type_map {
 #define ASTS(X)             \
   X(program)                \
   X(on_start)               \
-  X(variable_declaration)   \
+  X(assignment)             \
   X(print_statement)        \
   X(if_statement)           \
   X(if_else_statement)      \

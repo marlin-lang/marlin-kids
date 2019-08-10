@@ -229,7 +229,7 @@
 - (BOOL)performDragOperation:(id<NSDraggingInfo>)sender {
   if (_statementInserter.has_value() && _statementInserter->can_insert()) {
     auto index = [sender.draggingPasteboard stringForType:@"marlin.statement"].integerValue;
-    auto source = _statementInserter->insert(marlin::control::statement_prototypes[index]);
+    auto source = _statementInserter->insert(*marlin::control::statement_prototypes[index]);
     NSString* string = [NSString stringWithCString:source.source.c_str()
                                           encoding:NSUTF8StringEncoding];
     auto range = NSMakeRange(_statementInsertionPoint, 0);
