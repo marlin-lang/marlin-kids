@@ -9,8 +9,6 @@ set(APP_NAME "marlin")
 
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_LIST_DIR}/cmake")
 
-set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
-
 enable_testing()
 
 add_subdirectory(mac)
