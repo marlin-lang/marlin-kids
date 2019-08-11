@@ -1,9 +1,10 @@
 #import "SourceViewController.h"
 
-#import "prototypes.hpp"
+#import "toolbox_model.hpp"
 
 #import "Document.h"
 #import "SourceTheme.h"
+#import "ToolBoxHeaderView.h"
 #import "ToolBoxItem.h"
 
 @interface SourceViewController ()
@@ -42,19 +43,38 @@
                                                         encoding:NSUTF8StringEncoding];
 }
 
+#pragma mark - NSCollectionViewDataSource implementation
+
+- (NSInteger)numberOfSectionsInCollectionView:(NSCollectionView *)collectionView {
+  return marlin::control::toolbox_model::sections().size();
+}
+
 - (NSInteger)collectionView:(NSCollectionView *)collectionView
      numberOfItemsInSection:(NSInteger)section {
-  return marlin::control::statement_prototypes.size();
+  return marlin::control::toolbox_model::items()[section].size();
 }
 
 - (NSCollectionViewItem *)collectionView:(NSCollectionView *)collectionView
      itemForRepresentedObjectAtIndexPath:(NSIndexPath *)indexPath {
   ToolBoxItem *item = [collectionView makeItemWithIdentifier:@"ToolBoxItem" forIndexPath:indexPath];
-  const auto &name = marlin::control::statement_prototypes[indexPath.item]->name();
-  item.textField.stringValue = [NSString stringWithCString:name.c_str()
-                                                  encoding:NSUTF8StringEncoding];
+  item.textField.stringValue =
+      @(marlin::control::toolbox_model::nameOfItemAt(indexPath.section, indexPath.item).c_str());
   return item;
 }
+
+- (NSView *)collectionView:(NSCollectionView *)collectionView
+    viewForSupplementaryElementOfKind:(NSCollectionViewSupplementaryElementKind)kind
+                          atIndexPath:(NSIndexPath *)indexPath {
+  ToolBoxHeaderView *view =
+      [collectionView makeSupplementaryViewOfKind:NSCollectionElementKindSectionHeader
+                                   withIdentifier:@"ToolBoxHeaderView"
+                                     forIndexPath:indexPath];
+  view.titleTextField.stringValue =
+      @(marlin::control::toolbox_model::sections()[indexPath.section]);
+  return view;
+}
+
+#pragma mark - NSCollectionViewDelegateFlowLayout implementation
 
 - (NSSize)collectionView:(NSCollectionView *)collectionView
                     layout:(NSCollectionViewLayout *)collectionViewLayout
@@ -62,8 +82,10 @@
   return NSMakeSize(collectionView.bounds.size.width - 40, 30);
 }
 
-- (NSRange)textView:(SourceTextView *)textView selectRangeContainsIndex:(NSUInteger)index {
-  return NSMakeRange(0, 0);
+- (NSSize)collectionView:(NSCollectionView *)collectionView
+                             layout:(NSCollectionViewLayout *)collectionViewLayout
+    referenceSizeForHeaderInSection:(NSInteger)section {
+  return NSMakeSize(collectionView.bounds.size.width - 40, 30);
 }
 
 - (BOOL)collectionView:(NSCollectionView *)collectionView
@@ -75,8 +97,10 @@
 - (BOOL)collectionView:(NSCollectionView *)collectionView
     writeItemsAtIndexPaths:(NSSet<NSIndexPath *> *)indexPaths
               toPasteboard:(NSPasteboard *)pasteboard {
-  return [pasteboard setString:[NSString stringWithFormat:@"%ld", indexPaths.anyObject.item]
-                       forType:@"marlin.statement"];
+  auto section = indexPaths.anyObject.section;
+  auto item = indexPaths.anyObject.item;
+  NSString *string = [NSString stringWithFormat:@"%ld,%ld", section, item];
+  return [pasteboard setString:string forType:@(marlin::control::toolbox_model::pasteboard_type())];
 }
 
 #pragma mark - SourceTextViewDataSource implementation

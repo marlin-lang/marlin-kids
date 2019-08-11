@@ -3,6 +3,8 @@
 #import <optional>
 #import <utility>
 
+#import "toolbox_model.hpp"
+
 #import "SourceTheme.h"
 
 @interface SourceTextView ()
@@ -227,11 +229,11 @@
 @implementation SourceTextView (DragAndDrop)
 
 - (NSArray<NSPasteboardType>*)acceptableDragTypes {
-  return @[ @"marlin.statement" ];
+  return @[ @(marlin::control::toolbox_model::pasteboard_type()) ];
 }
 
 - (NSArray<NSPasteboardType>*)readablePasteboardTypes {
-  return @[ @"marlin.statement" ];
+  return @[ @(marlin::control::toolbox_model::pasteboard_type()) ];
 }
 
 - (NSDragOperation)dragOperationForDraggingInfo:(id<NSDraggingInfo>)dragInfo
@@ -258,12 +260,15 @@
 
 - (BOOL)performDragOperation:(id<NSDraggingInfo>)sender {
   if (_statementInserter.has_value() && _statementInserter->can_insert()) {
-    auto index = [sender.draggingPasteboard stringForType:@"marlin.statement"].integerValue;
+    NSString* string = [sender.draggingPasteboard
+        stringForType:@(marlin::control::toolbox_model::pasteboard_type())];
+    auto* strs = [string componentsSeparatedByString:@","];
+    auto section = strs[0].integerValue;
+    auto item = strs[1].integerValue;
+    auto index = marlin::control::toolbox_model::items()[section][item].index;
     auto source = _statementInserter->insert(*marlin::control::statement_prototypes[index]);
-    NSString* string = [NSString stringWithCString:source.source.c_str()
-                                          encoding:NSUTF8StringEncoding];
     auto range = NSMakeRange(_statementInsertionPoint, 0);
-    [self.textStorage replaceCharactersInRange:range withString:string];
+    [self.textStorage replaceCharactersInRange:range withString:@(source.source.c_str())];
     [[SourceTheme new] applyTo:self.textStorage range:range withHighlights:source.highlights];
 
     _statementInsertionPoint = -1;

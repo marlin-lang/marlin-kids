@@ -6,6 +6,7 @@ set(HEADERS
     SourceTextView.h
     SourceTheme.h
     SourceViewController.h
+    ToolBoxHeaderView.h
     ToolBoxItem.h)
 
 set(SOURCES
@@ -17,6 +18,7 @@ set(SOURCES
     SourceTextView.mm
     SourceTheme.mm
     SourceViewController.mm
+    ToolBoxHeaderView.mm
     ToolBoxItem.mm)
 
 set(RESOURCES
@@ -24,6 +26,7 @@ set(RESOURCES
     marlin.entitlements
     Assets.xcassets
     Base.lproj/Main.storyboard
+    ToolBoxHeaderView.xib
     ToolBoxItem.xib)
 
 add_executable(${PROJECT_NAME}.mac MACOSX_BUNDLE ${HEADERS} ${SOURCES}
