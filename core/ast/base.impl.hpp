@@ -67,6 +67,7 @@ struct base {
 
   [[nodiscard]] bool has_parent() const noexcept { return _parent != nullptr; }
   [[nodiscard]] base &parent() { return *_parent; }
+  [[nodiscard]] const base &parent() const { return *_parent; }
 
   [[nodiscard]] utils::vector_view<std::vector<node>> children() {
     return _children;

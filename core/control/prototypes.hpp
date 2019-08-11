@@ -57,6 +57,56 @@ struct if_else_prototype : statement_prototype::impl<if_else_prototype> {
           newline() + "}"}};
 };
 
+template <ast::binary_op _op>
+struct binary_prototype : expression_prototype::impl<binary_prototype<_op>> {
+  [[nodiscard]] std::string name() const override { return symbol_for(_op); }
+
+  inline static const auto content{expression_placeholder("left") + " + " +
+                                   expression_placeholder("right")};
+  inline static const proto_gen::expression_generator generator_no_paren{
+      proto_gen::node{[](auto array) {
+                        return ast::make<ast::binary_expression>(
+                            std::move(array[0]), _op, std::move(array[1]));
+                      },
+                      content}};
+  inline static const proto_gen::expression_generator generator_with_paren{
+      proto_gen::node{[](auto array) {
+                        return ast::make<ast::binary_expression>(
+                            std::move(array[0]), _op, std::move(array[1]));
+                      },
+                      "(" + content + ")"}};
+
+  [[nodiscard]] std::pair<ast::node, source_replacement> construct(
+      const ast::base& target) const override {
+    assert(target.has_parent());
+
+    bool needs_paren{false};
+    if (target.parent().is<marlin::ast::unary_expression>()) {
+      needs_paren = true;
+    } else if (target.parent().is<marlin::ast::binary_expression>()) {
+      const auto& binary{target.parent().as<marlin::ast::binary_expression>()};
+      const auto parent_precedence = precedence_for(binary.op);
+      const auto this_precedence = precedence_for(_op);
+      if (this_precedence < parent_precedence ||
+          (this_precedence == parent_precedence &&
+           binary.right().get() == &target)) {
+        needs_paren = true;
+      }
+    }
+
+    if (needs_paren) {
+      return generator_with_paren.construct(target.source_code_range);
+    } else {
+      return generator_no_paren.construct(target.source_code_range);
+    }
+  }
+};
+
+template struct binary_prototype<ast::binary_op::add>;
+template struct binary_prototype<ast::binary_op::subtract>;
+template struct binary_prototype<ast::binary_op::multiply>;
+template struct binary_prototype<ast::binary_op::divide>;
+
 struct number_prototype {
   static auto construct(source_range original, std::string value) {
     auto value_copy{value};

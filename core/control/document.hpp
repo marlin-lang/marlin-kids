@@ -46,10 +46,17 @@ struct document {
   }
 
   template <typename prototype_type, typename... arg_type>
-  source_replacement replace_with_prototype(ast::base& original,
-                                            arg_type&&... args) {
+  source_replacement replace_with_literal_prototype(ast::base& original,
+                                                    arg_type&&... args) {
     auto [node, update] = prototype_type::construct(
         original.source_code_range, std::forward<arg_type>(args)...);
+    replace_expression(original, std::move(node));
+    return update;
+  }
+
+  source_replacement replace_with_expression_prototype(
+      ast::base& original, const expression_prototype& prototype) {
+    auto [node, update] = prototype.construct(original);
     replace_expression(original, std::move(node));
     return update;
   }

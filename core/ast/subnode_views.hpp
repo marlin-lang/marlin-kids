@@ -65,7 +65,7 @@ struct const_concrete_view {
   const base_type* _base;
   const concrete* _con;
 
-  const data_vector& _data() const noexcept { return _base->_children; }
+  const data_vector& _data() const noexcept { return _base->children(); }
 };
 
 template <typename base_type>
@@ -177,7 +177,7 @@ struct const_vector_view {
   const base_type* _base;
   const vector* _vec;
 
-  const data_vector& _data() const noexcept { return _base->_children; }
+  const data_vector& _data() const noexcept { return _base->children(); }
 };
 
 }  // namespace marlin::ast::subnode

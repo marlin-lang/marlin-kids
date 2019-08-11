@@ -64,8 +64,32 @@ struct statement_prototype::impl : statement_prototype,
   }
 };
 
+struct expression_prototype
+    : prototype_container<expression_prototype, expression_prototype> {
+  template <typename prototype>
+  struct impl;
+
+  virtual ~expression_prototype() noexcept = default;
+
+  [[nodiscard]] virtual std::string name() const = 0;
+  [[nodiscard]] virtual std::pair<ast::node, source_replacement> construct(
+      const ast::base& target) const = 0;
+};
+
+template <typename prototype>
+struct expression_prototype::impl : expression_prototype,
+                                    expression_prototype::element<prototype> {
+  /*[[nodiscard]] std::pair<ast::node, source_insertion> construct(
+      size_t line, size_t indent) const override {
+    return prototype::generator.construct(line, indent);
+  }*/
+};
+
 inline static constexpr auto& statement_prototypes =
     statement_prototype::elements();
+
+inline static constexpr auto& expression_prototypes =
+    expression_prototype::elements();
 
 }  // namespace marlin::control
 
