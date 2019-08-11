@@ -12,8 +12,8 @@
 @end
 
 @implementation SourceTextView {
-  std::optional<marlin::control::statement_inserter> _statementInserter;
   NSRange _selectionRange;
+  std::optional<marlin::control::statement_inserter> _statementInserter;
   NSInteger _statementInsertionPoint;
   marlin::source_loc _expression_loc;
 }
@@ -34,6 +34,8 @@
   auto index = [self characterIndexForInsertionAtPoint:location];
   _expression_loc = [self sourceLocOfIndex:index];
   auto& node = [self.dataSource textView:self nodeContainsSourceLoc:_expression_loc];
+  _selectionRange = [self rangeOfSourceRange:node.source_code_range];
+  [self setNeedsDisplayInRect:self.bounds avoidAdditionalLayout:YES];
   if (node.is<marlin::ast::variable_placeholder>() ||
       node.is<marlin::ast::expression_placeholder>() || node.is<marlin::ast::variable_name>() ||
       node.is<marlin::ast::number_literal>() || node.is<marlin::ast::string_literal>() ||
@@ -45,9 +47,7 @@
         [storyboard instantiateControllerWithIdentifier:@"EditorViewController"];
     vc.delegate = self;
     self.popover.contentViewController = vc;
-    auto begin = [self indexOfSourceLoc:node.source_code_range.begin];
-    auto end = [self indexOfSourceLoc:node.source_code_range.end];
-    auto rect = [self rectOfRange:NSMakeRange(begin, end - begin)];
+    auto rect = [self rectOfRange:_selectionRange];
     [self.popover showRelativeToRect:rect ofView:self preferredEdge:NSMinYEdge];
 
     if (node.is<marlin::ast::variable_placeholder>()) {
@@ -194,6 +194,12 @@
   return currentLineIndex + loc.column - 1;
 }
 
+- (NSRange)rangeOfSourceRange:(marlin::source_range)sourceRange {
+  auto begin = [self indexOfSourceLoc:sourceRange.begin];
+  auto end = [self indexOfSourceLoc:sourceRange.end];
+  return NSMakeRange(begin, end - begin);
+}
+
 #pragma mark - EditorViewControllerDelegate implementation
 
 - (void)viewController:(EditorViewController*)vc finishEditWithString:(NSString*)string {
@@ -204,15 +210,15 @@
                                        type:vc.type
                                  withString:string];
     auto begin = [self indexOfSourceLoc:update.range.begin];
-    auto end = [self indexOfSourceLoc:update.range.end];
-    auto range = NSMakeRange(begin, end - begin);
     NSString* updatedString = [NSString stringWithCString:update.source.c_str()
                                                  encoding:NSUTF8StringEncoding];
-    [self.textStorage replaceCharactersInRange:range withString:updatedString];
+    [self.textStorage replaceCharactersInRange:[self rangeOfSourceRange:update.range]
+                                    withString:updatedString];
     [[SourceTheme new] applyTo:self.textStorage
                          range:NSMakeRange(begin, updatedString.length)
                 withHighlights:update.highlights];
     _expression_loc = {0, 0};
+    _selectionRange = NSMakeRange(0, 0);
   }
 }
 

@@ -137,7 +137,7 @@
   self.typeSegmentControl.segmentCount = 3;
   [self.typeSegmentControl setLabel:@"Number" forSegment:0];
   [self.typeSegmentControl setLabel:@"String" forSegment:1];
-  [self.typeSegmentControl setLabel:@"Identifier" forSegment:2];
+  [self.typeSegmentControl setLabel:@"Variable" forSegment:2];
 }
 
 - (void)validate {
