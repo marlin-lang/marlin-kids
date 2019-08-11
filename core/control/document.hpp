@@ -6,6 +6,7 @@
 #include <utility>
 
 #include "base.hpp"
+#include "environment.hpp"
 #include "prototypes.hpp"
 #include "source_modifications.hpp"
 
@@ -81,7 +82,13 @@ struct document {
 
   const auto& output() const noexcept { return _output; }
 
-  void execute() { _output.clear(); }
+  void execute() {
+    _output.clear();
+    marlin::exec::environment env;
+    env.register_print_callback(
+        [this](const auto& string) { _output += string; });
+    env.execute(*_program);
+  }
 
  private:
   ast::node _program;
