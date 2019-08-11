@@ -4,6 +4,9 @@
 #include "proto_gen.hpp"
 #include "prototype_definition.hpp"
 
+// Testing
+#include <iostream>
+
 namespace marlin::control {
 
 struct assignment_prototype : statement_prototype::impl<assignment_prototype> {
@@ -57,11 +60,45 @@ struct if_else_prototype : statement_prototype::impl<if_else_prototype> {
           newline() + "}"}};
 };
 
+template <ast::unary_op _op>
+struct unary_prototype : expression_prototype::impl<unary_prototype<_op>> {
+  [[nodiscard]] std::string name() const override { return symbol_for(_op); }
+
+  inline static const auto content{symbol_for(_op) +
+                                   expression_placeholder("argument")};
+  inline static const proto_gen::expression_generator generator_no_paren{
+      proto_gen::node{[](auto array) {
+                        return ast::make<ast::unary_expression>(
+                            _op, std::move(array[0]));
+                      },
+                      content}};
+  inline static const proto_gen::expression_generator generator_with_paren{
+      proto_gen::node{[](auto array) {
+                        return ast::make<ast::unary_expression>(
+                            _op, std::move(array[0]));
+                      },
+                      "(" + content + ")"}};
+
+  [[nodiscard]] std::pair<ast::node, source_replacement> construct(
+      const ast::base& target) const override {
+    assert(target.has_parent());
+
+    if (target.parent().is<marlin::ast::unary_expression>()) {
+      return generator_with_paren.construct(target.source_code_range);
+    } else {
+      return generator_no_paren.construct(target.source_code_range);
+    }
+  }
+};
+
+template struct unary_prototype<ast::unary_op::negative>;
+
 template <ast::binary_op _op>
 struct binary_prototype : expression_prototype::impl<binary_prototype<_op>> {
   [[nodiscard]] std::string name() const override { return symbol_for(_op); }
 
-  inline static const auto content{expression_placeholder("left") + " + " +
+  inline static const auto content{expression_placeholder("left") +
+                                   (std::string{" "} + symbol_for(_op) + " ") +
                                    expression_placeholder("right")};
   inline static const proto_gen::expression_generator generator_no_paren{
       proto_gen::node{[](auto array) {

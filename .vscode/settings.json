@@ -1,8 +1,8 @@
 {
     "files.associations": {
+        "SConscript": "python",
         "SConstruct": "python",
         "Sconscript": "python",
-        "SConscript": "python",
         "__locale": "cpp",
         "iosfwd": "cpp",
         "__bit_reference": "cpp",
@@ -91,7 +91,8 @@
         "cinttypes": "cpp",
         "hashtable": "cpp",
         "bit": "cpp",
-        "memory_resource": "cpp"
+        "memory_resource": "cpp",
+        "charconv": "cpp"
     },
     "C_Cpp.default.configurationProvider": "vector-of-bool.cmake-tools"
 }

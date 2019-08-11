@@ -102,8 +102,8 @@ TEST_CASE("control::Insert binary expressions at placeholder", "[control]") {
   auto inner_update = document.replace_with_expression_prototype(
       inner_placeholder,
       *marlin::control::expression_prototypes[marlin::control::binary_prototype<
-          marlin::ast::binary_op::add>::index()]);
-  REQUIRE(inner_update.source == "(@left + @right)");
+          marlin::ast::binary_op::subtract>::index()]);
+  REQUIRE(inner_update.source == "(@left - @right)");
   REQUIRE(inner_update.range.begin.line == 2);
   REQUIRE(inner_update.range.begin.column == 23);
   REQUIRE(inner_update.range.end.line == 2);
@@ -112,4 +112,42 @@ TEST_CASE("control::Insert binary expressions at placeholder", "[control]") {
   auto &declaration = document.locate({2, 13});
   REQUIRE(declaration.is<marlin::ast::assignment>());
   REQUIRE(declaration.source_code_range.end.column == 40);
+}
+
+TEST_CASE("control::Insert unary expressions at placeholder", "[control]") {
+  auto [document, init_data] =
+      marlin::control::document::make_document(nullptr, 0);
+  auto inserter = marlin::control::statement_inserter{document};
+  inserter.move_to_line(2);
+  REQUIRE(inserter.can_insert());
+  inserter.insert(*marlin::control::statement_prototypes
+                      [marlin::control::assignment_prototype::index()]);
+
+  auto &placeholder = document.locate({2, 20});
+  REQUIRE(placeholder.is<marlin::ast::expression_placeholder>());
+  auto update = document.replace_with_expression_prototype(
+      placeholder,
+      *marlin::control::expression_prototypes[marlin::control::unary_prototype<
+          marlin::ast::unary_op::negative>::index()]);
+  REQUIRE(update.source == "-@argument");
+  REQUIRE(update.range.begin.line == 2);
+  REQUIRE(update.range.begin.column == 15);
+  REQUIRE(update.range.end.line == 2);
+  REQUIRE(update.range.end.column == 21);
+
+  auto &inner_placeholder = document.locate({2, 19});
+  REQUIRE(inner_placeholder.is<marlin::ast::expression_placeholder>());
+  auto inner_update = document.replace_with_expression_prototype(
+      inner_placeholder,
+      *marlin::control::expression_prototypes[marlin::control::binary_prototype<
+          marlin::ast::binary_op::multiply>::index()]);
+  REQUIRE(inner_update.source == "(@left * @right)");
+  REQUIRE(inner_update.range.begin.line == 2);
+  REQUIRE(inner_update.range.begin.column == 16);
+  REQUIRE(inner_update.range.end.line == 2);
+  REQUIRE(inner_update.range.end.column == 25);
+
+  auto &declaration = document.locate({2, 13});
+  REQUIRE(declaration.is<marlin::ast::assignment>());
+  REQUIRE(declaration.source_code_range.end.column == 33);
 }

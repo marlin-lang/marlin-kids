@@ -6,7 +6,14 @@
 
 namespace marlin::ast {
 
-enum class unary_op : uint8_t { positive, negative };
+enum class unary_op : uint8_t { negative };
+
+static constexpr std::array _unary_op_symbol_map{
+    "-" /* negative */
+};
+[[nodiscard]] inline constexpr const char* symbol_for(unary_op op) noexcept {
+  return _unary_op_symbol_map[static_cast<uint8_t>(op)];
+}
 
 enum class binary_op : uint8_t { add, subtract, multiply, divide };
 

@@ -11,9 +11,17 @@
 #include "subnodes.hpp"
 #include "utils.hpp"
 
-namespace marlin::ast {
+namespace marlin {
+
+namespace exec {
+struct generator;
+}
+
+namespace ast {
 
 struct base {
+  friend exec::generator;
+
   friend subnode::concrete_view<base>;
   friend subnode::vector_view<base>;
 
@@ -282,6 +290,8 @@ struct base::impl : base {
   }
 };
 
-}  // namespace marlin::ast
+}  // namespace ast
+
+}  // namespace marlin
 
 #endif  // marlin_ast_base_impl
