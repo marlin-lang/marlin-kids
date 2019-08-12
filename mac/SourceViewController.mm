@@ -3,6 +3,7 @@
 #import "toolbox_model.hpp"
 
 #import "Document.h"
+#import "Pasteboard.h"
 #import "SourceTheme.h"
 #import "ToolBoxHeaderView.h"
 #import "ToolBoxItem.h"
@@ -46,12 +47,12 @@
 #pragma mark - NSCollectionViewDataSource implementation
 
 - (NSInteger)numberOfSectionsInCollectionView:(NSCollectionView *)collectionView {
-  return marlin::control::toolbox_model::sections().size();
+  return marlin::control::toolbox_model::sections.size();
 }
 
 - (NSInteger)collectionView:(NSCollectionView *)collectionView
      numberOfItemsInSection:(NSInteger)section {
-  return marlin::control::toolbox_model::items()[section].size();
+  return marlin::control::toolbox_model::items[section].size();
 }
 
 - (NSCollectionViewItem *)collectionView:(NSCollectionView *)collectionView
@@ -69,8 +70,7 @@
       [collectionView makeSupplementaryViewOfKind:NSCollectionElementKindSectionHeader
                                    withIdentifier:@"ToolBoxHeaderView"
                                      forIndexPath:indexPath];
-  view.titleTextField.stringValue =
-      @(marlin::control::toolbox_model::sections()[indexPath.section]);
+  view.titleTextField.stringValue = @(marlin::control::toolbox_model::sections[indexPath.section]);
   return view;
 }
 
@@ -99,8 +99,11 @@
               toPasteboard:(NSPasteboard *)pasteboard {
   auto section = indexPaths.anyObject.section;
   auto item = indexPaths.anyObject.item;
-  NSString *string = [NSString stringWithFormat:@"%ld,%ld", section, item];
-  return [pasteboard setString:string forType:@(marlin::control::toolbox_model::pasteboard_type())];
+  NSString *string = [NSString
+      stringWithFormat:@"%ld", marlin::control::toolbox_model::items[section][item].index];
+  return [pasteboard
+      setString:string
+        forType:pasteboardOfType(marlin::control::toolbox_model::items[section][item].type)];
 }
 
 #pragma mark - SourceTextViewDataSource implementation
@@ -135,6 +138,14 @@
           .replace_with_literal_prototype<marlin::control::identifier_prototype>(
               node, std::string{string.UTF8String});
   }
+}
+
+- (marlin::control::source_replacement)textView:(SourceTextView *)textView
+                           replacePlaceholderAt:(marlin::source_loc)loc
+                   withExpressionPrototypeIndex:(NSUInteger)index {
+  auto &node = _document.content.locate(loc);
+  return _document.content.replace_with_expression_prototype(
+      node, *marlin::control::expression_prototypes[index]);
 }
 
 @end
