@@ -161,16 +161,6 @@ struct update_checker {
 };
 
 template <typename... types>
-struct type_counter {
-  static constexpr size_t count = 0;
-};
-
-template <typename t0, typename... types>
-struct type_counter<t0, types...> {
-  static constexpr size_t count = 1 + type_counter<types...>::count;
-};
-
-template <typename... types>
 struct update_checker<subnode::concrete, types...> {
   static constexpr bool needs_update = update_checker<types...>::needs_update;
 };
@@ -190,9 +180,9 @@ struct update_checker<subnode::vector, t0, types...> {
 template <typename node_type, typename... subnode_types>
 struct base::impl : base {
   friend base;
- 
+
   using base_type = impl<node_type, subnode_types...>;
- 
+
   explicit impl(
       typename base_utils::type_config<subnode_types>::store... stores)
       : base{get_typeid<node_type>(), count_subnodes(stores...)} {
@@ -266,7 +256,7 @@ struct base::impl : base {
 
   template <size_t index>
   void update_subnodes(size_t target) noexcept {
-    if constexpr (index < base_utils::type_counter<subnode_types...>::count) {
+    if constexpr (index < sizeof...(subnode_types)) {
       update_subnodes<index + 1>(
           update_subnode(std::get<index>(_subs), target));
     }

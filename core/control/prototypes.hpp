@@ -14,9 +14,8 @@ struct assignment_prototype : statement_prototype::impl<assignment_prototype> {
   [[nodiscard]] std::string name() const override { return "assign"; }
 
   inline static const proto_gen::statement_generator generator{proto_gen::node{
-      [](auto array) {
-        return ast::make<ast::assignment>(std::move(array[0]),
-                                          std::move(array[1]));
+      [](auto left, auto right) {
+        return ast::make<ast::assignment>(std::move(left), std::move(right));
       },
       variable_placeholder(placeholder::get<ast::assignment>(0)) + " = " +
           expression_placeholder(placeholder::get<ast::assignment>(1)) + ";"}};
@@ -26,8 +25,8 @@ struct print_prototype : statement_prototype::impl<print_prototype> {
   [[nodiscard]] std::string name() const override { return "print"; }
 
   inline static const proto_gen::statement_generator generator{proto_gen::node{
-      [](auto array) {
-        return ast::make<ast::print_statement>(std::move(array[0]));
+      [](auto value) {
+        return ast::make<ast::print_statement>(std::move(value));
       },
       "print(" +
           expression_placeholder(placeholder::get<ast::print_statement>(0)) +
@@ -38,8 +37,8 @@ struct if_prototype : statement_prototype::impl<if_prototype> {
   [[nodiscard]] std::string name() const override { return "if"; }
 
   inline static const proto_gen::statement_generator generator{proto_gen::node{
-      [](auto array) {
-        return ast::make<ast::if_statement>(std::move(array[0]),
+      [](auto condition) {
+        return ast::make<ast::if_statement>(std::move(condition),
                                             std::vector<ast::node>{});
       },
       keyword("if") + " (" +
@@ -52,9 +51,9 @@ struct if_else_prototype : statement_prototype::impl<if_else_prototype> {
 
   inline static source_loc else_loc;
   inline static const proto_gen::statement_generator generator{proto_gen::node{
-      [](auto array) {
+      [](auto condition) {
         ast::node node{ast::make<ast::if_else_statement>(
-            std::move(array[0]), std::vector<ast::node>{},
+            std::move(condition), std::vector<ast::node>{},
             std::vector<ast::node>{})};
         node->as<ast::if_else_statement>().else_loc = else_loc;
         return node;
@@ -73,15 +72,15 @@ struct unary_prototype : expression_prototype::impl<unary_prototype<_op>> {
       symbol_for(_op) +
       expression_placeholder(placeholder::get<ast::unary_expression>(0))};
   inline static const proto_gen::expression_generator generator_no_paren{
-      proto_gen::node{[](auto array) {
+      proto_gen::node{[](auto argument) {
                         return ast::make<ast::unary_expression>(
-                            _op, std::move(array[0]));
+                            _op, std::move(argument));
                       },
                       content}};
   inline static const proto_gen::expression_generator generator_with_paren{
-      proto_gen::node{[](auto array) {
+      proto_gen::node{[](auto argument) {
                         return ast::make<ast::unary_expression>(
-                            _op, std::move(array[0]));
+                            _op, std::move(argument));
                       },
                       "(" + content + ")"}};
 
@@ -108,15 +107,15 @@ struct binary_prototype : expression_prototype::impl<binary_prototype<_op>> {
       (std::string{" "} + symbol_for(_op) + " ") +
       expression_placeholder(placeholder::get<ast::binary_expression>(1))};
   inline static const proto_gen::expression_generator generator_no_paren{
-      proto_gen::node{[](auto array) {
+      proto_gen::node{[](auto left, auto right) {
                         return ast::make<ast::binary_expression>(
-                            std::move(array[0]), _op, std::move(array[1]));
+                            std::move(left), _op, std::move(right));
                       },
                       content}};
   inline static const proto_gen::expression_generator generator_with_paren{
-      proto_gen::node{[](auto array) {
+      proto_gen::node{[](auto left, auto right) {
                         return ast::make<ast::binary_expression>(
-                            std::move(array[0]), _op, std::move(array[1]));
+                            std::move(left), _op, std::move(right));
                       },
                       "(" + content + ")"}};
 
@@ -155,7 +154,7 @@ struct number_prototype {
   static auto construct(source_range original, std::string value) {
     auto value_copy{value};
     const proto_gen::expression_generator gen{proto_gen::node{
-        [value{std::move(value_copy)}](auto) {
+        [value{std::move(value_copy)}]() {
           return ast::make<ast::number_literal>(std::move(value));
         },
         number(std::move(value))}};
@@ -166,11 +165,9 @@ struct number_prototype {
 struct string_prototype {
   static auto construct(source_range original, std::string str) {
     auto quoted_string{quoted(str)};
-    const proto_gen::expression_generator gen{
-        proto_gen::node{[str{std::move(str)}](auto) {
-                          return ast::make<ast::string_literal>(str);
-                        },
-                        string(std::move(quoted_string))}};
+    const proto_gen::expression_generator gen{proto_gen::node{
+        [str{std::move(str)}]() { return ast::make<ast::string_literal>(str); },
+        string(std::move(quoted_string))}};
     return gen.construct(original);
   }
 };
@@ -179,7 +176,7 @@ struct variable_name_prototype {
   static auto construct(source_range original, std::string name) {
     auto name_copy{name};
     const proto_gen::expression_generator gen{
-        proto_gen::node{[name{std::move(name_copy)}](auto) {
+        proto_gen::node{[name{std::move(name_copy)}]() {
                           return ast::make<ast::variable_name>(std::move(name));
                         },
                         std::move(name)}};
@@ -191,7 +188,7 @@ struct identifier_prototype {
   static auto construct(source_range original, std::string name) {
     auto name_copy{name};
     const proto_gen::expression_generator gen{
-        proto_gen::node{[name{std::move(name_copy)}](auto) {
+        proto_gen::node{[name{std::move(name_copy)}]() {
                           return ast::make<ast::identifier>(std::move(name));
                         },
                         std::move(name)}};

@@ -10,21 +10,6 @@
 
 namespace marlin::control {
 
-// To be extracted into common utils file later
-namespace placeholder_utils {
-
-template <typename... types>
-struct type_counter {
-  static constexpr size_t count = 0;
-};
-
-template <typename t0, typename... types>
-struct type_counter<t0, types...> {
-  static constexpr size_t count = 1 + type_counter<types...>::count;
-};
-
-}  // namespace placeholder_utils
-
 struct placeholder {
   inline static constexpr const char* default_text{"value"};
 
@@ -53,10 +38,7 @@ struct placeholder {
   static std::string get_from_parent(
       const ast::base::impl<node_type, subnode_type...>& parent,
       const ast::base& node) {
-    if constexpr (index >=
-                  placeholder_utils::type_counter<subnode_type...>::count) {
-      return default_text;
-    } else {
+    if constexpr (index < sizeof...(subnode_type)) {
       auto result{try_get_at_subnode_index(
           reinterpret_cast<const node_type&>(parent), index,
           parent.template get_subnode<index>(), node)};
@@ -65,6 +47,8 @@ struct placeholder {
       } else {
         return get_from_parent<index + 1>(parent, node);
       }
+    } else {
+      return default_text;
     }
   }
 

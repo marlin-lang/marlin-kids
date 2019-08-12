@@ -4,6 +4,7 @@
 #include <string>
 #include <tuple>
 #include <type_traits>
+#include <utility>
 
 #include "ast.hpp"
 #include "prototype_definition.hpp"
@@ -100,7 +101,8 @@ struct node : base::impl<1> {
     auto inner_target{nodes.data()};
     auto inner_result{
         _inner.construct_all(indent, curr_loc, curr_offset, inner_target, vec)};
-    *target = _callable(std::move(nodes));
+    *target = construct_node(std::move(nodes),
+                             std::make_index_sequence<inner_type::nodes>{});
     (*target)->source_code_range = {start, curr_loc};
     target++;
     return inner_result;
@@ -109,6 +111,12 @@ struct node : base::impl<1> {
  private:
   callable_type _callable;
   inner_type _inner;
+
+  template <std::size_t... index>
+  ast::node construct_node(std::array<ast::node, inner_type::nodes> nodes,
+                           std::index_sequence<index...>) const {
+    return _callable(std::move(std::get<index>(nodes))...);
+  }
 };
 
 template <typename callable_type>
@@ -225,13 +233,13 @@ inline auto op(inner_type inner) {
 
 inline auto variable_placeholder(std::string name) {
   return proto_gen::node(
-      [name](auto) { return ast::make<ast::variable_placeholder>(name); },
+      [name]() { return ast::make<ast::variable_placeholder>(name); },
       proto_gen::highlight(highlight_token_type::placeholder,
                            "@" + std::move(name)));
 }
 inline auto expression_placeholder(std::string name) {
   return proto_gen::node(
-      [name](auto) { return ast::make<ast::expression_placeholder>(name); },
+      [name]() { return ast::make<ast::expression_placeholder>(name); },
       proto_gen::highlight(highlight_token_type::placeholder,
                            "@" + std::move(name)));
 }
