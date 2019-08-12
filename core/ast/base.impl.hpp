@@ -190,7 +190,9 @@ struct update_checker<subnode::vector, t0, types...> {
 template <typename node_type, typename... subnode_types>
 struct base::impl : base {
   friend base;
-
+ 
+  using base_type = impl<node_type, subnode_types...>;
+ 
   explicit impl(
       typename base_utils::type_config<subnode_types>::store... stores)
       : base{get_typeid<node_type>(), count_subnodes(stores...)} {
@@ -199,9 +201,6 @@ struct base::impl : base {
       child->_parent = this;
     }
   }
-
- protected:
-  using base_type = impl<node_type, subnode_types...>;
 
   template <size_t index>
   decltype(auto) get_subnode() {

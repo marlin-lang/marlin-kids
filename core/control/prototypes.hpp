@@ -1,6 +1,7 @@
 #ifndef marlin_control_prototypes_hpp
 #define marlin_control_prototypes_hpp
 
+#include "placeholders.hpp"
 #include "proto_gen.hpp"
 #include "prototype_definition.hpp"
 
@@ -12,13 +13,13 @@ namespace marlin::control {
 struct assignment_prototype : statement_prototype::impl<assignment_prototype> {
   [[nodiscard]] std::string name() const override { return "assign"; }
 
-  inline static const proto_gen::statement_generator generator{
-      proto_gen::node{[](auto array) {
-                        return ast::make<ast::assignment>(std::move(array[0]),
-                                                          std::move(array[1]));
-                      },
-                      variable_placeholder("variable") + " = " +
-                          expression_placeholder("value") + ";"}};
+  inline static const proto_gen::statement_generator generator{proto_gen::node{
+      [](auto array) {
+        return ast::make<ast::assignment>(std::move(array[0]),
+                                          std::move(array[1]));
+      },
+      variable_placeholder(placeholder::get<ast::assignment>(0)) + " = " +
+          expression_placeholder(placeholder::get<ast::assignment>(1)) + ";"}};
 };
 
 struct print_prototype : statement_prototype::impl<print_prototype> {
@@ -28,7 +29,9 @@ struct print_prototype : statement_prototype::impl<print_prototype> {
       [](auto array) {
         return ast::make<ast::print_statement>(std::move(array[0]));
       },
-      "print(" + expression_placeholder("value") + ");"}};
+      "print(" +
+          expression_placeholder(placeholder::get<ast::print_statement>(0)) +
+          ");"}};
 };
 
 struct if_prototype : statement_prototype::impl<if_prototype> {
@@ -39,8 +42,9 @@ struct if_prototype : statement_prototype::impl<if_prototype> {
         return ast::make<ast::if_statement>(std::move(array[0]),
                                             std::vector<ast::node>{});
       },
-      keyword("if") + " (" + expression_placeholder("condition") + ") {" +
-          newline() + "}"}};
+      keyword("if") + " (" +
+          expression_placeholder(placeholder::get<ast::if_statement>(0)) +
+          ") {" + newline() + "}"}};
 };
 
 struct if_else_prototype : statement_prototype::impl<if_else_prototype> {
@@ -55,17 +59,19 @@ struct if_else_prototype : statement_prototype::impl<if_else_prototype> {
         node->as<ast::if_else_statement>().else_loc = else_loc;
         return node;
       },
-      keyword("if") + " (" + expression_placeholder("condition") + ") {" +
-          newline() + "} " + store_loc(else_loc) + keyword("else") + " {" +
-          newline() + "}"}};
+      keyword("if") + " (" +
+          expression_placeholder(placeholder::get<ast::if_statement>(0)) +
+          ") {" + newline() + "} " + store_loc(else_loc) + keyword("else") +
+          " {" + newline() + "}"}};
 };
 
 template <ast::unary_op _op>
 struct unary_prototype : expression_prototype::impl<unary_prototype<_op>> {
   [[nodiscard]] std::string name() const override { return symbol_for(_op); }
 
-  inline static const auto content{symbol_for(_op) +
-                                   expression_placeholder("argument")};
+  inline static const auto content{
+      symbol_for(_op) +
+      expression_placeholder(placeholder::get<ast::unary_expression>(0))};
   inline static const proto_gen::expression_generator generator_no_paren{
       proto_gen::node{[](auto array) {
                         return ast::make<ast::unary_expression>(
@@ -97,9 +103,10 @@ template <ast::binary_op _op>
 struct binary_prototype : expression_prototype::impl<binary_prototype<_op>> {
   [[nodiscard]] std::string name() const override { return symbol_for(_op); }
 
-  inline static const auto content{expression_placeholder("left") +
-                                   (std::string{" "} + symbol_for(_op) + " ") +
-                                   expression_placeholder("right")};
+  inline static const auto content{
+      expression_placeholder(placeholder::get<ast::binary_expression>(0)) +
+      (std::string{" "} + symbol_for(_op) + " ") +
+      expression_placeholder(placeholder::get<ast::binary_expression>(1))};
   inline static const proto_gen::expression_generator generator_no_paren{
       proto_gen::node{[](auto array) {
                         return ast::make<ast::binary_expression>(

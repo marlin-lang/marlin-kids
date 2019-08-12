@@ -62,22 +62,25 @@ struct document {
     return update;
   }
 
-  ast::node replace_expression(ast::base& existing, ast::node replacement) {
+  std::pair<ast::node, source_replacement> remove_expression(
+      ast::base& existing) {
     assert(existing.has_parent());
-    assert(existing.source_code_range.end.line ==
-           replacement->source_code_range.end.line);
 
-    auto offset =
-        static_cast<ptrdiff_t>(replacement->source_code_range.end.column) -
-        static_cast<ptrdiff_t>(existing.source_code_range.end.column);
-    auto& placed = *replacement;
-
-    auto result{
-        existing.parent().replace_child(existing, std::move(replacement))};
-    if (offset != 0) {
-      update_source_column_after_node(placed, offset);
-    }
-    return result;
+    auto placeholder_name{placeholder::get_replacing_node(existing)};
+    auto source{"@" + placeholder_name};
+    auto placeholder =
+        ast::make<ast::expression_placeholder>(std::move(placeholder_name));
+    auto original_range{existing.source_code_range};
+    placeholder->source_code_range = {
+        original_range.begin,
+        {original_range.begin.line,
+         original_range.begin.column + source.size()}};
+    auto node{replace_expression(existing, std::move(placeholder))};
+    std::vector<highlight_token> tokens{
+        highlight_token{highlight_token_type::placeholder, 0, source.size()}};
+    return std::make_pair(std::move(node),
+                          source_replacement{original_range, std::move(source),
+                                             std::move(tokens)});
   }
 
   const auto& output() const noexcept { return _output; }
@@ -93,6 +96,26 @@ struct document {
  private:
   ast::node _program;
   std::string _output;
+
+  ast::node replace_expression(ast::base& existing, ast::node replacement) {
+    assert(existing.has_parent());
+
+    // assume there are no multi-line expressions
+    assert(existing.source_code_range.end.line ==
+           replacement->source_code_range.end.line);
+
+    auto offset =
+        static_cast<ptrdiff_t>(replacement->source_code_range.end.column) -
+        static_cast<ptrdiff_t>(existing.source_code_range.end.column);
+    auto& placed = *replacement;
+
+    auto result{
+        existing.parent().replace_child(existing, std::move(replacement))};
+    if (offset != 0) {
+      update_source_column_after_node(placed, offset);
+    }
+    return result;
+  }
 
   void update_source_column_after_node(ast::base& node,
                                        ptrdiff_t column_offset) {

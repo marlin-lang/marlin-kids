@@ -10,7 +10,7 @@ namespace marlin::control {
 
 struct toolbox_model {
   struct item {
-    enum type_t { statement = 0, expression };
+    enum type_t : uint8_t { statement = 0, expression };
 
     size_t index;
     type_t type;
@@ -18,7 +18,7 @@ struct toolbox_model {
 
   inline static const char* pasteboard_type() noexcept { return "marlin"; }
 
-  inline static auto& sections() noexcept {
+  inline static const auto& sections() noexcept {
     static std::array _sections = {"statement", "expression"};
     return _sections;
   }

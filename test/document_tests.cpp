@@ -151,3 +151,29 @@ TEST_CASE("control::Insert unary expressions at placeholder", "[control]") {
   REQUIRE(declaration.is<marlin::ast::assignment>());
   REQUIRE(declaration.source_code_range.end.column == 33);
 }
+
+TEST_CASE("control::Remove expressions", "[control]") {
+  auto [document, init_data] =
+      marlin::control::document::make_document(nullptr, 0);
+  auto inserter = marlin::control::statement_inserter{document};
+  inserter.move_to_line(2);
+  REQUIRE(inserter.can_insert());
+  inserter.insert(*marlin::control::statement_prototypes
+                      [marlin::control::if_prototype::index()]);
+
+  auto &placeholder = document.locate({2, 7});
+  REQUIRE(placeholder.is<marlin::ast::expression_placeholder>());
+  auto update =
+      document
+          .replace_with_literal_prototype<marlin::control::number_prototype>(
+              placeholder, "12");
+
+  auto &literal = document.locate({2, 7});
+  REQUIRE(literal.is<marlin::ast::number_literal>());
+  auto [node, remove_update] = document.remove_expression(literal);
+  REQUIRE(remove_update.source == "@condition");
+  REQUIRE(remove_update.range.begin.line == 2);
+  REQUIRE(remove_update.range.begin.column == 7);
+  REQUIRE(remove_update.range.end.line == 2);
+  REQUIRE(remove_update.range.end.column == 9);
+}
