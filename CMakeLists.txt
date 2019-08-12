@@ -5,6 +5,9 @@ project(marlin-kids
         DESCRIPTION "The marlin language for kids"
         LANGUAGES CXX)
 
+# target_sources behavior
+cmake_policy(SET CMP0076 NEW)
+
 set(APP_NAME "marlin")
 
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_LIST_DIR}/cmake")
