@@ -15,71 +15,45 @@
 @end
 
 @implementation SourceTextView {
-  NSRange _selectionRange;
+  std::optional<marlin::control::source_selection> _selection;
+  std::optional<marlin::control::expression_inserter> _expressionInserter;
   std::optional<marlin::control::statement_inserter> _statementInserter;
+  NSRange _selectionRange;
   NSInteger _statementInsertionPoint;
-  marlin::source_loc _expression_loc;
-  marlin::ast::base* _expressionInsertionNode;
 }
 
 - (instancetype)initWithCoder:(NSCoder*)coder {
   if (self = [super initWithCoder:coder]) {
     _selectionRange = NSMakeRange(0, 0);
     _statementInsertionPoint = -1;
-    _expression_loc = {0, 0};
-    _expressionInsertionNode = nullptr;
   }
   return self;
 }
 
-- (void)mouseDown:(NSEvent*)theEvent {
-  [super mouseDown:theEvent];
+- (void)mouseDown:(NSEvent*)event {
+  [super mouseDown:event];
 
-  auto location = [self convertPoint:theEvent.locationInWindow fromView:nil];
+  auto location = [self convertPoint:event.locationInWindow fromView:nil];
   auto index = [self characterIndexForInsertionAtPoint:location];
-  _expression_loc = [self sourceLocOfIndex:index];
-  auto& node = [self.dataSource textView:self nodeContainsSourceLoc:_expression_loc];
-  _selectionRange = [self rangeOfSourceRange:node.source_code_range];
+  _selection = [self.dataSource textView:self selectionAt:[self sourceLocOfIndex:index]];
+  _selectionRange = [self rangeOfSourceRange:_selection->get_range()];
   [self setNeedsDisplayInRect:self.bounds avoidAdditionalLayout:YES];
-  if (node.is<marlin::ast::variable_placeholder>() ||
-      node.is<marlin::ast::expression_placeholder>() || node.is<marlin::ast::variable_name>() ||
-      node.is<marlin::ast::number_literal>() || node.is<marlin::ast::string_literal>() ||
-      node.is<marlin::ast::identifier>()) {
-    self.popover = [NSPopover new];
-    self.popover.behavior = NSPopoverBehaviorTransient;
+  if (_selection->is_literal()) {
     NSStoryboard* storyboard = [NSStoryboard storyboardWithName:@"Main" bundle:nil];
     EditorViewController* vc =
         [storyboard instantiateControllerWithIdentifier:@"EditorViewController"];
     vc.delegate = self;
+
+    self.popover = [NSPopover new];
+    self.popover.behavior = NSPopoverBehaviorTransient;
     self.popover.contentViewController = vc;
     auto rect = [self rectOfRange:_selectionRange];
     [self.popover showRelativeToRect:rect ofView:self preferredEdge:NSMinYEdge];
 
-    if (node.is<marlin::ast::variable_placeholder>()) {
-      vc.type = EditorType::Variable;
-    } else if (node.is<marlin::ast::expression_placeholder>()) {
-      vc.type = EditorType::Number;
-    } else if (node.is<marlin::ast::number_literal>()) {
-      vc.type = EditorType::Number;
-      vc.editorTextField.stringValue =
-          [NSString stringWithCString:node.as<marlin::ast::number_literal>().value.c_str()
-                             encoding:NSUTF8StringEncoding];
-    } else if (node.is<marlin::ast::variable_name>()) {
-      vc.type = EditorType::Variable;
-      vc.editorTextField.stringValue =
-          [NSString stringWithCString:node.as<marlin::ast::variable_name>().name.c_str()
-                             encoding:NSUTF8StringEncoding];
-    } else if (node.is<marlin::ast::string_literal>()) {
-      vc.type = EditorType::String;
-      vc.editorTextField.stringValue =
-          [NSString stringWithCString:node.as<marlin::ast::string_literal>().value.c_str()
-                             encoding:NSUTF8StringEncoding];
-    } else if (node.is<marlin::ast::identifier>()) {
-      vc.type = EditorType::Identifier;
-      vc.editorTextField.stringValue =
-          [NSString stringWithCString:node.as<marlin::ast::identifier>().name.c_str()
-                             encoding:NSUTF8StringEncoding];
-    }
+    auto [type, data] = _selection->get_literal_content();
+    vc.type = type;
+    vc.editorTextField.stringValue = [NSString stringWithCString:data.c_str()
+                                                        encoding:NSUTF8StringEncoding];
   }
 }
 
@@ -101,7 +75,7 @@
       _statementInserter->can_insert()) {
     auto* theme = [SourceTheme new];
     NSSize oneCharSize = [@"a" sizeWithAttributes:theme.allAttrs];
-    CGFloat x = oneCharSize.width * (_statementInserter->get_insert_location().column - 1);
+    CGFloat x = oneCharSize.width * (_statementInserter->get_location().column - 1);
     CGFloat y = 0;
     if (_statementInsertionPoint < self.textStorage.string.length) {
       auto rect = [self.layoutManager lineFragmentRectForGlyphAtIndex:_statementInsertionPoint
@@ -205,24 +179,33 @@
   return NSMakeRange(begin, end - begin);
 }
 
+- (void)updateInRange:(NSRange)range
+           withSource:(std::string)source
+           highlights:(std::vector<marlin::control::highlight_token>)highlights {
+  NSString* newString = [NSString stringWithCString:source.c_str() encoding:NSUTF8StringEncoding];
+  [self.textStorage replaceCharactersInRange:range withString:newString];
+  [[SourceTheme new] applyTo:self.textStorage
+                       range:NSMakeRange(range.location, newString.length)
+              withHighlights:highlights];
+}
+
 #pragma mark - EditorViewControllerDelegate implementation
 
 - (void)viewController:(EditorViewController*)vc finishEditWithString:(NSString*)string {
+  assert(_selection.has_value());
+
   [self.popover close];
   if (string.length > 0) {
-    auto update = [self.dataSource textView:self
-                       replacePlaceholderAt:_expression_loc
-                                       type:vc.type
-                                 withString:string];
-    auto begin = [self indexOfSourceLoc:update.range.begin];
-    NSString* updatedString = [NSString stringWithCString:update.source.c_str()
-                                                 encoding:NSUTF8StringEncoding];
-    [self.textStorage replaceCharactersInRange:[self rangeOfSourceRange:update.range]
-                                    withString:updatedString];
-    [[SourceTheme new] applyTo:self.textStorage
-                         range:NSMakeRange(begin, updatedString.length)
-                withHighlights:update.highlights];
-    _expression_loc = {0, 0};
+    auto inserter = (*std::move(_selection)).as_expression_inserter();
+    _selection = std::nullopt;
+    _selectionRange = NSMakeRange(0, 0);
+
+    auto update = inserter.insert_literal(vc.type, std::string{string.UTF8String});
+    [self updateInRange:[self rangeOfSourceRange:update.range]
+             withSource:std::move(update.source)
+             highlights:std::move(update.highlights)];
+  } else {
+    _selection = std::nullopt;
     _selectionRange = NSMakeRange(0, 0);
   }
 }
@@ -257,73 +240,65 @@
     auto [line, column]{[self sourceLocOfIndex:index]};
     _statementInserter->move_to_line(line);
     if (_statementInserter->can_insert()) {
-      auto range = [self.textStorage.string lineRangeForRange:NSMakeRange(index, 0)];
-      _statementInsertionPoint = range.location;
+      _statementInsertionPoint =
+          [self.textStorage.string lineRangeForRange:NSMakeRange(index, 0)].location;
       [self setNeedsDisplayInRect:self.bounds avoidAdditionalLayout:NO];
       return NSDragOperationCopy;
     } else {
       _statementInsertionPoint = -1;
       [self setNeedsDisplayInRect:self.bounds avoidAdditionalLayout:NO];
-      return NSDragOperationNone;
     }
   } else if (type == pasteboardOfType(marlin::control::pasteboard_t::expression)) {
-    _expression_loc = [self sourceLocOfIndex:index];
-    auto& node = [self.dataSource textView:self nodeContainsSourceLoc:_expression_loc];
-    _selectionRange = [self rangeOfSourceRange:node.source_code_range];
-    [self setNeedsDisplayInRect:self.bounds avoidAdditionalLayout:YES];
-    if (node.is<marlin::ast::expression_placeholder>()) {
+    if (!_expressionInserter.has_value()) {
+      _expressionInserter = [self.dataSource expressionInserterForTextView:self];
+    }
+    _expressionInserter->move_to_loc([self sourceLocOfIndex:index]);
+    if (_expressionInserter->can_insert()) {
+      _selectionRange = [self rangeOfSourceRange:_expressionInserter->get_range()];
+      [self setNeedsDisplayInRect:self.bounds avoidAdditionalLayout:YES];
       return NSDragOperationCopy;
     } else {
-      _expression_loc = {0, 0};
       _selectionRange = NSMakeRange(0, 0);
-      return NSDragOperationNone;
+      [self setNeedsDisplayInRect:self.bounds avoidAdditionalLayout:YES];
     }
-  } else {
-    return NSDragOperationNone;
   }
+
+  return NSDragOperationNone;
 }
 
 - (BOOL)performDragOperation:(id<NSDraggingInfo>)sender {
-  auto* string = [sender.draggingPasteboard
-      stringForType:pasteboardOfType(marlin::control::pasteboard_t::statement)];
-  if (string) {
+  auto type = [sender.draggingPasteboard availableTypeFromArray:self.acceptableDragTypes];
+  if (type == pasteboardOfType(marlin::control::pasteboard_t::statement)) {
     if (_statementInserter.has_value() && _statementInserter->can_insert()) {
-      auto index = string.integerValue;
-      auto source = _statementInserter->insert(*marlin::control::statement_prototypes[index]);
-      auto range = NSMakeRange(_statementInsertionPoint, 0);
-      [self.textStorage replaceCharactersInRange:range withString:@(source.source.c_str())];
-      [[SourceTheme new] applyTo:self.textStorage range:range withHighlights:source.highlights];
-
-      _statementInsertionPoint = -1;
-      [self setNeedsDisplayInRect:self.bounds avoidAdditionalLayout:YES];
+      auto index = [sender.draggingPasteboard
+                       stringForType:pasteboardOfType(marlin::control::pasteboard_t::statement)]
+                       .integerValue;
+      auto update = _statementInserter->insert_prototype(index);
+      [self updateInRange:NSMakeRange(_statementInsertionPoint, 0)
+               withSource:std::move(update.source)
+               highlights:std::move(update.highlights)];
       return YES;
-    } else {
-      return NO;
     }
-  }
-  string = [sender.draggingPasteboard
-      stringForType:pasteboardOfType(marlin::control::pasteboard_t::expression)];
-  if (string) {
-    auto index = string.integerValue;
-    auto source = [self.dataSource textView:self
-                       replacePlaceholderAt:_expression_loc
-               withExpressionPrototypeIndex:index];
-    [self.textStorage replaceCharactersInRange:_selectionRange withString:@(source.source.c_str())];
-    [[SourceTheme new] applyTo:self.textStorage
-                         range:_selectionRange
-                withHighlights:source.highlights];
-
-    _expression_loc = {0, 0};
-    _selectionRange = NSMakeRange(0, 0);
-    [self setNeedsDisplayInRect:self.bounds avoidAdditionalLayout:YES];
-    return YES;
+  } else if (type == pasteboardOfType(marlin::control::pasteboard_t::expression)) {
+    if (_expressionInserter.has_value() && _expressionInserter->can_insert()) {
+      auto index = [sender.draggingPasteboard
+                       stringForType:pasteboardOfType(marlin::control::pasteboard_t::expression)]
+                       .integerValue;
+      auto update = _expressionInserter->insert_prototype(index);
+      [self updateInRange:_selectionRange
+               withSource:std::move(update.source)
+               highlights:std::move(update.highlights)];
+      return YES;
+    }
   }
   return NO;
 }
 
 - (void)cleanUpAfterDragOperation {
   _statementInserter = std::nullopt;
+  _expressionInserter = std::nullopt;
   _statementInsertionPoint = -1;
+  _selectionRange = NSMakeRange(0, 0);
   [self setNeedsDisplayInRect:self.bounds avoidAdditionalLayout:YES];
 }
 

@@ -1,33 +1,33 @@
 #import <Cocoa/Cocoa.h>
 
-#import "base.hpp"
-#import "source_modifications.hpp"
+#import <string>
+#import <vector>
+
+#import "expression_inserter.hpp"
+#import "source_selection.hpp"
 #import "statement_inserter.hpp"
 
 #import "EditorViewController.h"
 
 @protocol SourceTextViewDataSource;
 
-@interface SourceTextView : NSTextView<EditorViewControllerDelegate>
+@interface SourceTextView : NSTextView <EditorViewControllerDelegate>
 
 @property(weak) id<SourceTextViewDataSource> dataSource;
+
+- (void)updateInRange:(NSRange)range
+           withSource:(std::string)source
+           highlights:(std::vector<marlin::control::highlight_token>)highlights;
 
 @end
 
 @protocol SourceTextViewDataSource
 
+- (marlin::control::source_selection)textView:(SourceTextView *)textView
+                                  selectionAt:(marlin::source_loc)loc;
+
 - (marlin::control::statement_inserter)statementInserterForTextView:(SourceTextView *)textView;
 
-- (marlin::ast::base &)textView:(SourceTextView *)textView
-          nodeContainsSourceLoc:(marlin::source_loc)loc;
-
-- (marlin::control::source_replacement)textView:(SourceTextView *)textView
-                           replacePlaceholderAt:(marlin::source_loc)loc
-                                           type:(EditorType)type
-                                     withString:(NSString *)string;
-
-- (marlin::control::source_replacement)textView:(SourceTextView *)textView
-                           replacePlaceholderAt:(marlin::source_loc)loc
-                   withExpressionPrototypeIndex:(NSUInteger)index;
+- (marlin::control::expression_inserter)expressionInserterForTextView:(SourceTextView *)textView;
 
 @end

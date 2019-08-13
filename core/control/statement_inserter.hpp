@@ -2,10 +2,42 @@
 #define marlin_control_statement_inserter_hpp
 
 #include "document.hpp"
+#include "prototypes.hpp"
 
 namespace marlin::control {
 
 struct statement_inserter {
+  statement_inserter(document& doc) : _doc{&doc} {}
+
+  bool can_insert() const noexcept { return _loc.has_value(); }
+  source_loc get_location() const noexcept {
+    assert(_loc.has_value());
+    return {_loc->line, _loc->indent * indent_space_count + 1};
+  }
+
+  void move_to_line(size_t line) {
+    if (_line == 0 || line != _line) {
+      _loc = find_statement_insert_location_in_node(line, *_doc->_program, 0);
+      _line = line;
+    }
+  }
+
+  source_insertion insert_prototype(size_t index) {
+    assert(_loc.has_value());
+
+    auto [node, source_update]{
+        statement_prototypes[index]->construct(_loc->line, _loc->indent)};
+    auto line_offset{static_cast<ptrdiff_t>(node->source_code_range.end.line) +
+                     1 - static_cast<ptrdiff_t>(_loc->line)};
+
+    _loc->block.emplace(_loc->index, std::move(node));
+
+    _doc->update_source_line_after_node(*_loc->block[_loc->index], line_offset);
+
+    return source_update;
+  }
+
+ private:
   struct location {
     ast::base* parent;
     ast::subnode::vector_view<ast::base> block;
@@ -22,34 +54,6 @@ struct statement_inserter {
           indent{_indent} {}
   };
 
-  statement_inserter(document& doc) : _doc{&doc} {}
-
-  bool can_insert() const noexcept { return _loc.has_value(); }
-  source_loc get_insert_location() const noexcept {
-    return {_loc->line, _loc->indent * indent_space_count + 1};
-  }
-
-  void move_to_line(size_t line) {
-    if (_line == 0 || line != _line) {
-      _loc = find_statement_insert_location_in_node(line, *_doc->_program, 0);
-      _line = line;
-    }
-  }
-
-  source_insertion insert(const statement_prototype& prototype) {
-    assert(_loc.has_value());
-    auto [node, source_update]{prototype.construct(_loc->line, _loc->indent)};
-    auto line_offset{static_cast<ptrdiff_t>(node->source_code_range.end.line) +
-                     1 - static_cast<ptrdiff_t>(_loc->line)};
-
-    _loc->block.emplace(_loc->index, std::move(node));
-
-    _doc->update_source_line_after_node(*_loc->block[_loc->index], line_offset);
-
-    return source_update;
-  }
-
- private:
   document* _doc;
   size_t _line{0};
   std::optional<location> _loc;

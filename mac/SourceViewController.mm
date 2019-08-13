@@ -22,13 +22,9 @@
   _document = document;
 
   auto initialData = [self.document initialize];
-  self.sourceTextView.string = [NSString stringWithCString:initialData.source.c_str()
-                                                  encoding:NSUTF8StringEncoding];
-
-  auto *theme = [SourceTheme new];
-  [theme applyTo:self.sourceTextView.textStorage
-               range:NSMakeRange(0, initialData.source.size())
-      withHighlights:initialData.highlights];
+  [self.sourceTextView updateInRange:NSMakeRange(0, 0)
+                          withSource:std::move(initialData.source)
+                          highlights:std::move(initialData.highlights)];
 }
 
 - (void)viewDidLoad {
@@ -108,44 +104,17 @@
 
 #pragma mark - SourceTextViewDataSource implementation
 
+- (marlin::control::source_selection)textView:(SourceTextView *)textView
+                                  selectionAt:(marlin::source_loc)loc {
+  return {_document.content, loc};
+}
+
 - (marlin::control::statement_inserter)statementInserterForTextView:(SourceTextView *)textView {
   return {_document.content};
 }
 
-- (marlin::ast::base &)textView:(SourceTextView *)textView
-          nodeContainsSourceLoc:(marlin::source_loc)loc {
-  return _document.content.locate(loc);
-}
-
-- (marlin::control::source_replacement)textView:(SourceTextView *)textView
-                           replacePlaceholderAt:(marlin::source_loc)loc
-                                           type:(EditorType)type
-                                     withString:(NSString *)string {
-  auto &node = _document.content.locate(loc);
-  switch (type) {
-    case EditorType::Variable:
-      return _document.content
-          .replace_with_literal_prototype<marlin::control::variable_name_prototype>(
-              node, std::string{string.UTF8String});
-    case EditorType::Number:
-      return _document.content.replace_with_literal_prototype<marlin::control::number_prototype>(
-          node, std::string{string.UTF8String});
-    case EditorType::String:
-      return _document.content.replace_with_literal_prototype<marlin::control::string_prototype>(
-          node, std::string{string.UTF8String});
-    case EditorType::Identifier:
-      return _document.content
-          .replace_with_literal_prototype<marlin::control::identifier_prototype>(
-              node, std::string{string.UTF8String});
-  }
-}
-
-- (marlin::control::source_replacement)textView:(SourceTextView *)textView
-                           replacePlaceholderAt:(marlin::source_loc)loc
-                   withExpressionPrototypeIndex:(NSUInteger)index {
-  auto &node = _document.content.locate(loc);
-  return _document.content.replace_with_expression_prototype(
-      node, *marlin::control::expression_prototypes[index]);
+- (marlin::control::expression_inserter)expressionInserterForTextView:(SourceTextView *)textView {
+  return {_document.content};
 }
 
 @end

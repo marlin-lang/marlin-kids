@@ -65,26 +65,27 @@
 - (void)setType:(EditorType)type {
   _type = type;
   switch (_type) {
-    case EditorType::Variable:
+    case EditorType::variable_name:
       self.formatter = [VariableFormatter new];
       self.typeSegmentControl.segmentCount = 1;
       [self.typeSegmentControl setLabel:@"Variable" forSegment:0];
       [self.typeSegmentControl setSelected:YES forSegment:0];
       break;
-    case EditorType::Number: {
+    case EditorType::number: {
       NSNumberFormatter *formatter = [NSNumberFormatter new];
       formatter.minimumFractionDigits = 0;
       formatter.maximumFractionDigits = 10;
       self.formatter = formatter;
       [self setupSegmentControlForRightValue];
       [self.typeSegmentControl setSelected:YES forSegment:0];
-    } break;
-    case EditorType::String:
+      break;
+    }
+    case EditorType::string:
       self.formatter = [StringFormatter new];
       [self setupSegmentControlForRightValue];
       [self.typeSegmentControl setSelected:YES forSegment:1];
       break;
-    case EditorType::Identifier:
+    case EditorType::identifier:
       self.formatter = [VariableFormatter new];
       [self setupSegmentControlForRightValue];
       [self.typeSegmentControl setSelected:YES forSegment:2];
@@ -94,13 +95,13 @@
 
 - (IBAction)typeSegmentControlChanged:(id)sender {
   switch (self.type) {
-    case EditorType::Number:
+    case EditorType::number:
       self.numberStr = self.editorTextField.stringValue;
       break;
-    case EditorType::String:
+    case EditorType::string:
       self.stringStr = self.editorTextField.stringValue;
       break;
-    case EditorType::Identifier:
+    case EditorType::identifier:
       self.identifierStr = self.editorTextField.stringValue;
       break;
     default:
@@ -108,15 +109,15 @@
   }
   switch (self.typeSegmentControl.selectedSegment) {
     case 0:
-      self.type = EditorType::Number;
+      self.type = EditorType::number;
       self.editorTextField.stringValue = self.numberStr;
       break;
     case 1:
-      self.type = EditorType::String;
+      self.type = EditorType::string;
       self.editorTextField.stringValue = self.stringStr;
       break;
     case 2:
-      self.type = EditorType::Identifier;
+      self.type = EditorType::identifier;
       self.editorTextField.stringValue = self.identifierStr;
       break;
     default:

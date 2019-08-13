@@ -30,8 +30,9 @@ set(RESOURCES
     ToolBoxHeaderView.xib
     ToolBoxItem.xib)
 
-add_executable(${PROJECT_NAME}.mac MACOSX_BUNDLE ${HEADERS} ${SOURCES}
+add_executable(${PROJECT_NAME}.mac MACOSX_BUNDLE ${SOURCES}
                                                  ${RESOURCES})
+target_sources(${PROJECT_NAME}.mac PRIVATE ${HEADERS})
 
 set_target_properties(${PROJECT_NAME}.mac
                       PROPERTIES OUTPUT_NAME

@@ -1,8 +1,10 @@
 #import <Cocoa/Cocoa.h>
 
+#import "expression_inserter.hpp"
+
 @protocol EditorViewControllerDelegate;
 
-enum class EditorType { Variable, Number, String, Identifier };
+using EditorType = marlin::control::literal_data_type;
 
 @interface EditorViewController : NSViewController <NSTextFieldDelegate>
 
