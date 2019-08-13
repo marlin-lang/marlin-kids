@@ -69,7 +69,7 @@ struct unary_prototype : expression_prototype::impl<unary_prototype<_op>> {
   [[nodiscard]] std::string name() const override { return symbol_for(_op); }
 
   inline static const auto content{
-      symbol_for(_op) +
+      op(symbol_for(_op)) +
       expression_placeholder(placeholder::get<ast::unary_expression>(0))};
   inline static const proto_gen::expression_generator generator_no_paren{
       proto_gen::node{[](auto argument) {
@@ -104,7 +104,7 @@ struct binary_prototype : expression_prototype::impl<binary_prototype<_op>> {
 
   inline static const auto content{
       expression_placeholder(placeholder::get<ast::binary_expression>(0)) +
-      (std::string{" "} + symbol_for(_op) + " ") +
+      (std::string{" "} +  op(symbol_for(_op)) + " ") +
       expression_placeholder(placeholder::get<ast::binary_expression>(1))};
   inline static const proto_gen::expression_generator generator_no_paren{
       proto_gen::node{[](auto left, auto right) {
