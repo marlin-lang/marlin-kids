@@ -8,49 +8,43 @@
 
 namespace marlin::control {
 
+enum class pasteboard_t : uint8_t { statement = 0, expression };
+
 struct toolbox_model {
   struct item {
-    enum type_t : uint8_t { statement = 0, expression };
-
     size_t index;
-    type_t type;
+    pasteboard_t type;
   };
 
-  inline static const char* pasteboard_type() noexcept { return "marlin"; }
+  inline static const std::array sections{"statement", "expression"};
 
-  inline static const auto& sections() noexcept {
-    static std::array _sections = {"statement", "expression"};
-    return _sections;
-  }
+  inline static const std::array items{
+      std::array{
+          item{assignment_prototype::index(), pasteboard_t::statement},
+          item{if_prototype::index(), pasteboard_t::statement},
+          item{if_else_prototype::index(), pasteboard_t::statement},
+          item{print_prototype::index(), pasteboard_t::statement},
+      },
+      std::array{
+          item{binary_prototype<ast::binary_op::add>::index(),
+               pasteboard_t::expression},
+          item{binary_prototype<ast::binary_op::subtract>::index(),
+               pasteboard_t::expression},
+          item{binary_prototype<ast::binary_op::multiply>::index(),
+               pasteboard_t::expression},
+          item{binary_prototype<ast::binary_op::divide>::index(),
+               pasteboard_t::expression},
+      },
+  };
 
-  inline static auto& items() noexcept {
-    static std::array _items = {
-        std::array{
-            item{assignment_prototype::index(), item::statement},
-            item{if_prototype::index(), item::statement},
-            item{if_else_prototype::index(), item::statement},
-            item{print_prototype::index(), item::statement},
-        },
-        std::array{
-            item{binary_prototype<ast::binary_op::add>::index(),
-                 item::expression},
-            item{binary_prototype<ast::binary_op::subtract>::index(),
-                 item::expression},
-            item{binary_prototype<ast::binary_op::multiply>::index(),
-                 item::expression},
-            item{binary_prototype<ast::binary_op::divide>::index(),
-                 item::expression},
-        },
-    };
-    return _items;
-  }
+  static_assert(sections.size() == items.size());
 
   inline static std::string nameOfItemAt(size_t section, size_t item) {
-    switch (items()[section][item].type) {
-      case item::statement:
-        return statement_prototypes[items()[section][item].index]->name();
-      case item::expression:
-        return expression_prototypes[items()[section][item].index]->name();
+    switch (items[section][item].type) {
+      case pasteboard_t::statement:
+        return statement_prototypes[items[section][item].index]->name();
+      case pasteboard_t::expression:
+        return expression_prototypes[items[section][item].index]->name();
     }
   }
 };

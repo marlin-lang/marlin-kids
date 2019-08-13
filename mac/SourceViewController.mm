@@ -3,6 +3,7 @@
 #import "toolbox_model.hpp"
 
 #import "Document.h"
+#import "Pasteboard.h"
 #import "SourceTheme.h"
 #import "ToolBoxHeaderView.h"
 #import "ToolBoxItem.h"
@@ -46,12 +47,12 @@
 #pragma mark - NSCollectionViewDataSource implementation
 
 - (NSInteger)numberOfSectionsInCollectionView:(NSCollectionView *)collectionView {
-  return marlin::control::toolbox_model::sections().size();
+  return marlin::control::toolbox_model::sections.size();
 }
 
 - (NSInteger)collectionView:(NSCollectionView *)collectionView
      numberOfItemsInSection:(NSInteger)section {
-  return marlin::control::toolbox_model::items()[section].size();
+  return marlin::control::toolbox_model::items[section].size();
 }
 
 - (NSCollectionViewItem *)collectionView:(NSCollectionView *)collectionView
@@ -70,7 +71,7 @@
                                    withIdentifier:@"ToolBoxHeaderView"
                                      forIndexPath:indexPath];
   view.titleTextField.stringValue =
-      @(marlin::control::toolbox_model::sections()[indexPath.section]);
+      @(marlin::control::toolbox_model::sections[indexPath.section]);
   return view;
 }
 
@@ -99,8 +100,8 @@
               toPasteboard:(NSPasteboard *)pasteboard {
   auto section = indexPaths.anyObject.section;
   auto item = indexPaths.anyObject.item;
-  NSString *string = [NSString stringWithFormat:@"%ld,%ld", section, item];
-  return [pasteboard setString:string forType:@(marlin::control::toolbox_model::pasteboard_type())];
+    NSString *string = [NSString stringWithFormat:@"%ld", marlin::control::toolbox_model::items[section][item].index];
+  return [pasteboard setString:string forType:pasteboardOfType(marlin::control::toolbox_model::items[section][item].type)];
 }
 
 #pragma mark - SourceTextViewDataSource implementation

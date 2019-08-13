@@ -3,6 +3,7 @@ set(HEADERS
     Document.h
     EditorViewController.h
     NSObject+Casting.h
+    Pasteboard.h
     SourceTextView.h
     SourceTheme.h
     SourceViewController.h
