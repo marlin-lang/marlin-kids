@@ -7,6 +7,7 @@
 
 #include "base.hpp"
 #include "environment.hpp"
+#include "errors.hpp"
 #include "prototypes.hpp"
 #include "source_modifications.hpp"
 
@@ -38,9 +39,11 @@ struct document {
   }
 
   explicit document(ast::node program) noexcept
-      : _program(std::move(program)) {}
+      : _program(std::move(program)){}
 
-  [[nodiscard]] ast::base& locate(source_loc loc) {
+            [[nodiscard]] ast::base
+        &
+        locate(source_loc loc) {
     return _program->locate(loc);
   }
   [[nodiscard]] const ast::base& locate(source_loc loc) const {
@@ -70,12 +73,17 @@ struct document {
 
   const auto& output() const noexcept { return _output; }
 
-  void execute() {
+  template <typename error_block>
+  void execute(error_block block) {
     _output.clear();
     marlin::exec::environment env;
     env.register_print_callback(
         [this](const auto& string) { _output += string; });
-    env.execute(*_program);
+    try {
+      env.execute(*_program);
+    } catch (exec::generation_error& e) {
+      block(e.node(), e.what());
+    }
   }
 
  private:

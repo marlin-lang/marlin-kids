@@ -20,12 +20,17 @@
   std::optional<marlin::control::statement_inserter> _statementInserter;
   NSRange _selectionRange;
   NSInteger _statementInsertionPoint;
+
+  NSString* _errorMessage;
+  NSRange _errorRange;
 }
 
 - (instancetype)initWithCoder:(NSCoder*)coder {
   if (self = [super initWithCoder:coder]) {
     _selectionRange = NSMakeRange(0, 0);
     _statementInsertionPoint = -1;
+    _errorMessage = nil;
+    _errorRange = NSMakeRange(0, 0);
   }
   return self;
 }
@@ -127,6 +132,7 @@
     [NSGraphicsContext restoreGraphicsState];
   }
   [self drawStatementInsertionPoint];
+  [self drawErrorMessage];
 }
 
 - (NSRect)rectOfRange:(NSRange)range {
@@ -189,6 +195,30 @@
               withHighlights:highlights];
 }
 
+- (void)showErrorMessage:(NSString*)message forSourceRange:(marlin::source_range)range {
+  _errorMessage = message;
+  _errorRange = [self rangeOfSourceRange:range];
+  [self addToolTipRect:[self rectOfRange:_errorRange] owner:self userData:nil];
+  [self setNeedsDisplayInRect:self.bounds avoidAdditionalLayout:YES];
+}
+
+- (void)drawErrorMessage {
+  if (_errorMessage) {
+    auto rect = [self rectOfRange:_errorRange];
+    [NSGraphicsContext saveGraphicsState];
+    NSBezierPath* line = [NSBezierPath bezierPath];
+    [line moveToPoint:NSMakePoint(rect.origin.x, rect.origin.y + rect.size.height)];
+    [line
+        lineToPoint:NSMakePoint(rect.origin.x + rect.size.width, rect.origin.y + rect.size.height)];
+    [line setLineWidth:3.0];
+    CGFloat dashPattern[] = {5, 5};
+    [line setLineDash:dashPattern count:2 phase:0];
+    [[NSColor redColor] set];
+    [line stroke];
+    [NSGraphicsContext restoreGraphicsState];
+  }
+}
+
 #pragma mark - EditorViewControllerDelegate implementation
 
 - (void)viewController:(EditorViewController*)vc finishEditWithString:(NSString*)string {
@@ -208,6 +238,15 @@
     _selection = std::nullopt;
     _selectionRange = NSMakeRange(0, 0);
   }
+}
+
+#pragma mark - NSViewToolTipOwner implementation
+
+- (NSString*)view:(NSView*)view
+    stringForToolTip:(NSToolTipTag)tag
+               point:(NSPoint)point
+            userData:(void*)data {
+  return _errorMessage;
 }
 
 @end

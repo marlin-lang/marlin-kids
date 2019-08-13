@@ -11,13 +11,15 @@
 
 @protocol SourceTextViewDataSource;
 
-@interface SourceTextView : NSTextView <EditorViewControllerDelegate>
+@interface SourceTextView : NSTextView<EditorViewControllerDelegate, NSViewToolTipOwner>
 
 @property(weak) id<SourceTextViewDataSource> dataSource;
 
 - (void)updateInRange:(NSRange)range
            withSource:(std::string)source
            highlights:(std::vector<marlin::control::highlight_token>)highlights;
+
+- (void)showErrorMessage:(NSString *)message forSourceRange:(marlin::source_range)range;
 
 @end
 

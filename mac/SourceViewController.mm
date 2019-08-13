@@ -35,7 +35,9 @@
 
 - (IBAction)execute:(id)sender {
   auto &doc = self.document.content;
-  doc.execute();
+  doc.execute([self](const marlin::ast::base &node, const std::string &message) {
+    [self.sourceTextView showErrorMessage:@(message.c_str()) forSourceRange:node.source_code_range];
+  });
   self.outputTextField.stringValue = [NSString stringWithCString:doc.output().c_str()
                                                         encoding:NSUTF8StringEncoding];
 }
