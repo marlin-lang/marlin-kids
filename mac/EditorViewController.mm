@@ -127,7 +127,9 @@
 }
 
 - (IBAction)okButtonPressed:(id)sender {
-  [self.delegate viewController:self finishEditWithString:self.editorTextField.stringValue];
+  [self.delegate viewController:self
+           finishEditWithString:self.editorTextField.stringValue
+                         ofType:self.type];
 }
 
 - (void)controlTextDidChange:(NSNotification *)obj {

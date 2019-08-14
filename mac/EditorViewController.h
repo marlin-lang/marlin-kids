@@ -18,6 +18,8 @@ using EditorType = marlin::control::literal_data_type;
 
 @protocol EditorViewControllerDelegate <NSObject>
 
-- (void)viewController:(EditorViewController *)vc finishEditWithString:(NSString *)string;
+- (void)viewController:(EditorViewController *)vc
+    finishEditWithString:(NSString *)string
+                  ofType:(EditorType)type;
 
 @end

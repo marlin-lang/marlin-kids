@@ -94,7 +94,8 @@
         "memory_resource": "cpp",
         "charconv": "cpp",
         "*.ipp": "cpp",
-        "__functional_03": "cpp"
+        "__functional_03": "cpp",
+        "valarray": "cpp"
     },
     "C_Cpp.default.configurationProvider": "vector-of-bool.cmake-tools"
 }

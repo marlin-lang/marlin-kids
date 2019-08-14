@@ -5,7 +5,7 @@
 
 #include <jsc/jsc.hpp>
 
-#include "errors.hpp"
+#include "exec_errors.hpp"
 #include "generator.hpp"
 #include "stacktrace.hpp"
 

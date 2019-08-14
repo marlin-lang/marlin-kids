@@ -12,9 +12,7 @@ set(HEADERS
     subnodes.hpp
     utils.hpp)
 
-set(SOURCES
-    base.cpp
-    node.cpp)
+set(SOURCES base.cpp node.cpp)
 
 add_library(${PROJECT_NAME}.core.ast base.cpp node.cpp)
 target_sources(${PROJECT_NAME}.core.ast PRIVATE ${HEADERS})

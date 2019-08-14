@@ -4,27 +4,13 @@
 #include <string>
 #include <vector>
 
+#include "store.hpp"
 #include "utils.hpp"
 
 namespace marlin::control {
 
-enum class highlight_token_type {
-  keyword,
-  op,
-  boolean,
-  number,
-  string,
-  placeholder
-};
-
-struct highlight_token {
-  highlight_token_type type;
-  size_t offset;
-  size_t length;
-
-  highlight_token(highlight_token_type _type, size_t _offset, size_t _length)
-      : type(_type), offset(_offset), length(_length) {}
-};
+using highlight_token_type = store::highlight_token_type;
+using highlight_token = store::highlight_token;
 
 struct source_initialization {
   std::string source;

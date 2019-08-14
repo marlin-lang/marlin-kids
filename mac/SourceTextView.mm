@@ -221,16 +221,16 @@
 
 #pragma mark - EditorViewControllerDelegate implementation
 
-- (void)viewController:(EditorViewController*)vc finishEditWithString:(NSString*)string {
-  assert(_selection.has_value());
-
+- (void)viewController:(EditorViewController*)vc
+    finishEditWithString:(NSString*)string
+                  ofType:(EditorType)type {
   [self.popover close];
-  if (string.length > 0) {
+  if (string.length > 0 && _selection.has_value()) {
     auto inserter = (*std::move(_selection)).as_expression_inserter();
     _selection = std::nullopt;
     _selectionRange = NSMakeRange(0, 0);
 
-    auto update = inserter.insert_literal(vc.type, std::string{string.UTF8String});
+    auto update = inserter.insert_literal(type, std::string{string.UTF8String});
     [self updateInRange:[self rangeOfSourceRange:update.range]
              withSource:std::move(update.source)
              highlights:std::move(update.highlights)];

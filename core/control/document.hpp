@@ -7,7 +7,7 @@
 
 #include "base.hpp"
 #include "environment.hpp"
-#include "errors.hpp"
+#include "exec_errors.hpp"
 #include "prototypes.hpp"
 #include "source_modifications.hpp"
 

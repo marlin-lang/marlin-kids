@@ -6,7 +6,7 @@
 #include <jsast/jsast.hpp>
 
 #include "ast.hpp"
-#include "errors.hpp"
+#include "exec_errors.hpp"
 
 namespace marlin::exec {
 
