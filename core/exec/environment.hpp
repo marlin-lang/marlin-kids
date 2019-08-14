@@ -39,7 +39,8 @@ struct environment {
 
   inline void execute(ast::base& c,
                       const std::string& source_url = "<anonymous>") {
-    const auto javascript = generator::generate(c);
+    generator gen;
+    const auto javascript = gen.generate(c);
     _ctx.clear_exception();
     _ctx.eval_script(javascript, source_url);
     if (!_ctx.ok()) {

@@ -4,10 +4,12 @@
 #include <stdexcept>
 
 #include "base.hpp"
+#include "utils.hpp"
 
 namespace marlin::exec {
 
-enum class error_type { generation, runtime };
+// Generation errors will only be reported using
+// collected_generation_error
 
 struct generation_error : std::exception {
   inline generation_error(std::string message, ast::base& node)
@@ -22,6 +24,23 @@ struct generation_error : std::exception {
  private:
   std::string _message;
   ast::base* _node;
+};
+
+struct collected_generation_error : std::exception {
+  inline collected_generation_error(std::vector<generation_error> errors)
+      : _errors{std::move(errors)} {}
+
+  [[nodiscard]] const char* what() const noexcept override {
+    return "Error occurred during generation of executable!";
+  }
+
+  [[nodiscard]] inline utils::vector_view<std::vector<generation_error>>
+  errors() noexcept {
+    return _errors;
+  }
+
+ private:
+  std::vector<generation_error> _errors;
 };
 
 struct runtime_error : std::exception {

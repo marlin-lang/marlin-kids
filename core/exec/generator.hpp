@@ -11,16 +11,26 @@
 namespace marlin::exec {
 
 struct generator {
-  static inline std::string generate(ast::base& c) {
+  generator() noexcept = default;
+
+  std::string generate(ast::base& c) {
     jsast::generator gen;
     gen.write(get_node(c));
-    return std::move(gen).str();
+    if (_errors.size()) {
+      auto errors{std::move(_errors)};
+      _errors = {};
+      throw collected_generation_error{std::move(errors)};
+    } else {
+      return std::move(gen).str();
+    }
   }
 
  private:
   static constexpr const char* main_name{"__main__"};
 
-  static inline jsast::ast::node scoped_callee_with_name(std::string name) {
+  std::vector<generation_error> _errors;
+
+  jsast::ast::node scoped_callee_with_name(std::string name) {
     return jsast::ast::member_expression{
         jsast::ast::object_expression{
             {jsast::ast::property{jsast::ast::member_identifier{"__thefunc__"},
@@ -29,7 +39,7 @@ struct generator {
   }
 
   template <typename vector_type>
-  static inline auto get_block(vector_type vector) {
+  auto get_block(vector_type vector) {
     jsast::utils::move_vector<jsast::ast::node> statements;
     for (auto& statement : vector) {
       statements.emplace_back(get_node(*statement));
@@ -37,27 +47,25 @@ struct generator {
     return jsast::ast::block_statement{std::move(statements)};
   }
 
-  static inline jsast::ast::node get_node(ast::base& c) {
-    return c.apply<jsast::ast::node>([](auto& node) {
+  jsast::ast::node get_node(ast::base& c) {
+    return c.apply<jsast::ast::node>([this](auto& node) {
       return jsast::ast::node{get_jsast(node), [&node](source_range range) {
                                 node._js_range = range;
                               }};
     });
   }
 
-  // Unused return value type, specified so that the code compiles
-  [[noreturn]] static inline jsast::ast::empty_statement get_jsast(
-      ast::variable_placeholder& node) {
-    throw generation_error{"Unparsed chunk encountered!", node};
+  auto get_jsast(ast::variable_placeholder& node) {
+    _errors.emplace_back("Unparsed chunk encountered!", node);
+    return jsast::ast::identifier{"__error__"};
   }
 
-  // Unused return value type, specified so that the code compiles
-  [[noreturn]] static inline jsast::ast::empty_statement get_jsast(
-      ast::expression_placeholder& node) {
-    throw generation_error{"Unexpected placeholder!", node};
+  auto get_jsast(ast::expression_placeholder& node) {
+    _errors.emplace_back("Unexpected placeholder!", node);
+    return jsast::ast::identifier{"__error__"};
   }
 
-  static inline auto get_jsast(ast::program& program) {
+  auto get_jsast(ast::program& program) {
     jsast::utils::move_vector<jsast::ast::node> blocks;
     for (auto& block : program.blocks()) {
       blocks.emplace_back(get_node(*block));
@@ -67,36 +75,36 @@ struct generator {
     return jsast::ast::program{std::move(blocks)};
   }
 
-  static inline auto get_jsast(ast::on_start& start) {
+  auto get_jsast(ast::on_start& start) {
     return jsast::ast::function_declaration{
         main_name,
         {},
         jsast::ast::block_statement{get_block(start.statements())}};
   }
 
-  static inline auto get_jsast(ast::assignment& assignment) {
+  auto get_jsast(ast::assignment& assignment) {
     return jsast::ast::expression_statement{jsast::ast::assignment_expression{
         get_node(*assignment.variable()), jsast::assignment_op::standard,
         get_node(*assignment.value())}};
   }
 
-  static inline auto get_jsast(ast::print_statement& statement) {
+  auto get_jsast(ast::print_statement& statement) {
     return jsast::ast::expression_statement{jsast::ast::call_expression{
         jsast::ast::identifier{"print"}, {get_node(*statement.value())}}};
   }
 
-  static inline auto get_jsast(ast::if_statement& statement) {
+  auto get_jsast(ast::if_statement& statement) {
     return jsast::ast::if_statement{get_node(*statement.condition()),
                                     get_block(statement.statements())};
   }
 
-  static inline auto get_jsast(ast::if_else_statement& statement) {
+  auto get_jsast(ast::if_else_statement& statement) {
     return jsast::ast::if_statement{get_node(*statement.condition()),
                                     get_block(statement.consequence()),
                                     get_block(statement.alternate())};
   }
 
-  static inline auto get_jsast(ast::unary_expression& unary) {
+  auto get_jsast(ast::unary_expression& unary) {
     static constexpr jsast::unary_op symbol_map[]{
         jsast::unary_op::negative /* negative */
     };
@@ -105,7 +113,7 @@ struct generator {
         get_node(*unary.argument())};
   }
 
-  static inline auto get_jsast(ast::binary_expression& binary) {
+  auto get_jsast(ast::binary_expression& binary) {
     static constexpr jsast::binary_op symbol_map[]{
         jsast::binary_op::add /* add */,
         jsast::binary_op::subtract /* subtract */,
@@ -117,19 +125,19 @@ struct generator {
         get_node(*binary.right())};
   }
 
-  static inline auto get_jsast(ast::identifier& identifier) {
+  auto get_jsast(ast::identifier& identifier) {
     return jsast::ast::identifier{identifier.name};
   }
 
-  static inline auto get_jsast(ast::variable_name& variable) {
+  auto get_jsast(ast::variable_name& variable) {
     return jsast::ast::identifier{variable.name};
   }
 
-  static inline auto get_jsast(ast::number_literal& literal) {
+  auto get_jsast(ast::number_literal& literal) {
     return jsast::ast::raw_literal{literal.value};
   }
 
-  static inline auto get_jsast(ast::string_literal& literal) {
+  auto get_jsast(ast::string_literal& literal) {
     return jsast::ast::string_literal{literal.value};
   }
 

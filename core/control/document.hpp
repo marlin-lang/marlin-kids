@@ -39,11 +39,9 @@ struct document {
   }
 
   explicit document(ast::node program) noexcept
-      : _program(std::move(program)){}
+      : _program(std::move(program)) {}
 
-            [[nodiscard]] ast::base
-        &
-        locate(source_loc loc) {
+  [[nodiscard]] ast::base& locate(source_loc loc) {
     return _program->locate(loc);
   }
   [[nodiscard]] const ast::base& locate(source_loc loc) const {
@@ -81,8 +79,10 @@ struct document {
         [this](const auto& string) { _output += string; });
     try {
       env.execute(*_program);
-    } catch (exec::generation_error& e) {
-      block(e.node(), e.what());
+    } catch (exec::collected_generation_error& e) {
+      for (auto& err : e.errors()) {
+        block(err.node(), err.what());
+      }
     }
   }
 
