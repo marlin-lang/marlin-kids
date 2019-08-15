@@ -10,6 +10,10 @@
 
     auto *font = [NSFont fontWithName:@"Courier" size:25];
     _allAttrs = @{NSFontAttributeName : font};
+    _lineNumberAttrs = @{
+      NSFontAttributeName : [NSFont fontWithName:@"Courier" size:18],
+      NSForegroundColorAttributeName : NSColor.blackColor
+    };
     _keywordAttrs =
         @{NSFontAttributeName : font, NSForegroundColorAttributeName : NSColor.purpleColor};
     _opAttrs = @{NSFontAttributeName : font, NSForegroundColorAttributeName : NSColor.brownColor};
