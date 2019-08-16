@@ -5,6 +5,7 @@
 #include <vector>
 
 #include "node.hpp"
+#include "utils.hpp"
 
 namespace marlin::store {
 
@@ -30,11 +31,17 @@ struct reconstruction_result {
   std::vector<ast::node> nodes;
   std::string source;
   std::vector<highlight_token> highlights;
+
+  reconstruction_result(std::vector<ast::node> _nodes, std::string _source,
+                        std::vector<highlight_token> _highlights)
+      : nodes{std::move(_nodes)},
+        source{std::move(_source)},
+        highlights{std::move(_highlights)} {}
 };
 
 struct base_store {
   friend reconstruction_result read(const std::string& data,
-                                    const ast::base* parent);
+                                    const ast::base* parent, source_loc start);
 
   template <typename store_type>
   struct impl;
@@ -43,13 +50,17 @@ struct base_store {
 
   virtual bool recognize(const std::string& data) = 0;
   virtual reconstruction_result read(const std::string& data,
-                                     const ast::base* parent) = 0;
+                                     const ast::base* parent,
+                                     source_loc start) = 0;
 
   // The latest version also needs to implement
   // std::string write(std::vector<const ast::base*> node);
 
  private:
-  inline static std::vector<base_store*> _stores;
+  [[nodiscard]] static std::vector<base_store*>& get_stores() {
+    static std::vector<base_store*> _stores;
+    return _stores;
+  }
 };
 
 template <typename store_type>
@@ -57,7 +68,7 @@ struct base_store::impl : base_store {
   friend std::string write(std::vector<const ast::base*> nodes);
 
  protected:
-  impl() { _stores.emplace_back(&_singleton); }
+  impl() { get_stores().emplace_back(&_singleton); }
 
  private:
   template <store_type&>

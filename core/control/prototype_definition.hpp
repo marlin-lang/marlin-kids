@@ -18,7 +18,10 @@ struct prototype_container {
     static size_t index() { return _index; }
 
    protected:
-    element() { _index = container_type::register_elem(_singleton); }
+    element() {
+      _index = mutable_elements().size();
+      mutable_elements().emplace_back(&_singleton);
+    }
 
    private:
     template <concrete_type&>
@@ -29,17 +32,14 @@ struct prototype_container {
     inline static proto_ref<_singleton> _ref;
   };
 
-  [[nodiscard]] static constexpr std::vector<const element_type*>& elements() {
-    return _elements;
+  [[nodiscard]] static const std::vector<const element_type*>& elements() {
+    return mutable_elements();
   }
 
  private:
-  inline static std::vector<const element_type*> _elements;
-
-  static size_t register_elem(const element_type& elem) {
-    const auto index{_elements.size()};
-    _elements.emplace_back(&elem);
-    return index;
+  [[nodiscard]] static std::vector<const element_type*>& mutable_elements() {
+    static std::vector<const element_type*> _elements;
+    return _elements;
   }
 };
 
@@ -85,11 +85,9 @@ struct expression_prototype::impl : expression_prototype,
   }*/
 };
 
-inline static constexpr auto& statement_prototypes =
-    statement_prototype::elements();
+inline static auto& statement_prototypes{statement_prototype::elements()};
 
-inline static constexpr auto& expression_prototypes =
-    expression_prototype::elements();
+inline static auto& expression_prototypes{expression_prototype::elements()};
 
 }  // namespace marlin::control
 

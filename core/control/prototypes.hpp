@@ -5,9 +5,6 @@
 #include "proto_gen.hpp"
 #include "prototype_definition.hpp"
 
-// Testing
-#include <iostream>
-
 namespace marlin::control {
 
 struct assignment_prototype : statement_prototype::impl<assignment_prototype> {
@@ -104,7 +101,7 @@ struct binary_prototype : expression_prototype::impl<binary_prototype<_op>> {
 
   inline static const auto content{
       expression_placeholder(placeholder::get<ast::binary_expression>(0)) +
-      (std::string{" "} +  op(symbol_for(_op)) + " ") +
+      (std::string{" "} + op(symbol_for(_op)) + " ") +
       expression_placeholder(placeholder::get<ast::binary_expression>(1))};
   inline static const proto_gen::expression_generator generator_no_paren{
       proto_gen::node{[](auto left, auto right) {

@@ -2,18 +2,19 @@
 #define marlin_store_store_hpp
 
 #include "store_definition.hpp"
+#include "store_errors.hpp"
 
 // Stores
-#include "store_errors.hpp"
 #include "v1_store.hpp"
 
 namespace marlin::store {
 
 [[nodiscard]] inline reconstruction_result read(
-    const std::string& data, const ast::base* parent = nullptr) {
-  for (auto* s : base_store::_stores) {
+    const std::string& data, const ast::base* parent = nullptr,
+    source_loc start = {1, 1}) {
+  for (auto* s : base_store::get_stores()) {
     if (s->recognize(data)) {
-      return s->read(data, parent);
+      return s->read(data, parent, start);
     }
   }
   throw read_error{"Unrecognized data format!"};
