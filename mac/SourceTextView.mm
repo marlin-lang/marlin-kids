@@ -40,6 +40,13 @@
 
 - (instancetype)initWithCoder:(NSCoder*)coder {
   if (self = [super initWithCoder:coder]) {
+    self.enclosingScrollView.hasHorizontalScroller = YES;
+    self.horizontallyResizable = YES;
+    self.autoresizingMask = NSViewWidthSizable | NSViewHeightSizable;
+    self.maxSize = NSMakeSize(FLT_MAX, FLT_MAX);
+    self.textContainer.containerSize = NSMakeSize(FLT_MAX, FLT_MAX);
+    self.textContainer.widthTracksTextView = NO;
+
     _selectionRange = NSMakeRange(0, 0);
     _statementInsertionPoint = -1;
     _errors = [NSMutableArray new];

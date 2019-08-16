@@ -1,7 +1,6 @@
 set(HEADERS
     document.hpp
     placeholders.hpp
-    proto_gen.hpp
     prototype_definition.hpp
     prototypes.hpp
     source_modifications.hpp
