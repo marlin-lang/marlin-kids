@@ -2,6 +2,7 @@
 #define marlin_store_store_definition_hpp
 
 #include <string>
+#include <string_view>
 #include <vector>
 
 #include "node.hpp"
@@ -40,18 +41,22 @@ struct reconstruction_result {
 };
 
 struct base_store {
-  friend reconstruction_result read(const std::string& data,
-                                    const ast::base* parent, source_loc start);
+  friend reconstruction_result read(std::string_view data,
+                                    const ast::base* parent, size_t start_line);
+  friend reconstruction_result read(std::string_view data,
+                                    const ast::base* target);
 
   template <typename store_type>
   struct impl;
 
   virtual ~base_store() noexcept = default;
 
-  virtual bool recognize(const std::string& data) = 0;
-  virtual reconstruction_result read(const std::string& data,
+  virtual bool recognize(std::string_view data) = 0;
+  virtual reconstruction_result read(std::string_view data,
                                      const ast::base* parent,
-                                     source_loc start) = 0;
+                                     size_t start_line) = 0;
+  virtual reconstruction_result read(std::string_view data,
+                                     const ast::base* target) = 0;
 
   // The latest version also needs to implement
   // std::string write(std::vector<const ast::base*> node);

@@ -2,6 +2,7 @@
 #define marlin_store_v1_store_hpp
 
 #include <string_view>
+#include <unordered_map>
 
 #include "base.hpp"
 #include "specs.hpp"
@@ -44,41 +45,46 @@ inline const std::string string{"string"};
 // TODO: mark empty lines in data
 
 struct store : base_store::impl<store> {
-  bool recognize(const std::string& data) override {
+  bool recognize(std::string_view data) override {
     return data.compare(0, _data_prefix.size(), _data_prefix) == 0;
   }
 
-  reconstruction_result read(const std::string& data, const ast::base* parent,
-                             source_loc start) override {
-    assert(recognize(data));
-
-    for (const auto& ch : data) {
-      std::cout << static_cast<uint32_t>(ch) << " ";
+  reconstruction_result read(std::string_view data, const ast::base* parent,
+                             size_t start_line) override {
+    _indent = 0;
+    if (parent != nullptr) {
+      const ast::base* curr_parent{parent};
+      while (curr_parent->has_parent()) {
+        _indent++;
+        curr_parent = &curr_parent->parent();
+      }
     }
-    std::cout << "\n";
+
+    return read(std::move(data), {start_line, 1});
+  }
+
+  reconstruction_result read(std::string_view data,
+                             const ast::base* target) override {
+    assert(target != nullptr);
 
     _indent = 0;
-    const ast::base* curr_parent{parent};
-    while (curr_parent->has_parent()) {
-      _indent++;
-      curr_parent = &curr_parent->parent();
+
+    size_t paren_precedence{0};
+    if (target->has_parent()) {
+      if (target->parent().is<ast::unary_expression>()) {
+        paren_precedence = ast::unary_op_precedence;
+      } else if (target->parent().is<ast::binary_expression>()) {
+        auto& binary{target->parent().as<ast::binary_expression>()};
+        if (target == binary.left().get()) {
+          paren_precedence = precedence_for(binary.op) - 1;
+        } else {
+          paren_precedence = precedence_for(binary.op);
+        }
+      }
     }
 
-    _buffer.clear();
-    _highlights.clear();
-    _current_loc = start;
-    auto current{data.begin() + _data_prefix.size()};
-    // auto nodes{read_vector(current, data.end())};
-
-    for (uint32_t i{0}; i < 10; i++) {
-      std::cout << read_int(current, data.end()) << "\n";
-    }
-
-    reconstruction_result result{
-        {} /* std::move(nodes) */, std::move(_buffer), std::move(_highlights)};
-    _buffer = {};
-    _highlights = {};
-    return result;
+    return read(std::move(data), target->source_code_range.begin,
+                paren_precedence);
   }
 
   std::string write(std::vector<const ast::base*> nodes) {
@@ -92,12 +98,40 @@ struct store : base_store::impl<store> {
   }
 
  private:
+  struct read_node_entry {
+    using callable_type = ast::node (store::*)(const char*&, const char*,
+                                               size_t);
+
+    callable_type callable;
+    bool is_statement;
+
+    read_node_entry(callable_type _callable, bool _is_statement)
+        : callable{_callable}, is_statement{_is_statement} {}
+  };
+
   inline static const std::string _data_prefix{"MKB\1"};
 
   std::string _buffer;
   std::vector<highlight_token> _highlights;
   source_loc _current_loc;
   size_t _indent;
+
+  reconstruction_result read(std::string_view data, source_loc start,
+                             size_t paren_precedence = 0) {
+    assert(recognize(data));
+
+    _buffer.clear();
+    _highlights.clear();
+    _current_loc = start;
+    auto current{data.begin() + _data_prefix.size()};
+    auto nodes{read_vector(current, data.end(), paren_precedence)};
+
+    reconstruction_result result{std::move(nodes), std::move(_buffer),
+                                 std::move(_highlights)};
+    _buffer = {};
+    _highlights = {};
+    return result;
+  }
 
   void emit_to_buffer(std::string_view string) {
     _buffer.append(string);
@@ -137,17 +171,23 @@ struct store : base_store::impl<store> {
     _current_loc = {_current_loc.line + 1, 1};
   }
 
+  void emit_placeholder(std::string_view name) {
+    _highlights.emplace_back(highlight_token_type::placeholder, _buffer.size(),
+                             name.size() + 1);
+    emit_to_buffer("@");
+    emit_to_buffer(std::move(name));
+  }
+
   void emit_highlight(std::string_view string, highlight_token_type type) {
     _highlights.emplace_back(type, _buffer.size(), string.size());
     emit_to_buffer(std::move(string));
   }
 
-  std::string_view read_zero_terminated(std::string::const_iterator& iter,
-                                        std::string::const_iterator end) {
+  std::string_view read_zero_terminated(const char*& iter, const char* end) {
     auto begin{iter};
     while (iter < end) {
       if (*iter == '\0') {
-        std::string_view result{&*begin, static_cast<size_t>(iter - begin)};
+        std::string_view result{begin, static_cast<size_t>(iter - begin)};
         iter++;
         return result;
       } else {
@@ -157,13 +197,11 @@ struct store : base_store::impl<store> {
     throw read_error{"Unterminating character sequence!"};
   }
 
-  bool read_bool(std::string::const_iterator& iter,
-                 std::string::const_iterator end) {
+  bool read_bool(const char*& iter, const char* end) {
     return static_cast<uint8_t>(*iter++);
   }
 
-  uint32_t read_int(std::string::const_iterator& iter,
-                    std::string::const_iterator end) {
+  uint32_t read_int(const char*& iter, const char* end) {
     if (iter + 4 <= end) {
       uint32_t result{static_cast<uint8_t>(*iter++)};
       for (size_t i{0}; i < 3; i++) {
@@ -176,11 +214,10 @@ struct store : base_store::impl<store> {
     }
   }
 
-  std::string_view read_string(std::string::const_iterator& iter,
-                               std::string::const_iterator end) {
+  std::string_view read_string(const char*& iter, const char* end) {
     auto length{read_int(iter, end)};
     if (iter + length <= end) {
-      std::string_view result{&*iter, length};
+      std::string_view result{iter, length};
       iter += length;
       return result;
     } else {
@@ -188,42 +225,56 @@ struct store : base_store::impl<store> {
     }
   }
 
-  std::vector<ast::node> read_vector(std::string::const_iterator& iter,
-                                     std::string::const_iterator end) {
+  std::vector<ast::node> read_vector(const char*& iter, const char* end,
+                                     size_t paren_precedence = 0) {
     auto length{read_int(iter, end)};
     std::vector<ast::node> result;
     result.reserve(length);
     for (size_t i{0}; i < length; i++) {
-      result.emplace_back(read_node(iter, end));
+      result.emplace_back(read_node(iter, end, paren_precedence));
     }
     return result;
   }
 
-  ast::node read_node(std::string::const_iterator& iter,
-                      std::string::const_iterator end,
+  ast::node read_node(const char*& iter, const char* end,
                       size_t paren_precedence = 0) {
+    static const std::unordered_map<std::string, read_node_entry> read_node_map{
+        {key::program, {&store::read_program, true}},
+        {key::on_start, {&store::read_on_start, true}},
+        {key::assignment, {&store::read_assignment, true}},
+        {key::print, {&store::read_print_statement, true}},
+        {key::if_else, {&store::read_if_else_statement, true}},
+        {key::variable_placeholder, {&store::read_variable_placeholder, false}},
+        {key::variable_name, {&store::read_variable_name, false}},
+        {key::expression_placeholder,
+         {&store::read_expression_placeholder, false}},
+        {key::unary, {&store::read_unary_expression, false}},
+        {key::binary, {&store::read_binary_expression, false}},
+        {key::identifier, {&store::read_identifier, false}},
+        {key::number, {&store::read_number_literal, false}},
+        {key::string, {&store::read_string_literal, false}}};
+
     auto key{read_zero_terminated(iter, end)};
-    const bool is_statement{false};
-    if (is_statement) {
+    // c++17 maps does not support access by views yet
+    auto entry{read_node_map.at(std::string{std::move(key)})};
+    if (entry.is_statement) {
       emit_indent();
     }
     auto start{_current_loc};
-    ast::node node;
+    auto node{(this->*entry.callable)(iter, end, paren_precedence)};
     node->source_code_range = {start, _current_loc};
-    if (is_statement) {
+    if (entry.is_statement) {
       emit_new_line();
     }
     return node;
   }
-  ast::node read_program(std::string::const_iterator& iter,
-                         std::string::const_iterator end,
+  ast::node read_program(const char*& iter, const char* end,
                          size_t paren_precedence) {
     auto blocks{read_vector(iter, end)};
     return ast::make<ast::program>(std::move(blocks));
   }
 
-  ast::node read_on_start(std::string::const_iterator& iter,
-                          std::string::const_iterator end,
+  ast::node read_on_start(const char*& iter, const char* end,
                           size_t paren_precedence) {
     emit_to_buffer("on_start {");
     emit_new_line();
@@ -235,8 +286,7 @@ struct store : base_store::impl<store> {
     return ast::make<ast::on_start>(std::move(statements));
   }
 
-  ast::node read_assignment(std::string::const_iterator& iter,
-                            std::string::const_iterator end,
+  ast::node read_assignment(const char*& iter, const char* end,
                             size_t paren_precedence) {
     auto variable{read_node(iter, end)};
     emit_to_buffer(" = ");
@@ -245,8 +295,7 @@ struct store : base_store::impl<store> {
     return ast::make<ast::assignment>(std::move(variable), std::move(value));
   }
 
-  ast::node read_print_statement(std::string::const_iterator& iter,
-                                 std::string::const_iterator end,
+  ast::node read_print_statement(const char*& iter, const char* end,
                                  size_t paren_precedence) {
     emit_to_buffer("print(");
     auto value{read_node(iter, end)};
@@ -254,8 +303,7 @@ struct store : base_store::impl<store> {
     return ast::make<ast::print_statement>(std::move(value));
   }
 
-  ast::node read_if_else_statement(std::string::const_iterator& iter,
-                                   std::string::const_iterator end,
+  ast::node read_if_else_statement(const char*& iter, const char* end,
                                    size_t paren_precedence) {
     const bool has_else{read_bool(iter, end)};
     emit_highlight("if", highlight_token_type::keyword);
@@ -286,37 +334,29 @@ struct store : base_store::impl<store> {
     }
   }
 
-  ast::node read_variable_placeholder(std::string::const_iterator& iter,
-                                      std::string::const_iterator end,
+  ast::node read_variable_placeholder(const char*& iter, const char* end,
                                       size_t paren_precedence) {
     auto string{read_string(iter, end)};
-    std::string text{"@"};
-    text.append(string);
-    emit_highlight(text, highlight_token_type::placeholder);
+    emit_placeholder(string);
     return ast::make<ast::variable_placeholder>(std::string{std::move(string)});
   }
 
-  ast::node read_variable_name(std::string::const_iterator& iter,
-                               std::string::const_iterator end,
+  ast::node read_variable_name(const char*& iter, const char* end,
                                size_t paren_precedence) {
     auto string{read_string(iter, end)};
     emit_to_buffer(string);
     return ast::make<ast::variable_name>(std::string{std::move(string)});
   }
 
-  ast::node read_expression_placeholder(std::string::const_iterator& iter,
-                                        std::string::const_iterator end,
+  ast::node read_expression_placeholder(const char*& iter, const char* end,
                                         size_t paren_precedence) {
     auto string{read_string(iter, end)};
-    std::string text{"@"};
-    text.append(string);
-    emit_highlight(text, highlight_token_type::placeholder);
+    emit_placeholder(string);
     return ast::make<ast::expression_placeholder>(
         std::string{std::move(string)});
   }
 
-  ast::node read_unary_expression(std::string::const_iterator& iter,
-                                  std::string::const_iterator end,
+  ast::node read_unary_expression(const char*& iter, const char* end,
                                   size_t paren_precedence) {
     static const auto unary_inverse_op_symbol_map{[]() {
       std::unordered_map<std::string, ast::unary_op> map;
@@ -342,8 +382,7 @@ struct store : base_store::impl<store> {
     return ast::make<ast::unary_expression>(op, std::move(argument));
   }
 
-  ast::node read_binary_expression(std::string::const_iterator& iter,
-                                   std::string::const_iterator end,
+  ast::node read_binary_expression(const char*& iter, const char* end,
                                    size_t paren_precedence) {
     static const auto binary_inverse_op_symbol_map{[]() {
       std::unordered_map<std::string, ast::binary_op> map;
@@ -373,24 +412,21 @@ struct store : base_store::impl<store> {
                                              std::move(right));
   }
 
-  ast::node read_identifier(std::string::const_iterator& iter,
-                            std::string::const_iterator end,
+  ast::node read_identifier(const char*& iter, const char* end,
                             size_t paren_precedence) {
     auto string{read_string(iter, end)};
     emit_to_buffer(string);
     return ast::make<ast::identifier>(std::string{std::move(string)});
   }
 
-  ast::node read_number_literal(std::string::const_iterator& iter,
-                                std::string::const_iterator end,
+  ast::node read_number_literal(const char*& iter, const char* end,
                                 size_t paren_precedence) {
     auto string{read_string(iter, end)};
     emit_highlight(string, highlight_token_type::number);
     return ast::make<ast::number_literal>(std::string{std::move(string)});
   }
 
-  ast::node read_string_literal(std::string::const_iterator& iter,
-                                std::string::const_iterator end,
+  ast::node read_string_literal(const char*& iter, const char* end,
                                 size_t paren_precedence) {
     auto string{read_string(iter, end)};
     emit_highlight(quoted(std::string{string}), highlight_token_type::string);
@@ -399,12 +435,12 @@ struct store : base_store::impl<store> {
 
   void write_key(const std::string& key) {
     _buffer.append(key);
-    _buffer.append("\0");
+    _buffer.append("\0", 1);
   }
 
   void write_symbol(const std::string& symbol) {
     _buffer.append(symbol);
-    _buffer.append("\0");
+    _buffer.append("\0", 1);
   }
 
   void write_bool(bool value) {
