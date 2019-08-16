@@ -9,35 +9,32 @@
 #include "store_definition.hpp"
 #include "store_errors.hpp"
 
-// Testing
-#include <iostream>
-
 namespace marlin::store {
 
 namespace v1 {
 
 namespace key {
 
-inline const std::string program{"program"};
-inline const std::string on_start{"on_start"};
+inline const std::string_view program{"program"};
+inline const std::string_view on_start{"on_start"};
 
-inline const std::string assignment{"assign"};
-inline const std::string print{"print"};
+inline const std::string_view assignment{"assign"};
+inline const std::string_view print{"print"};
 
-inline const std::string if_else{"if"};
+inline const std::string_view if_else{"if"};
 
-inline const std::string variable_placeholder{"var_ph"};
-inline const std::string variable_name{"var"};
+inline const std::string_view variable_placeholder{"var_ph"};
+inline const std::string_view variable_name{"var"};
 
-inline const std::string expression_placeholder{"expr_ph"};
+inline const std::string_view expression_placeholder{"expr_ph"};
 
-inline const std::string unary{"unary"};
-inline const std::string binary{"binary"};
+inline const std::string_view unary{"unary"};
+inline const std::string_view binary{"binary"};
 
-inline const std::string identifier{"id"};
+inline const std::string_view identifier{"id"};
 
-inline const std::string number{"number"};
-inline const std::string string{"string"};
+inline const std::string_view number{"number"};
+inline const std::string_view string{"string"};
 
 }  // namespace key
 
@@ -49,42 +46,22 @@ struct store : base_store::impl<store> {
     return data.compare(0, _data_prefix.size(), _data_prefix) == 0;
   }
 
-  reconstruction_result read(std::string_view data, const ast::base* parent,
-                             size_t start_line) override {
-    _indent = 0;
-    if (parent != nullptr) {
-      const ast::base* curr_parent{parent};
-      while (curr_parent->has_parent()) {
-        _indent++;
-        curr_parent = &curr_parent->parent();
-      }
-    }
+  reconstruction_result read(std::string_view data, source_loc start,
+                             size_t indent, size_t paren_precedence) override {
+    assert(recognize(data));
 
-    return read(std::move(data), {start_line, 1});
-  }
+    _buffer.clear();
+    _highlights.clear();
+    _current_loc = start;
+    _indent = indent;
+    auto current{data.begin() + _data_prefix.size()};
+    auto nodes{read_vector(current, data.end(), paren_precedence)};
 
-  reconstruction_result read(std::string_view data,
-                             const ast::base* target) override {
-    assert(target != nullptr);
-
-    _indent = 0;
-
-    size_t paren_precedence{0};
-    if (target->has_parent()) {
-      if (target->parent().is<ast::unary_expression>()) {
-        paren_precedence = ast::unary_op_precedence;
-      } else if (target->parent().is<ast::binary_expression>()) {
-        auto& binary{target->parent().as<ast::binary_expression>()};
-        if (target == binary.left().get()) {
-          paren_precedence = precedence_for(binary.op) - 1;
-        } else {
-          paren_precedence = precedence_for(binary.op);
-        }
-      }
-    }
-
-    return read(std::move(data), target->source_code_range.begin,
-                paren_precedence);
+    reconstruction_result result{std::move(nodes), std::move(_buffer),
+                                 std::move(_highlights)};
+    _buffer = {};
+    _highlights = {};
+    return result;
   }
 
   std::string write(std::vector<const ast::base*> nodes) {
@@ -113,23 +90,6 @@ struct store : base_store::impl<store> {
   std::vector<highlight_token> _highlights;
   source_loc _current_loc;
   size_t _indent;
-
-  reconstruction_result read(std::string_view data, source_loc start,
-                             size_t paren_precedence = 0) {
-    assert(recognize(data));
-
-    _buffer.clear();
-    _highlights.clear();
-    _current_loc = start;
-    auto current{data.begin() + _data_prefix.size()};
-    auto nodes{read_vector(current, data.end(), paren_precedence)};
-
-    reconstruction_result result{std::move(nodes), std::move(_buffer),
-                                 std::move(_highlights)};
-    _buffer = {};
-    _highlights = {};
-    return result;
-  }
 
   void emit_to_buffer(std::string_view string) {
     _buffer.append(string);
@@ -236,21 +196,22 @@ struct store : base_store::impl<store> {
 
   ast::node read_node(const char*& iter, const char* end,
                       size_t paren_precedence = 0) {
-    static const std::unordered_map<std::string, read_node_entry> read_node_map{
-        {key::program, {&store::read_program, true}},
-        {key::on_start, {&store::read_on_start, true}},
-        {key::assignment, {&store::read_assignment, true}},
-        {key::print, {&store::read_print_statement, true}},
-        {key::if_else, {&store::read_if_else_statement, true}},
-        {key::variable_placeholder, {&store::read_variable_placeholder, false}},
-        {key::variable_name, {&store::read_variable_name, false}},
-        {key::expression_placeholder,
-         {&store::read_expression_placeholder, false}},
-        {key::unary, {&store::read_unary_expression, false}},
-        {key::binary, {&store::read_binary_expression, false}},
-        {key::identifier, {&store::read_identifier, false}},
-        {key::number, {&store::read_number_literal, false}},
-        {key::string, {&store::read_string_literal, false}}};
+    static const std::unordered_map<std::string_view, read_node_entry>
+        read_node_map{{key::program, {&store::read_program, true}},
+                      {key::on_start, {&store::read_on_start, true}},
+                      {key::assignment, {&store::read_assignment, true}},
+                      {key::print, {&store::read_print_statement, true}},
+                      {key::if_else, {&store::read_if_else_statement, true}},
+                      {key::variable_placeholder,
+                       {&store::read_variable_placeholder, false}},
+                      {key::variable_name, {&store::read_variable_name, false}},
+                      {key::expression_placeholder,
+                       {&store::read_expression_placeholder, false}},
+                      {key::unary, {&store::read_unary_expression, false}},
+                      {key::binary, {&store::read_binary_expression, false}},
+                      {key::identifier, {&store::read_identifier, false}},
+                      {key::number, {&store::read_number_literal, false}},
+                      {key::string, {&store::read_string_literal, false}}};
 
     auto key{read_zero_terminated(iter, end)};
     // c++17 maps does not support access by views yet
@@ -316,6 +277,7 @@ struct store : base_store::impl<store> {
     emit_to_buffer("}");
     if (has_else) {
       emit_to_buffer(" ");
+      const auto else_loc{_current_loc};
       emit_highlight("else", highlight_token_type::keyword);
       emit_to_buffer(" {");
       emit_new_line();
@@ -324,8 +286,10 @@ struct store : base_store::impl<store> {
       _indent--;
       emit_indent();
       emit_to_buffer("}");
-      return ast::make<ast::if_else_statement>(
-          std::move(condition), std::move(consequence), std::move(alternate));
+      auto node{ast::make<ast::if_else_statement>(
+          std::move(condition), std::move(consequence), std::move(alternate))};
+      node->as<ast::if_else_statement>().else_loc = else_loc;
+      return node;
     } else {
       return ast::make<ast::if_statement>(std::move(condition),
                                           std::move(consequence));
@@ -357,17 +321,16 @@ struct store : base_store::impl<store> {
   ast::node read_unary_expression(const char*& iter, const char* end,
                                   size_t paren_precedence) {
     static const auto unary_inverse_op_symbol_map{[]() {
-      std::unordered_map<std::string, ast::unary_op> map;
+      std::unordered_map<std::string_view, ast::unary_op> map;
       for (uint8_t i{0}; i < ast::unary_op_symbol_map.size(); i++) {
-        map[std::string{ast::unary_op_symbol_map[i]}] =
-            static_cast<ast::unary_op>(i);
+        map[ast::unary_op_symbol_map[i]] = static_cast<ast::unary_op>(i);
       }
       return map;
     }()};
 
     auto op_symbol{read_zero_terminated(iter, end)};
     // c++17 maps does not support access by views yet
-    const auto op{unary_inverse_op_symbol_map.at(std::string{op_symbol})};
+    const auto op{unary_inverse_op_symbol_map.at(op_symbol)};
     const size_t op_precedence{ast::unary_op_precedence};
 
     if (op_precedence <= paren_precedence) {
@@ -384,17 +347,16 @@ struct store : base_store::impl<store> {
   ast::node read_binary_expression(const char*& iter, const char* end,
                                    size_t paren_precedence) {
     static const auto binary_inverse_op_symbol_map{[]() {
-      std::unordered_map<std::string, ast::binary_op> map;
+      std::unordered_map<std::string_view, ast::binary_op> map;
       for (uint8_t i{0}; i < ast::binary_op_symbol_map.size(); i++) {
-        map[std::string{ast::binary_op_symbol_map[i]}] =
-            static_cast<ast::binary_op>(i);
+        map[ast::binary_op_symbol_map[i]] = static_cast<ast::binary_op>(i);
       }
       return map;
     }()};
 
     auto op_symbol{read_zero_terminated(iter, end)};
     // c++17 maps does not support access by views yet
-    const auto op{binary_inverse_op_symbol_map.at(std::string{op_symbol})};
+    const auto op{binary_inverse_op_symbol_map.at(op_symbol)};
     const size_t op_precedence{ast::precedence_for(op)};
 
     if (op_precedence <= paren_precedence) {

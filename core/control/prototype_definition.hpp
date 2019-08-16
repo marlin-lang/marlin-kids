@@ -53,15 +53,20 @@ struct statement_prototype
 
   [[nodiscard]] virtual std::string_view name() const = 0;
   [[nodiscard]] virtual std::pair<ast::node, source_insertion> construct(
-      size_t line, size_t indent) const = 0;
+      const ast::base* parent, size_t line) const = 0;
 };
 
 template <typename prototype>
 struct statement_prototype::impl : statement_prototype,
                                    statement_prototype::element<prototype> {
   [[nodiscard]] std::pair<ast::node, source_insertion> construct(
-      size_t line, size_t indent) const override {
-    return prototype::generator.construct(line, indent);
+      const ast::base* parent, size_t line) const override {
+    auto result{store::read(prototype::data, parent, line)};
+    assert(result.nodes.size() == 1);
+    return std::make_pair(
+        std::move(result.nodes[0]),
+        source_insertion{
+            {line, 1}, std::move(result.source), std::move(result.highlights)});
   }
 };
 
@@ -80,10 +85,15 @@ struct expression_prototype
 template <typename prototype>
 struct expression_prototype::impl : expression_prototype,
                                     expression_prototype::element<prototype> {
-  /*[[nodiscard]] std::pair<ast::node, source_insertion> construct(
-      size_t line, size_t indent) const override {
-    return prototype::generator.construct(line, indent);
-  }*/
+  [[nodiscard]] std::pair<ast::node, source_replacement> construct(
+      const ast::base& target) const override {
+    const auto original{target.source_code_range};
+    auto result{store::read(prototype::data, target)};
+    assert(result.nodes.size() == 1);
+    return std::make_pair(std::move(result.nodes[0]),
+                          source_replacement{original, std::move(result.source),
+                                             std::move(result.highlights)});
+  }
 };
 
 inline static auto& statement_prototypes{statement_prototype::elements()};

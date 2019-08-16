@@ -1,5 +1,6 @@
 #include <catch2/catch.hpp>
 
+#include "ast.hpp"
 #include "store.hpp"
 
 TEST_CASE("store::Read unrecognized data", "[store]") {
@@ -25,7 +26,7 @@ TEST_CASE("store::Write and read expressions", "[store]") {
       marlin::ast::make<marlin::ast::expression_placeholder>("right"))};
   auto inner_data{marlin::store::write({inner_node.get()})};
 
-  auto inner_result{marlin::store::read(inner_data, &left)};
+  auto inner_result{marlin::store::read(inner_data, left)};
   REQUIRE(inner_result.nodes.size() == 1);
   REQUIRE(inner_result.source == "(@left + @right)");
 }

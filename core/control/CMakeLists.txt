@@ -8,15 +8,15 @@ set(HEADERS
     statement_inserter.hpp
     toolbox_model.hpp)
 
-add_library(${PROJECT_NAME}.core.control INTERFACE)
-target_compile_features(${PROJECT_NAME}.core.control INTERFACE cxx_std_17)
+set(SOURCES statement_inserter.cpp)
+
+add_library(${PROJECT_NAME}.core.control ${SOURCES})
+target_sources(${PROJECT_NAME}.core.control PRIVATE ${HEADERS})
+target_compile_features(${PROJECT_NAME}.core.control PUBLIC cxx_std_17)
 
 target_include_directories(${PROJECT_NAME}.core.control INTERFACE .)
 
 target_link_libraries(${PROJECT_NAME}.core.control
-                      INTERFACE ${PROJECT_NAME}.core.ast
-                                ${PROJECT_NAME}.core.exec
-                                ${PROJECT_NAME}.core.store)
-
-# IDE hack for displaying header-only target
-add_custom_target(${PROJECT_NAME}.core.control.ide SOURCES ${HEADERS})
+                      ${PROJECT_NAME}.core.ast
+                      ${PROJECT_NAME}.core.exec
+                      ${PROJECT_NAME}.core.store)

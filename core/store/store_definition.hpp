@@ -44,7 +44,7 @@ struct base_store {
   friend reconstruction_result read(std::string_view data,
                                     const ast::base* parent, size_t start_line);
   friend reconstruction_result read(std::string_view data,
-                                    const ast::base* target);
+                                    const ast::base& target);
 
   template <typename store_type>
   struct impl;
@@ -52,11 +52,9 @@ struct base_store {
   virtual ~base_store() noexcept = default;
 
   virtual bool recognize(std::string_view data) = 0;
-  virtual reconstruction_result read(std::string_view data,
-                                     const ast::base* parent,
-                                     size_t start_line) = 0;
-  virtual reconstruction_result read(std::string_view data,
-                                     const ast::base* target) = 0;
+  virtual reconstruction_result read(std::string_view data, source_loc start,
+                                     size_t indent,
+                                     size_t paren_precedence = 0) = 0;
 
   // The latest version also needs to implement
   // std::string write(std::vector<const ast::base*> node);
