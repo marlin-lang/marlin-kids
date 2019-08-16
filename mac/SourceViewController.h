@@ -5,7 +5,7 @@
 
 @interface SourceViewController
     : NSViewController<NSCollectionViewDataSource, NSCollectionViewDelegateFlowLayout,
-                       SourceTextViewDataSource>
+                       NSTextViewDelegate, SourceTextViewDataSource>
 
 @property(nonatomic, weak) Document* document;
 

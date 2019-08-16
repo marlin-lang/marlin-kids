@@ -3,6 +3,7 @@
 #import "toolbox_model.hpp"
 
 #import "Document.h"
+#import "LineNumberView.h"
 #import "Pasteboard.h"
 #import "SourceTheme.h"
 #import "ToolBoxHeaderView.h"
@@ -13,6 +14,8 @@
 @property(weak) IBOutlet NSCollectionView *toolBoxView;
 @property(weak) IBOutlet SourceTextView *sourceTextView;
 @property(weak) IBOutlet NSTextField *outputTextField;
+
+@property(strong) LineNumberView *lineNumberView;
 
 @end
 
@@ -31,13 +34,21 @@
   [super viewDidLoad];
 
   self.sourceTextView.dataSource = self;
+  self.sourceTextView.delegate = self;
+
+  self.sourceTextView.rulerVisible = YES;
+  self.sourceTextView.enclosingScrollView.hasHorizontalRuler = NO;
+  self.sourceTextView.enclosingScrollView.hasVerticalRuler = YES;
+  self.lineNumberView = [[LineNumberView alloc] initWithTextView:self.sourceTextView];
+  self.sourceTextView.enclosingScrollView.verticalRulerView = self.lineNumberView;
 }
 
 - (IBAction)execute:(id)sender {
   auto &doc = self.document.content;
   doc.execute([self](const marlin::ast::base &node, const std::string &message) {
-    [self.sourceTextView showErrorMessage:@(message.c_str()) forSourceRange:node.source_code_range];
+    [self.sourceTextView addError:@(message.c_str()) atSourceRange:node.source_code_range];
   });
+  [self.sourceTextView showErrors];
   self.outputTextField.stringValue = [NSString stringWithCString:doc.output().c_str()
                                                         encoding:NSUTF8StringEncoding];
 }
@@ -102,6 +113,12 @@
   return [pasteboard
       setString:string
         forType:pasteboardOfType(marlin::control::toolbox_model::items[section][item].type)];
+}
+
+#pragma mark - NSTextViewDelegate implementation
+
+- (void)textDidChange:(NSNotification *)notification {
+  [self.lineNumberView setNeedsDisplay:YES];
 }
 
 #pragma mark - SourceTextViewDataSource implementation

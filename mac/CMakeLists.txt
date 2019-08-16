@@ -2,6 +2,8 @@ set(HEADERS
     AppDelegate.h
     Document.h
     EditorViewController.h
+    LineNumberView.h
+    MessageViewController.h
     NSObject+Casting.h
     Pasteboard.h
     SourceTextView.h
@@ -14,7 +16,9 @@ set(SOURCES
     AppDelegate.mm
     Document.mm
     EditorViewController.mm
+    LineNumberView.mm
     main.mm
+    MessageViewController.mm
     NSObject+Casting.mm
     SourceTextView.mm
     SourceTheme.mm

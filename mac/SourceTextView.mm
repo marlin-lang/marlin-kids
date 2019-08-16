@@ -5,8 +5,21 @@
 
 #import "toolbox_model.hpp"
 
+#import "LineNumberView.h"
+#import "MessageViewController.h"
 #import "Pasteboard.h"
 #import "SourceTheme.h"
+
+@interface ErrorInfo : NSObject
+
+@property(nonatomic, strong) NSString* message;
+@property NSRange range;
+
+@end
+
+@implementation ErrorInfo
+
+@end
 
 @interface SourceTextView ()
 
@@ -21,16 +34,14 @@
   NSRange _selectionRange;
   NSInteger _statementInsertionPoint;
 
-  NSString* _errorMessage;
-  NSRange _errorRange;
+  NSMutableArray* _errors;
 }
 
 - (instancetype)initWithCoder:(NSCoder*)coder {
   if (self = [super initWithCoder:coder]) {
     _selectionRange = NSMakeRange(0, 0);
     _statementInsertionPoint = -1;
-    _errorMessage = nil;
-    _errorRange = NSMakeRange(0, 0);
+    _errors = [NSMutableArray new];
   }
   return self;
 }
@@ -43,6 +54,21 @@
   _selection = [self.dataSource textView:self selectionAt:[self sourceLocOfIndex:index]];
   _selectionRange = [self rangeOfSourceRange:_selection->get_range()];
   [self setNeedsDisplayInRect:self.bounds avoidAdditionalLayout:YES];
+  for (ErrorInfo* error in _errors) {
+    if (NSEqualRanges(_selectionRange, error.range)) {
+      NSStoryboard* storyboard = [NSStoryboard storyboardWithName:@"Main" bundle:nil];
+      MessageViewController* vc =
+          [storyboard instantiateControllerWithIdentifier:@"MessageViewController"];
+      vc.messageTextField.stringValue = error.message;
+
+      self.popover = [NSPopover new];
+      self.popover.behavior = NSPopoverBehaviorTransient;
+      self.popover.contentViewController = vc;
+      auto rect = [self rectOfRange:_selectionRange];
+      [self.popover showRelativeToRect:rect ofView:self preferredEdge:NSMinYEdge];
+      return;
+    }
+  }
   if (_selection->is_literal()) {
     NSStoryboard* storyboard = [NSStoryboard storyboardWithName:@"Main" bundle:nil];
     EditorViewController* vc =
@@ -188,23 +214,30 @@
 - (void)updateInRange:(NSRange)range
            withSource:(std::string)source
            highlights:(std::vector<marlin::control::highlight_token>)highlights {
+  [self.textStorage beginEditing];
   NSString* newString = [NSString stringWithCString:source.c_str() encoding:NSUTF8StringEncoding];
   [self.textStorage replaceCharactersInRange:range withString:newString];
   [[SourceTheme new] applyTo:self.textStorage
                        range:NSMakeRange(range.location, newString.length)
               withHighlights:highlights];
+  [self.textStorage endEditing];
+  [self didChangeText];
 }
 
-- (void)showErrorMessage:(NSString*)message forSourceRange:(marlin::source_range)range {
-  _errorMessage = message;
-  _errorRange = [self rangeOfSourceRange:range];
-  [self addToolTipRect:[self rectOfRange:_errorRange] owner:self userData:nil];
+- (void)addError:(NSString*)message atSourceRange:(marlin::source_range)range {
+  ErrorInfo* error = [ErrorInfo new];
+  error.message = message;
+  error.range = [self rangeOfSourceRange:range];
+  [_errors addObject:error];
+}
+
+- (void)showErrors {
   [self setNeedsDisplayInRect:self.bounds avoidAdditionalLayout:YES];
 }
 
 - (void)drawErrorMessage {
-  if (_errorMessage) {
-    auto rect = [self rectOfRange:_errorRange];
+  for (ErrorInfo* error in _errors) {
+    auto rect = [self rectOfRange:error.range];
     [NSGraphicsContext saveGraphicsState];
     NSBezierPath* line = [NSBezierPath bezierPath];
     [line moveToPoint:NSMakePoint(rect.origin.x, rect.origin.y + rect.size.height)];
@@ -246,7 +279,7 @@
     stringForToolTip:(NSToolTipTag)tag
                point:(NSPoint)point
             userData:(void*)data {
-  return _errorMessage;
+  return @"";  //_errorMessage;
 }
 
 @end

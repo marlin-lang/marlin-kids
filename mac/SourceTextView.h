@@ -9,19 +9,7 @@
 
 #import "EditorViewController.h"
 
-@protocol SourceTextViewDataSource;
-
-@interface SourceTextView : NSTextView<EditorViewControllerDelegate, NSViewToolTipOwner>
-
-@property(weak) id<SourceTextViewDataSource> dataSource;
-
-- (void)updateInRange:(NSRange)range
-           withSource:(std::string)source
-           highlights:(std::vector<marlin::control::highlight_token>)highlights;
-
-- (void)showErrorMessage:(NSString *)message forSourceRange:(marlin::source_range)range;
-
-@end
+@class SourceTextView;
 
 @protocol SourceTextViewDataSource
 
@@ -31,5 +19,19 @@
 - (marlin::control::statement_inserter)statementInserterForTextView:(SourceTextView *)textView;
 
 - (marlin::control::expression_inserter)expressionInserterForTextView:(SourceTextView *)textView;
+
+@end
+
+@interface SourceTextView : NSTextView<EditorViewControllerDelegate, NSViewToolTipOwner>
+
+@property(weak) id<SourceTextViewDataSource> dataSource;
+
+- (void)updateInRange:(NSRange)range
+           withSource:(std::string)source
+           highlights:(std::vector<marlin::control::highlight_token>)highlights;
+
+- (void)addError:(NSString *)message atSourceRange:(marlin::source_range)range;
+
+- (void)showErrors;
 
 @end
