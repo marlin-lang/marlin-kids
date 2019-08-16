@@ -5,6 +5,7 @@ set(HEADERS
     LineNumberView.h
     MessageViewController.h
     NSObject+Casting.h
+    NSString+StringView.h
     Pasteboard.h
     SourceTextView.h
     SourceTheme.h
@@ -20,6 +21,7 @@ set(SOURCES
     main.mm
     MessageViewController.mm
     NSObject+Casting.mm
+    NSString+StringView.mm
     SourceTextView.mm
     SourceTheme.mm
     SourceViewController.mm

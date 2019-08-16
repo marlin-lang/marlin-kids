@@ -2,6 +2,7 @@
 #define marlin_control_prototype_definition_hpp
 
 #include <array>
+#include <string_view>
 #include <utility>
 
 #include "node.hpp"
@@ -50,7 +51,7 @@ struct statement_prototype
 
   virtual ~statement_prototype() noexcept = default;
 
-  [[nodiscard]] virtual std::string name() const = 0;
+  [[nodiscard]] virtual std::string_view name() const = 0;
   [[nodiscard]] virtual std::pair<ast::node, source_insertion> construct(
       size_t line, size_t indent) const = 0;
 };
@@ -71,7 +72,7 @@ struct expression_prototype
 
   virtual ~expression_prototype() noexcept = default;
 
-  [[nodiscard]] virtual std::string name() const = 0;
+  [[nodiscard]] virtual std::string_view name() const = 0;
   [[nodiscard]] virtual std::pair<ast::node, source_replacement> construct(
       const ast::base& target) const = 0;
 };

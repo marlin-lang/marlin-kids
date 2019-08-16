@@ -7,6 +7,7 @@
 
 #import "LineNumberView.h"
 #import "MessageViewController.h"
+#import "NSString+StringView.h"
 #import "Pasteboard.h"
 #import "SourceTheme.h"
 
@@ -83,8 +84,7 @@
 
     auto [type, data] = _selection->get_literal_content();
     vc.type = type;
-    vc.editorTextField.stringValue = [NSString stringWithCString:data.c_str()
-                                                        encoding:NSUTF8StringEncoding];
+    vc.editorTextField.stringValue = [NSString stringWithStringView:data];
   }
 }
 
@@ -212,10 +212,10 @@
 }
 
 - (void)updateInRange:(NSRange)range
-           withSource:(std::string)source
+           withSource:(std::string_view)source
            highlights:(std::vector<marlin::control::highlight_token>)highlights {
   [self.textStorage beginEditing];
-  NSString* newString = [NSString stringWithCString:source.c_str() encoding:NSUTF8StringEncoding];
+  NSString* newString = [NSString stringWithStringView:source];
   [self.textStorage replaceCharactersInRange:range withString:newString];
   [[SourceTheme new] applyTo:self.textStorage
                        range:NSMakeRange(range.location, newString.length)

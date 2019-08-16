@@ -24,7 +24,6 @@ struct base::impl : base {
 };
 
 struct raw : base::impl<0> {
-  raw(const char* str) : _str{str} {}
   raw(std::string str) : _str{std::move(str)} {}
 
   std::string construct_all(size_t, source_loc& curr_loc, size_t& curr_offset,
@@ -36,6 +35,21 @@ struct raw : base::impl<0> {
 
  private:
   std::string _str;
+};
+
+struct raw_view : base::impl<0> {
+  raw_view(const char* str) : _str{str} {}
+  raw_view(std::string_view str) : _str{std::move(str)} {}
+
+  std::string construct_all(size_t, source_loc& curr_loc, size_t& curr_offset,
+                            ast::node*&, std::vector<highlight_token>&) const {
+    curr_loc.column += _str.size();
+    curr_offset += _str.size();
+    return std::string{_str};
+  }
+
+ private:
+  std::string_view _str;
 };
 
 struct newline : base::impl<0> {
@@ -85,7 +99,9 @@ struct highlight : base::impl<inner_type::nodes> {
   inner_type _inner;
 };
 
+highlight(highlight_token_type, const char*)->highlight<raw_view>;
 highlight(highlight_token_type, std::string)->highlight<raw>;
+highlight(highlight_token_type, std::string_view)->highlight<raw_view>;
 
 template <typename callable_type, typename inner_type,
           typename = std::enable_if_t<std::is_base_of_v<base, inner_type>>>
@@ -231,17 +247,23 @@ inline auto op(inner_type inner) {
   return proto_gen::highlight{highlight_token_type::op, std::move(inner)};
 }
 
-inline auto variable_placeholder(std::string name) {
+inline auto variable_placeholder(std::string_view name) {
+  std::string text{"@"};
+  text.append(name);
   return proto_gen::node(
-      [name]() { return ast::make<ast::variable_placeholder>(name); },
-      proto_gen::highlight(highlight_token_type::placeholder,
-                           "@" + std::move(name)));
+      [name{std::move(name)}]() {
+        return ast::make<ast::variable_placeholder>(std::string{name});
+      },
+      proto_gen::highlight(highlight_token_type::placeholder, std::move(text)));
 }
-inline auto expression_placeholder(std::string name) {
+inline auto expression_placeholder(std::string_view name) {
+  std::string text{"@"};
+  text.append(name);
   return proto_gen::node(
-      [name]() { return ast::make<ast::expression_placeholder>(name); },
-      proto_gen::highlight(highlight_token_type::placeholder,
-                           "@" + std::move(name)));
+      [name{std::move(name)}]() {
+        return ast::make<ast::expression_placeholder>(std::string{name});
+      },
+      proto_gen::highlight(highlight_token_type::placeholder, std::move(text)));
 }
 
 inline auto newline() { return proto_gen::newline{}; }

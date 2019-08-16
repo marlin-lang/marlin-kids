@@ -3,15 +3,17 @@
 
 #include <array>
 #include <cstdint>
+#include <string_view>
 
 namespace marlin::ast {
 
 enum class unary_op : uint8_t { negative };
 
-static constexpr std::array unary_op_symbol_map{
+static constexpr std::array<std::string_view, 1> unary_op_symbol_map{
     "-" /* negative */
 };
-[[nodiscard]] inline constexpr const char* symbol_for(unary_op op) noexcept {
+[[nodiscard]] inline constexpr std::string_view symbol_for(
+    unary_op op) noexcept {
   return unary_op_symbol_map[static_cast<uint8_t>(op)];
 }
 
@@ -20,10 +22,11 @@ static constexpr size_t unary_op_precedence{14UL};
 
 enum class binary_op : uint8_t { add, subtract, multiply, divide };
 
-static constexpr std::array binary_op_symbol_map{
+static constexpr std::array<std::string_view, 4> binary_op_symbol_map{
     "+" /* add */, "-" /* subtract */, "*" /* multiply */, "/" /* divide */
 };
-[[nodiscard]] inline constexpr const char* symbol_for(binary_op op) noexcept {
+[[nodiscard]] inline constexpr std::string_view symbol_for(
+    binary_op op) noexcept {
   return binary_op_symbol_map[static_cast<uint8_t>(op)];
 }
 

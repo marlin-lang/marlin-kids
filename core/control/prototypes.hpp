@@ -8,7 +8,7 @@
 namespace marlin::control {
 
 struct assignment_prototype : statement_prototype::impl<assignment_prototype> {
-  [[nodiscard]] std::string name() const override { return "assign"; }
+  [[nodiscard]] std::string_view name() const override { return "assign"; }
 
   inline static const proto_gen::statement_generator generator{proto_gen::node{
       [](auto left, auto right) {
@@ -19,7 +19,7 @@ struct assignment_prototype : statement_prototype::impl<assignment_prototype> {
 };
 
 struct print_prototype : statement_prototype::impl<print_prototype> {
-  [[nodiscard]] std::string name() const override { return "print"; }
+  [[nodiscard]] std::string_view name() const override { return "print"; }
 
   inline static const proto_gen::statement_generator generator{proto_gen::node{
       [](auto value) {
@@ -31,7 +31,7 @@ struct print_prototype : statement_prototype::impl<print_prototype> {
 };
 
 struct if_prototype : statement_prototype::impl<if_prototype> {
-  [[nodiscard]] std::string name() const override { return "if"; }
+  [[nodiscard]] std::string_view name() const override { return "if"; }
 
   inline static const proto_gen::statement_generator generator{proto_gen::node{
       [](auto condition) {
@@ -44,7 +44,7 @@ struct if_prototype : statement_prototype::impl<if_prototype> {
 };
 
 struct if_else_prototype : statement_prototype::impl<if_else_prototype> {
-  [[nodiscard]] std::string name() const override { return "if-else"; }
+  [[nodiscard]] std::string_view name() const override { return "if-else"; }
 
   inline static source_loc else_loc;
   inline static const proto_gen::statement_generator generator{proto_gen::node{
@@ -63,7 +63,9 @@ struct if_else_prototype : statement_prototype::impl<if_else_prototype> {
 
 template <ast::unary_op _op>
 struct unary_prototype : expression_prototype::impl<unary_prototype<_op>> {
-  [[nodiscard]] std::string name() const override { return symbol_for(_op); }
+  [[nodiscard]] std::string_view name() const override {
+    return symbol_for(_op);
+  }
 
   inline static const auto content{
       op(symbol_for(_op)) +
@@ -97,7 +99,9 @@ template struct unary_prototype<ast::unary_op::negative>;
 
 template <ast::binary_op _op>
 struct binary_prototype : expression_prototype::impl<binary_prototype<_op>> {
-  [[nodiscard]] std::string name() const override { return symbol_for(_op); }
+  [[nodiscard]] std::string_view name() const override {
+    return symbol_for(_op);
+  }
 
   inline static const auto content{
       expression_placeholder(placeholder::get<ast::binary_expression>(0)) +

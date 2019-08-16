@@ -3,6 +3,7 @@
 
 #include <optional>
 #include <string>
+#include <string_view>
 #include <utility>
 
 #include "base.hpp"
@@ -53,9 +54,10 @@ struct document {
     assert(existing.has_parent());
 
     auto placeholder_name{placeholder::get_replacing_node(existing)};
-    auto source{"@" + placeholder_name};
-    auto placeholder =
-        ast::make<ast::expression_placeholder>(std::move(placeholder_name));
+    std::string source{"@"};
+    source.append(placeholder_name);
+    auto placeholder = ast::make<ast::expression_placeholder>(
+        std::string{std::move(placeholder_name)});
     auto original_range{existing.source_code_range};
     placeholder->source_code_range = {
         original_range.begin,
@@ -69,7 +71,7 @@ struct document {
                                              std::move(tokens)});
   }
 
-  const auto& output() const noexcept { return _output; }
+  std::string_view output() const noexcept { return _output; }
 
   template <typename error_block>
   void execute(error_block block) {

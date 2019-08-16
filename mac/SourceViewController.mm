@@ -4,6 +4,7 @@
 
 #import "Document.h"
 #import "LineNumberView.h"
+#import "NSString+StringView.h"
 #import "Pasteboard.h"
 #import "SourceTheme.h"
 #import "ToolBoxHeaderView.h"
@@ -46,11 +47,11 @@
 - (IBAction)execute:(id)sender {
   auto &doc = self.document.content;
   doc.execute([self](const marlin::ast::base &node, const std::string &message) {
-    [self.sourceTextView addError:@(message.c_str()) atSourceRange:node.source_code_range];
+    [self.sourceTextView addError:[NSString stringWithStringView:message]
+                    atSourceRange:node.source_code_range];
   });
   [self.sourceTextView showErrors];
-  self.outputTextField.stringValue = [NSString stringWithCString:doc.output().c_str()
-                                                        encoding:NSUTF8StringEncoding];
+  self.outputTextField.stringValue = [NSString stringWithStringView:doc.output()];
 }
 
 #pragma mark - NSCollectionViewDataSource implementation
@@ -68,7 +69,8 @@
      itemForRepresentedObjectAtIndexPath:(NSIndexPath *)indexPath {
   ToolBoxItem *item = [collectionView makeItemWithIdentifier:@"ToolBoxItem" forIndexPath:indexPath];
   item.textField.stringValue =
-      @(marlin::control::toolbox_model::nameOfItemAt(indexPath.section, indexPath.item).c_str());
+      [NSString stringWithStringView:marlin::control::toolbox_model::nameOfItemAt(indexPath.section,
+                                                                                  indexPath.item)];
   return item;
 }
 
@@ -79,7 +81,8 @@
       [collectionView makeSupplementaryViewOfKind:NSCollectionElementKindSectionHeader
                                    withIdentifier:@"ToolBoxHeaderView"
                                      forIndexPath:indexPath];
-  view.titleTextField.stringValue = @(marlin::control::toolbox_model::sections[indexPath.section]);
+  view.titleTextField.stringValue =
+      [NSString stringWithStringView:marlin::control::toolbox_model::sections[indexPath.section]];
   return view;
 }
 

@@ -89,9 +89,7 @@ struct store : base_store::impl<store> {
 
   std::string write(std::vector<const ast::base*> nodes) {
     _buffer = _data_prefix;
-
     write_vector(nodes);
-
     auto result{std::move(_buffer)};
     _buffer = {};
     return result;
@@ -109,7 +107,7 @@ struct store : base_store::impl<store> {
         : callable{_callable}, is_statement{_is_statement} {}
   };
 
-  inline static const std::string _data_prefix{"MKB\1"};
+  static constexpr std::string_view _data_prefix{"MKB\1"};
 
   std::string _buffer;
   std::vector<highlight_token> _highlights;
@@ -361,7 +359,8 @@ struct store : base_store::impl<store> {
     static const auto unary_inverse_op_symbol_map{[]() {
       std::unordered_map<std::string, ast::unary_op> map;
       for (uint8_t i{0}; i < ast::unary_op_symbol_map.size(); i++) {
-        map[ast::unary_op_symbol_map[i]] = static_cast<ast::unary_op>(i);
+        map[std::string{ast::unary_op_symbol_map[i]}] =
+            static_cast<ast::unary_op>(i);
       }
       return map;
     }()};
@@ -387,7 +386,8 @@ struct store : base_store::impl<store> {
     static const auto binary_inverse_op_symbol_map{[]() {
       std::unordered_map<std::string, ast::binary_op> map;
       for (uint8_t i{0}; i < ast::binary_op_symbol_map.size(); i++) {
-        map[ast::binary_op_symbol_map[i]] = static_cast<ast::binary_op>(i);
+        map[std::string{ast::binary_op_symbol_map[i]}] =
+            static_cast<ast::binary_op>(i);
       }
       return map;
     }()};
@@ -433,12 +433,12 @@ struct store : base_store::impl<store> {
     return ast::make<ast::string_literal>(std::string{std::move(string)});
   }
 
-  void write_key(const std::string& key) {
+  void write_key(std::string_view key) {
     _buffer.append(key);
     _buffer.append("\0", 1);
   }
 
-  void write_symbol(const std::string& symbol) {
+  void write_symbol(std::string_view symbol) {
     _buffer.append(symbol);
     _buffer.append("\0", 1);
   }

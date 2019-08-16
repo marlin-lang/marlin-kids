@@ -1,6 +1,6 @@
 #import <Cocoa/Cocoa.h>
 
-#import <string>
+#import <string_view>
 #import <vector>
 
 #import "expression_inserter.hpp"
@@ -22,12 +22,12 @@
 
 @end
 
-@interface SourceTextView : NSTextView<EditorViewControllerDelegate, NSViewToolTipOwner>
+@interface SourceTextView : NSTextView <EditorViewControllerDelegate, NSViewToolTipOwner>
 
 @property(weak) id<SourceTextViewDataSource> dataSource;
 
 - (void)updateInRange:(NSRange)range
-           withSource:(std::string)source
+           withSource:(std::string_view)source
            highlights:(std::vector<marlin::control::highlight_token>)highlights;
 
 - (void)addError:(NSString *)message atSourceRange:(marlin::source_range)range;

@@ -2,6 +2,7 @@
 #define marlin_exec_environment_hpp
 
 #include <optional>
+#include <string_view>
 
 #include <jsc/jsc.hpp>
 

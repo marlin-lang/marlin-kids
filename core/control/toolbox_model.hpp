@@ -3,6 +3,7 @@
 
 #include <array>
 #include <string>
+#include <string_view>
 
 #include "prototypes.hpp"
 
@@ -16,7 +17,8 @@ struct toolbox_model {
     pasteboard_t type;
   };
 
-  inline static const std::array sections{"statement", "expression"};
+  inline static const std::array<std::string_view, 2> sections{"statement",
+                                                               "expression"};
 
   inline static const std::array items{
       std::array{
@@ -39,7 +41,7 @@ struct toolbox_model {
 
   static_assert(sections.size() == items.size());
 
-  inline static std::string nameOfItemAt(size_t section, size_t item) {
+  inline static std::string_view nameOfItemAt(size_t section, size_t item) {
     switch (items[section][item].type) {
       case pasteboard_t::statement:
         return statement_prototypes[items[section][item].index]->name();
