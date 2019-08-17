@@ -2,6 +2,7 @@ set(HEADERS
     AppDelegate.h
     Document.h
     EditorViewController.h
+    ExecuteViewController.h
     LineNumberView.h
     MessageViewController.h
     NSData+DataView.h
@@ -12,12 +13,14 @@ set(HEADERS
     SourceTheme.h
     SourceViewController.h
     ToolBoxHeaderView.h
-    ToolBoxItem.h)
+    ToolBoxItem.h
+    WindowController.h)
 
 set(SOURCES
     AppDelegate.mm
     Document.mm
     EditorViewController.mm
+    ExecuteViewController.mm
     LineNumberView.mm
     main.mm
     MessageViewController.mm
@@ -28,7 +31,8 @@ set(SOURCES
     SourceTheme.mm
     SourceViewController.mm
     ToolBoxHeaderView.mm
-    ToolBoxItem.mm)
+    ToolBoxItem.mm
+    WindowController.mm)
 
 set(RESOURCES
     Info.plist

@@ -15,7 +15,6 @@
 
 @property(weak) IBOutlet NSCollectionView *toolBoxView;
 @property(weak) IBOutlet SourceTextView *sourceTextView;
-@property(weak) IBOutlet NSTextField *outputTextField;
 
 @property(strong) LineNumberView *lineNumberView;
 
@@ -45,15 +44,17 @@
   self.sourceTextView.enclosingScrollView.verticalRulerView = self.lineNumberView;
 }
 
-- (IBAction)execute:(id)sender {
+- (void)prepareForSegue:(NSStoryboardSegue *)segue sender:(id)sender {
+  if ([segue.destinationController isKindOfClass:[ExecuteViewController class]]) {
+    auto *vc = (ExecuteViewController *)segue.destinationController;
+    vc.delegate = self;
+    vc.document = self.document;
+  }
+}
+
+- (void)execute {
   [self.lineNumberView clearErrors];
-  auto &doc = self.document.content;
-  doc.execute([self](const marlin::ast::base &node, const std::string &message) {
-    auto index = [self.sourceTextView addErrorAtSourceRange:node.source_code_range];
-    [self.lineNumberView addError:@(message.c_str()) atIndex:index];
-  });
-  [self.sourceTextView setNeedsDisplayInRect:self.sourceTextView.bounds avoidAdditionalLayout:YES];
-  self.outputTextField.stringValue = [NSString stringWithStringView:doc.output()];
+  [self performSegueWithIdentifier:@"ExecuteViewController" sender:self];
 }
 
 #pragma mark - NSCollectionViewDataSource implementation
@@ -126,6 +127,14 @@
 - (void)textDidChange:(NSNotification *)notification {
   [self.sourceTextView clearErrors];
   [self.lineNumberView clearErrors];
+}
+
+#pragma mark - ExecuteViewControllerDelegate implementation
+
+- (void)addErrorAt:(const marlin::ast::base &)node message:(const std::string &)message {
+  auto index = [self.sourceTextView addErrorAtSourceRange:node.source_code_range];
+  [self.lineNumberView addError:@(message.c_str()) atIndex:index];
+  [self.sourceTextView setNeedsDisplayInRect:self.sourceTextView.bounds avoidAdditionalLayout:YES];
 }
 
 #pragma mark - SourceTextViewDataSource implementation
