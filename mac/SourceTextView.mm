@@ -2,6 +2,7 @@
 
 #import <optional>
 #import <utility>
+#import <vector>
 
 #import "toolbox_model.hpp"
 
@@ -10,17 +11,6 @@
 #import "NSString+StringView.h"
 #import "Pasteboard.h"
 #import "SourceTheme.h"
-
-@interface ErrorInfo : NSObject
-
-@property(nonatomic, strong) NSString* message;
-@property NSRange range;
-
-@end
-
-@implementation ErrorInfo
-
-@end
 
 @interface SourceTextView ()
 
@@ -35,7 +25,7 @@
   NSRange _selectionRange;
   NSInteger _statementInsertionPoint;
 
-  NSMutableArray* _errors;
+  std::vector<NSRange> _errors;
 }
 
 - (instancetype)initWithCoder:(NSCoder*)coder {
@@ -49,7 +39,6 @@
 
     _selectionRange = NSMakeRange(0, 0);
     _statementInsertionPoint = -1;
-    _errors = [NSMutableArray new];
   }
   return self;
 }
@@ -62,21 +51,6 @@
   _selection = [self.dataSource textView:self selectionAt:[self sourceLocOfIndex:index]];
   _selectionRange = [self rangeOfSourceRange:_selection->get_range()];
   [self setNeedsDisplayInRect:self.bounds avoidAdditionalLayout:YES];
-  for (ErrorInfo* error in _errors) {
-    if (NSEqualRanges(_selectionRange, error.range)) {
-      NSStoryboard* storyboard = [NSStoryboard storyboardWithName:@"Main" bundle:nil];
-      MessageViewController* vc =
-          [storyboard instantiateControllerWithIdentifier:@"MessageViewController"];
-      vc.messageTextField.stringValue = error.message;
-
-      self.popover = [NSPopover new];
-      self.popover.behavior = NSPopoverBehaviorTransient;
-      self.popover.contentViewController = vc;
-      auto rect = [self rectOfRange:_selectionRange];
-      [self.popover showRelativeToRect:rect ofView:self preferredEdge:NSMinYEdge];
-      return;
-    }
-  }
   if (_selection->is_literal()) {
     NSStoryboard* storyboard = [NSStoryboard storyboardWithName:@"Main" bundle:nil];
     EditorViewController* vc =
@@ -231,20 +205,15 @@
   [self didChangeText];
 }
 
-- (void)addError:(NSString*)message atSourceRange:(marlin::source_range)range {
-  ErrorInfo* error = [ErrorInfo new];
-  error.message = message;
-  error.range = [self rangeOfSourceRange:range];
-  [_errors addObject:error];
-}
-
-- (void)showErrors {
-  [self setNeedsDisplayInRect:self.bounds avoidAdditionalLayout:YES];
+- (NSUInteger)characterIndexOfErrorAtSourceRange:(marlin::source_range)range {
+  auto charRange = [self rangeOfSourceRange:range];
+  _errors.push_back(charRange);
+  return charRange.location;
 }
 
 - (void)drawErrorMessage {
-  for (ErrorInfo* error in _errors) {
-    auto rect = [self rectOfRange:error.range];
+  for (auto errorRange : _errors) {
+    auto rect = [self rectOfRange:errorRange];
     [NSGraphicsContext saveGraphicsState];
     NSBezierPath* line = [NSBezierPath bezierPath];
     [line moveToPoint:NSMakePoint(rect.origin.x, rect.origin.y + rect.size.height)];
