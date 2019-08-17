@@ -4,7 +4,8 @@ set(HEADERS
     environment.hpp
     exec_errors.hpp
     generator.hpp
-    stacktrace.hpp)
+    stacktrace.hpp
+    standard_lib.hpp)
 
 set(SOURCES stacktrace.cpp)
 

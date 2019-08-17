@@ -38,10 +38,10 @@ static constexpr std::array binary_op_precedence_map{
   return binary_op_precedence_map[static_cast<uint8_t>(op)];
 }
 
-enum class system_function : size_t { range };
+enum class system_function : size_t { range1, range2, range3 };
 
-static constexpr std::array<std::string_view, 1> system_function_name_map{
-    "range" /* range */
+static constexpr std::array<std::string_view, 3> system_function_name_map{
+    "range1" /* range1 */, "range2" /* range2 */, "range3" /* range3 */
 };
 [[nodiscard]] inline constexpr std::string_view name_for(
     system_function func) noexcept {

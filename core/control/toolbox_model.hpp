@@ -18,8 +18,8 @@ struct toolbox_model {
     pasteboard_t type;
   };
 
-  inline static const std::array<std::string_view, 3> sections{
-      "control flow", "statement", "expression"};
+  inline static const std::array<std::string_view, 4> sections{
+      "control flow", "statement", "expression", "function"};
 
   inline static const std::array items{
       std::vector{
@@ -41,7 +41,13 @@ struct toolbox_model {
                pasteboard_t::expression},
           item{binary_prototype<ast::binary_op::divide>::index(),
                pasteboard_t::expression},
-          item{system_function_prototype<ast::system_function::range>::index(),
+      },
+      std::vector{
+          item{system_function_prototype<ast::system_function::range1>::index(),
+               pasteboard_t::expression},
+          item{system_function_prototype<ast::system_function::range2>::index(),
+               pasteboard_t::expression},
+          item{system_function_prototype<ast::system_function::range3>::index(),
                pasteboard_t::expression},
       },
   };

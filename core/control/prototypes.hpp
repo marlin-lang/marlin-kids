@@ -140,7 +140,9 @@ struct system_function_prototype
   }()};
 };
 
-template struct system_function_prototype<ast::system_function::range>;
+template struct system_function_prototype<ast::system_function::range1>;
+template struct system_function_prototype<ast::system_function::range2>;
+template struct system_function_prototype<ast::system_function::range3>;
 
 // Construct literal prototypes manually for now
 

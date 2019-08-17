@@ -5,6 +5,7 @@ set(HEADERS
     prototype_definition.hpp
     prototypes.hpp
     source_modifications.hpp
+    source_selection.hpp
     statement_inserter.hpp
     toolbox_model.hpp)
 

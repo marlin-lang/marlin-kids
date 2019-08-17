@@ -140,10 +140,16 @@ struct generator {
   }
 
   auto get_jsast(ast::system_function_call& call) {
-    static constexpr std::array<jsast::ast::node (*)(), 1> callee_map{
+    static constexpr std::array<jsast::ast::node (*)(), 3> callee_map{
         []() {
           return jsast::ast::node{jsast::ast::identifier{"range"}};
-        } /* range */
+        } /* range1 */,
+        []() {
+          return jsast::ast::node{jsast::ast::identifier{"range"}};
+        } /* range2 */,
+        []() {
+          return jsast::ast::node{jsast::ast::identifier{"range"}};
+        } /* range3 */
     };
     jsast::utils::move_vector<jsast::ast::node> args;
     for (auto& arg : call.arguments()) {

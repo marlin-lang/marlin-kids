@@ -496,14 +496,19 @@ struct store : base_store::impl<store> {
       return map;
     }()};
 
+    static constexpr std::array<std::string_view, 3>
+        system_function_display_map{
+            "range" /* range1 */, "range" /* range2 */, "range" /* range3 */
+        };
+
     auto name{read_zero_terminated(iter, end)};
     auto it{system_function_inverse_name_map.find(name)};
     if (it == system_function_inverse_name_map.end()) {
       throw read_error{"Unknown system function encountered!"};
     } else {
-      emit_to_buffer(name);
-
       const auto func{it->second};
+      emit_to_buffer(system_function_display_map[static_cast<size_t>(func)]);
+
       // custom read_vector to emit deliminators
       emit_to_buffer("(");
       auto length{read_int(iter, end)};
