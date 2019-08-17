@@ -7,7 +7,7 @@ set(HEADERS
     statement_inserter.hpp
     toolbox_model.hpp)
 
-set(SOURCES statement_inserter.cpp)
+set(SOURCES expression_inserter.cpp statement_inserter.cpp)
 
 add_library(${PROJECT_NAME}.core.control ${SOURCES})
 target_sources(${PROJECT_NAME}.core.control PRIVATE ${HEADERS})

@@ -4,6 +4,7 @@ set(HEADERS
     EditorViewController.h
     LineNumberView.h
     MessageViewController.h
+    NSData+DataView.h
     NSObject+Casting.h
     NSString+StringView.h
     Pasteboard.h
@@ -20,6 +21,7 @@ set(SOURCES
     LineNumberView.mm
     main.mm
     MessageViewController.mm
+    NSData+DataView.mm
     NSObject+Casting.mm
     NSString+StringView.mm
     SourceTextView.mm

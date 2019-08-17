@@ -3,10 +3,12 @@
 #import <optional>
 #import <utility>
 
+#import "prototype_definition.hpp"
 #import "toolbox_model.hpp"
 
 #import "LineNumberView.h"
 #import "MessageViewController.h"
+#import "NSData+DataView.h"
 #import "NSString+StringView.h"
 #import "Pasteboard.h"
 #import "SourceTheme.h"
@@ -270,10 +272,11 @@
     _selection = std::nullopt;
     _selectionRange = NSMakeRange(0, 0);
 
-    auto update = inserter.insert_literal(type, std::string{string.UTF8String});
-    [self updateInRange:[self rangeOfSourceRange:update.range]
-             withSource:std::move(update.source)
-             highlights:std::move(update.highlights)];
+    if (auto update = inserter.insert_literal(type, std::string{string.UTF8String})) {
+      [self updateInRange:[self rangeOfSourceRange:update->range]
+               withSource:std::move(update->source)
+               highlights:std::move(update->highlights)];
+    }
   } else {
     _selection = std::nullopt;
     _selectionRange = NSMakeRange(0, 0);
@@ -349,25 +352,25 @@
   auto type = [sender.draggingPasteboard availableTypeFromArray:self.acceptableDragTypes];
   if (type == pasteboardOfType(marlin::control::pasteboard_t::statement)) {
     if (_statementInserter.has_value() && _statementInserter->can_insert()) {
-      auto index = [sender.draggingPasteboard
-                       stringForType:pasteboardOfType(marlin::control::pasteboard_t::statement)]
-                       .integerValue;
-      auto update = _statementInserter->insert_prototype(index);
-      [self updateInRange:NSMakeRange(_statementInsertionPoint, 0)
-               withSource:std::move(update.source)
-               highlights:std::move(update.highlights)];
-      return YES;
+      auto* data = [sender.draggingPasteboard
+          dataForType:pasteboardOfType(marlin::control::pasteboard_t::statement)];
+      if (auto update = _statementInserter->insert(data.dataView)) {
+        [self updateInRange:NSMakeRange(_statementInsertionPoint, 0)
+                 withSource:std::move(update->source)
+                 highlights:std::move(update->highlights)];
+        return YES;
+      }
     }
   } else if (type == pasteboardOfType(marlin::control::pasteboard_t::expression)) {
     if (_expressionInserter.has_value() && _expressionInserter->can_insert()) {
-      auto index = [sender.draggingPasteboard
-                       stringForType:pasteboardOfType(marlin::control::pasteboard_t::expression)]
-                       .integerValue;
-      auto update = _expressionInserter->insert_prototype(index);
-      [self updateInRange:_selectionRange
-               withSource:std::move(update.source)
-               highlights:std::move(update.highlights)];
-      return YES;
+      auto* data = [sender.draggingPasteboard
+          dataForType:pasteboardOfType(marlin::control::pasteboard_t::expression)];
+      if (auto update = _expressionInserter->insert(data.dataView)) {
+        [self updateInRange:_selectionRange
+                 withSource:std::move(update->source)
+                 highlights:std::move(update->highlights)];
+        return YES;
+      }
     }
   }
   return NO;

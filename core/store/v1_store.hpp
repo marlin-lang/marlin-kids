@@ -53,6 +53,9 @@ struct store : base_store::impl<store> {
     _indent = indent;
     auto current{data.begin() + data_prefix().size()};
     auto nodes{read_vector(current, data.end(), type, paren_precedence)};
+    if (nodes.size() == 0) {
+      throw read_error{"No data is read!"};
+    }
 
     reconstruction_result result{std::move(nodes), std::move(_source_buffer),
                                  std::move(_highlights)};

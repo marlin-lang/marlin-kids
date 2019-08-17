@@ -44,59 +44,40 @@ struct prototype_container {
   }
 };
 
-struct statement_prototype
-    : prototype_container<statement_prototype, statement_prototype> {
-  template <typename prototype>
-  struct impl;
-
-  virtual ~statement_prototype() noexcept = default;
+struct base_prototype {
+  virtual ~base_prototype() noexcept = default;
 
   [[nodiscard]] virtual std::string_view name() const = 0;
-  [[nodiscard]] virtual std::pair<ast::node, source_insertion> construct(
-      const ast::base& parent, size_t line) const = 0;
+  [[nodiscard]] virtual store::data_view data() const = 0;
+};
+
+struct statement_prototype
+    : base_prototype,
+      prototype_container<statement_prototype, statement_prototype> {
+  template <typename prototype>
+  struct impl;
 };
 
 template <typename prototype>
 struct statement_prototype::impl : statement_prototype,
                                    statement_prototype::element<prototype> {
-  [[nodiscard]] std::pair<ast::node, source_insertion> construct(
-      const ast::base& parent, size_t line) const override {
-    // store::read throws exceptions,
-    // but we assert that reading prototype data does not
-    auto result{store::read(prototype::data, parent, line)};
-    assert(result.nodes.size() == 1);
-    return std::make_pair(
-        std::move(result.nodes[0]),
-        source_insertion{
-            {line, 1}, std::move(result.source), std::move(result.highlights)});
+  [[nodiscard]] store::data_view data() const override {
+    return prototype::_data;
   }
 };
 
 struct expression_prototype
-    : prototype_container<expression_prototype, expression_prototype> {
+    : base_prototype,
+      prototype_container<expression_prototype, expression_prototype> {
   template <typename prototype>
   struct impl;
-
-  virtual ~expression_prototype() noexcept = default;
-
-  [[nodiscard]] virtual std::string_view name() const = 0;
-  [[nodiscard]] virtual std::pair<ast::node, source_replacement> construct(
-      const ast::base& target) const = 0;
 };
 
 template <typename prototype>
 struct expression_prototype::impl : expression_prototype,
                                     expression_prototype::element<prototype> {
-  [[nodiscard]] std::pair<ast::node, source_replacement> construct(
-      const ast::base& target) const override {
-    const auto original{target.source_code_range};
-    // store::read throws exceptions,
-    // but we assert that reading prototype data does not
-    auto result{store::read(prototype::data, target)};
-    assert(result.nodes.size() == 1);
-    return std::make_pair(std::move(result.nodes[0]),
-                          source_replacement{original, std::move(result.source),
-                                             std::move(result.highlights)});
+  [[nodiscard]] store::data_view data() const override {
+    return prototype::_data;
   }
 };
 

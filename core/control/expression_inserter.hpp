@@ -1,7 +1,10 @@
 #ifndef marlin_control_expression_inserter_hpp
 #define marlin_control_expression_inserter_hpp
 
+#include <optional>
+
 #include "ast.hpp"
+#include "byte_span.hpp"
 #include "document.hpp"
 #include "prototypes.hpp"
 
@@ -33,31 +36,23 @@ struct expression_inserter {
   }
 
   template <typename... arg_type>
-  source_replacement insert_literal(literal_data_type type,
-                                    arg_type&&... args) {
+  std::optional<source_replacement> insert_literal(literal_data_type type,
+                                                   arg_type&&... args) {
     switch (type) {
       case literal_data_type::variable_name:
-        return insert_literal<variable_name_prototype>(
-            std::forward<arg_type>(args)...);
+        return insert(
+            variable_name_prototype::data(std::forward<arg_type>(args)...));
       case literal_data_type::identifier:
-        return insert_literal<identifier_prototype>(
-            std::forward<arg_type>(args)...);
+        return insert(
+            identifier_prototype::data(std::forward<arg_type>(args)...));
       case literal_data_type::number:
-        return insert_literal<number_prototype>(
-            std::forward<arg_type>(args)...);
+        return insert(number_prototype::data(std::forward<arg_type>(args)...));
       case literal_data_type::string:
-        return insert_literal<string_prototype>(
-            std::forward<arg_type>(args)...);
+        return insert(string_prototype::data(std::forward<arg_type>(args)...));
     }
   }
 
-  source_replacement insert_prototype(size_t index) {
-    assert(_selection != nullptr);
-
-    auto [node, update]{expression_prototypes[index]->construct(*_selection)};
-    _doc->replace_expression(*_selection, std::move(node));
-    return update;
-  }
+  std::optional<source_replacement> insert(store::data_view data);
 
  private:
   document* _doc;
@@ -67,17 +62,7 @@ struct expression_inserter {
   // Special constructor for constructing from source_selection
   expression_inserter(document& doc, source_loc loc, ast::base& selection)
       : _doc{&doc}, _loc{loc}, _selection{&selection} {}
-
-  template <typename prototype_type, typename... arg_type>
-  source_replacement insert_literal(arg_type&&... args) {
-    assert(_selection != nullptr);
-
-    auto [node, update]{prototype_type::construct(
-        _selection->source_code_range, std::forward<arg_type>(args)...)};
-    _doc->replace_expression(*_selection, std::move(node));
-    return update;
-  }
-};
+};  // namespace marlin::control
 
 }  // namespace marlin::control
 

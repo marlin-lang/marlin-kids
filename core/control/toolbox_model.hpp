@@ -41,12 +41,12 @@ struct toolbox_model {
 
   static_assert(sections.size() == items.size());
 
-  inline static std::string_view nameOfItemAt(size_t section, size_t item) {
+  static const base_prototype& prototype_at(size_t section, size_t item) {
     switch (items[section][item].type) {
       case pasteboard_t::statement:
-        return statement_prototypes[items[section][item].index]->name();
+        return *statement_prototypes[items[section][item].index];
       case pasteboard_t::expression:
-        return expression_prototypes[items[section][item].index]->name();
+        return *expression_prototypes[items[section][item].index];
     }
   }
 };

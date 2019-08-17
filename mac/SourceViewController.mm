@@ -4,6 +4,7 @@
 
 #import "Document.h"
 #import "LineNumberView.h"
+#import "NSData+DataView.h"
 #import "NSString+StringView.h"
 #import "Pasteboard.h"
 #import "SourceTheme.h"
@@ -69,8 +70,9 @@
      itemForRepresentedObjectAtIndexPath:(NSIndexPath *)indexPath {
   ToolBoxItem *item = [collectionView makeItemWithIdentifier:@"ToolBoxItem" forIndexPath:indexPath];
   item.textField.stringValue =
-      [NSString stringWithStringView:marlin::control::toolbox_model::nameOfItemAt(indexPath.section,
-                                                                                  indexPath.item)];
+      [NSString stringWithStringView:marlin::control::toolbox_model::prototype_at(indexPath.section,
+                                                                                  indexPath.item)
+                                         .name()];
   return item;
 }
 
@@ -111,11 +113,11 @@
               toPasteboard:(NSPasteboard *)pasteboard {
   auto section = indexPaths.anyObject.section;
   auto item = indexPaths.anyObject.item;
-  NSString *string = [NSString
-      stringWithFormat:@"%ld", marlin::control::toolbox_model::items[section][item].index];
+  NSData *data =
+      [NSData dataWithDataView:marlin::control::toolbox_model::prototype_at(section, item).data()];
   return [pasteboard
-      setString:string
-        forType:pasteboardOfType(marlin::control::toolbox_model::items[section][item].type)];
+      setData:data
+      forType:pasteboardOfType(marlin::control::toolbox_model::items[section][item].type)];
 }
 
 #pragma mark - NSTextViewDelegate implementation

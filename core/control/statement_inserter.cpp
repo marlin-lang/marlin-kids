@@ -1,20 +1,38 @@
 #include "statement_inserter.hpp"
 
+#include "store.hpp"
+
 namespace marlin::control {
 
-source_insertion statement_inserter::insert_prototype(size_t index) {
+std::optional<source_insertion> statement_inserter::insert(
+    store::data_view data) {
   assert(_loc.has_value());
 
-  auto [node, source_update]{
-      statement_prototypes[index]->construct(*_loc->parent, _loc->line)};
-  auto line_offset{static_cast<ptrdiff_t>(node->source_code_range.end.line) +
-                   1 - static_cast<ptrdiff_t>(_loc->line)};
+  std::optional<store::reconstruction_result> try_result;
+  try {
+    try_result = store::read(data, *_loc->parent, _loc->line);
+  } catch (const store::read_error&) {
+    // Leave try_result as std::nullopt
+  }
 
-  _loc->block.emplace(_loc->index, std::move(node));
+  if (try_result.has_value()) {
+    auto& result{*try_result};
+    assert(result.nodes.size() > 0);
+    auto line_offset{static_cast<ptrdiff_t>(
+                         result.nodes.back()->source_code_range.end.line) +
+                     1 - static_cast<ptrdiff_t>(_loc->line)};
 
-  _doc->update_source_line_after_node(*_loc->block[_loc->index], line_offset);
+    for (auto& node : result.nodes) {
+      _loc->block.emplace(_loc->index, std::move(node));
+    }
+    _doc->update_source_line_after_node(*_loc->block[_loc->index], line_offset);
 
-  return source_update;
+    return source_insertion{{_loc->line, 1},
+                            std::move(result.source),
+                            std::move(result.highlights)};
+  } else {
+    return std::nullopt;
+  }
 }
 
 template <bool vector_is_block>

@@ -1,6 +1,8 @@
 #ifndef marlin_control_statement_inserter_hpp
 #define marlin_control_statement_inserter_hpp
 
+#include <optional>
+
 #include "document.hpp"
 #include "prototypes.hpp"
 
@@ -22,7 +24,7 @@ struct statement_inserter {
     }
   }
 
-  source_insertion insert_prototype(size_t index);
+  std::optional<source_insertion> insert(store::data_view data);
 
  private:
   struct location {
