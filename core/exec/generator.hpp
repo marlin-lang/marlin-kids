@@ -1,6 +1,7 @@
 #ifndef marlin_exec_generator_hpp
 #define marlin_exec_generator_hpp
 
+#include <array>
 #include <type_traits>
 
 #include <jsast/jsast.hpp>
@@ -58,7 +59,7 @@ struct generator {
   }
 
   auto get_jsast(ast::variable_placeholder& node) {
-    _errors.emplace_back("Unparsed chunk encountered!", node);
+    _errors.emplace_back("Unexpected placeholder!", node);
     return jsast::ast::identifier{"__error__"};
   }
 
@@ -106,8 +107,19 @@ struct generator {
                                     get_block(statement.alternate())};
   }
 
+  auto get_jsast(ast::while_statement& statement) {
+    return jsast::ast::while_statement{get_node(*statement.condition()),
+                                       get_block(statement.statements())};
+  }
+
+  auto get_jsast(ast::for_statement& statement) {
+    return jsast::ast::for_of_statement{get_node(*statement.variable()),
+                                        get_node(*statement.list()),
+                                        get_block(statement.statements())};
+  }
+
   auto get_jsast(ast::unary_expression& unary) {
-    static constexpr jsast::unary_op symbol_map[]{
+    static constexpr std::array symbol_map{
         jsast::unary_op::negative /* negative */
     };
     return jsast::ast::unary_expression{
@@ -116,7 +128,7 @@ struct generator {
   }
 
   auto get_jsast(ast::binary_expression& binary) {
-    static constexpr jsast::binary_op symbol_map[]{
+    static constexpr std::array symbol_map{
         jsast::binary_op::add /* add */,
         jsast::binary_op::subtract /* subtract */,
         jsast::binary_op::multiply /* multiply */,
@@ -125,6 +137,20 @@ struct generator {
     return jsast::ast::binary_expression{
         get_node(*binary.left()), symbol_map[static_cast<uint8_t>(binary.op)],
         get_node(*binary.right())};
+  }
+
+  auto get_jsast(ast::system_function_call& call) {
+    static constexpr std::array<jsast::ast::node (*)(), 1> callee_map{
+        []() {
+          return jsast::ast::node{jsast::ast::identifier{"range"}};
+        } /* range */
+    };
+    jsast::utils::move_vector<jsast::ast::node> args;
+    for (auto& arg : call.arguments()) {
+      args.emplace_back(get_node(*arg));
+    }
+    return jsast::ast::call_expression{
+        callee_map[static_cast<size_t>(call.func)](), std::move(args)};
   }
 
   auto get_jsast(ast::identifier& identifier) {

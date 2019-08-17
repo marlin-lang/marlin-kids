@@ -90,6 +90,18 @@ struct statement_inserter {
     }
   }
 
+  std::optional<location> find_statement_insert_location_in_node(
+      size_t line, ast::while_statement& node, size_t current_indent) {
+    return find_statement_insert_location_in_vector<true>(
+        line, node, node.statements(), current_indent);
+  }
+
+  std::optional<location> find_statement_insert_location_in_node(
+      size_t line, ast::for_statement& node, size_t current_indent) {
+    return find_statement_insert_location_in_vector<true>(
+        line, node, node.statements(), current_indent);
+  }
+
   template <bool vector_is_block>
   std::optional<location> find_statement_insert_location_in_vector(
       size_t line, ast::base& parent,

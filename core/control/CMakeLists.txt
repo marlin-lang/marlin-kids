@@ -1,5 +1,6 @@
 set(HEADERS
     document.hpp
+    expression_inserter.hpp
     placeholders.hpp
     prototype_definition.hpp
     prototypes.hpp

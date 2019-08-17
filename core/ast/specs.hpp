@@ -38,6 +38,16 @@ static constexpr std::array binary_op_precedence_map{
   return binary_op_precedence_map[static_cast<uint8_t>(op)];
 }
 
+enum class system_function : size_t { range };
+
+static constexpr std::array<std::string_view, 1> system_function_name_map{
+    "range" /* range */
+};
+[[nodiscard]] inline constexpr std::string_view name_for(
+    system_function func) noexcept {
+  return system_function_name_map[static_cast<size_t>(func)];
+}
+
 }  // namespace marlin::ast
 
 #endif  // marlin_ast_specs_hpp

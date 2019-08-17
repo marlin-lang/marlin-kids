@@ -23,12 +23,16 @@ inline const std::string_view assignment{"assign"};
 inline const std::string_view print{"print"};
 
 inline const std::string_view if_else{"if"};
+inline const std::string_view while_loop{"while"};
+inline const std::string_view for_loop{"for"};
 
 inline const std::string_view placeholder{"placeholder"};
 inline const std::string_view identifier{"id"};
 
 inline const std::string_view unary{"unary"};
 inline const std::string_view binary{"binary"};
+
+inline const std::string_view system_function{"sys_func"};
 
 inline const std::string_view number{"number"};
 inline const std::string_view string{"string"};
@@ -220,17 +224,21 @@ struct store : base_store::impl<store> {
   ast::node read_node(data_view::pointer& iter, data_view::pointer end,
                       type_expectation type, size_t paren_precedence = 0) {
     static const std::unordered_map<std::string_view, read_node_entry>
-        read_node_map{{key::program, {&store::read_program, true}},
-                      {key::on_start, {&store::read_on_start, true}},
-                      {key::assignment, {&store::read_assignment, true}},
-                      {key::print, {&store::read_print_statement, true}},
-                      {key::if_else, {&store::read_if_else_statement, true}},
-                      {key::placeholder, {&store::read_placeholder, false}},
-                      {key::identifier, {&store::read_identifier, false}},
-                      {key::unary, {&store::read_unary_expression, false}},
-                      {key::binary, {&store::read_binary_expression, false}},
-                      {key::number, {&store::read_number_literal, false}},
-                      {key::string, {&store::read_string_literal, false}}};
+        read_node_map{
+            {key::program, {&store::read_program, true}},
+            {key::on_start, {&store::read_on_start, true}},
+            {key::assignment, {&store::read_assignment, true}},
+            {key::print, {&store::read_print_statement, true}},
+            {key::if_else, {&store::read_if_else_statement, true}},
+            {key::while_loop, {&store::read_while_statement, true}},
+            {key::for_loop, {&store::read_for_statement, true}},
+            {key::placeholder, {&store::read_placeholder, false}},
+            {key::identifier, {&store::read_identifier, false}},
+            {key::unary, {&store::read_unary_expression, false}},
+            {key::binary, {&store::read_binary_expression, false}},
+            {key::system_function, {&store::read_system_function, false}},
+            {key::number, {&store::read_number_literal, false}},
+            {key::string, {&store::read_string_literal, false}}};
 
     auto key{read_zero_terminated(iter, end)};
     const auto it{read_node_map.find(std::move(key))};
@@ -333,6 +341,45 @@ struct store : base_store::impl<store> {
     }
   }
 
+  ast::node read_while_statement(data_view::pointer& iter,
+                                 data_view::pointer end, type_expectation type,
+                                 size_t paren_precedence) {
+    assert_type<type_expectation::statement>(type, "Unexpected statement!");
+
+    emit_highlight("while", highlight_token_type::keyword);
+    emit_to_buffer(" (");
+    auto condition{read_node(iter, end, type_expectation::rvalue)};
+    emit_to_buffer(") {");
+    emit_new_line();
+    _indent++;
+    auto statements{read_vector(iter, end, type_expectation::statement)};
+    _indent--;
+    emit_indent();
+    emit_to_buffer("}");
+    return ast::make<ast::while_statement>(std::move(condition),
+                                           std::move(statements));
+  }
+
+  ast::node read_for_statement(data_view::pointer& iter, data_view::pointer end,
+                               type_expectation type, size_t paren_precedence) {
+    assert_type<type_expectation::statement>(type, "Unexpected statement!");
+
+    emit_highlight("for", highlight_token_type::keyword);
+    emit_to_buffer(" (");
+    auto variable{read_node(iter, end, type_expectation::lvalue)};
+    emit_to_buffer(" in ");
+    auto list{read_node(iter, end, type_expectation::rvalue)};
+    emit_to_buffer(") {");
+    emit_new_line();
+    _indent++;
+    auto statements{read_vector(iter, end, type_expectation::statement)};
+    _indent--;
+    emit_indent();
+    emit_to_buffer("}");
+    return ast::make<ast::for_statement>(std::move(variable), std::move(list),
+                                         std::move(statements));
+  }
+
   ast::node read_placeholder(data_view::pointer& iter, data_view::pointer end,
                              type_expectation type, size_t paren_precedence) {
     assert_type<type_expectation::lvalue, type_expectation::rvalue>(
@@ -371,7 +418,7 @@ struct store : base_store::impl<store> {
     static const auto unary_inverse_op_symbol_map{[]() {
       std::unordered_map<std::string_view, ast::unary_op> map;
       for (uint8_t i{0}; i < ast::unary_op_symbol_map.size(); i++) {
-        map[ast::unary_op_symbol_map[i]] = static_cast<ast::unary_op>(i);
+        map[ast::unary_op_symbol_map[i]] = {i};
       }
       return map;
     }()};
@@ -406,7 +453,7 @@ struct store : base_store::impl<store> {
     static const auto binary_inverse_op_symbol_map{[]() {
       std::unordered_map<std::string_view, ast::binary_op> map;
       for (uint8_t i{0}; i < ast::binary_op_symbol_map.size(); i++) {
-        map[ast::binary_op_symbol_map[i]] = static_cast<ast::binary_op>(i);
+        map[ast::binary_op_symbol_map[i]] = {i};
       }
       return map;
     }()};
@@ -433,6 +480,44 @@ struct store : base_store::impl<store> {
       }
       return ast::make<ast::binary_expression>(std::move(left), op,
                                                std::move(right));
+    }
+  }
+
+  ast::node read_system_function(data_view::pointer& iter,
+                                 data_view::pointer end, type_expectation type,
+                                 size_t paren_precedence) {
+    assert_type<type_expectation::rvalue>(type, "Unexpected expression!");
+
+    static const auto system_function_inverse_name_map{[]() {
+      std::unordered_map<std::string_view, ast::system_function> map;
+      for (size_t i{0}; i < ast::system_function_name_map.size(); i++) {
+        map[ast::system_function_name_map[i]] = {i};
+      }
+      return map;
+    }()};
+
+    auto name{read_zero_terminated(iter, end)};
+    auto it{system_function_inverse_name_map.find(name)};
+    if (it == system_function_inverse_name_map.end()) {
+      throw read_error{"Unknown system function encountered!"};
+    } else {
+      emit_to_buffer(name);
+
+      const auto func{it->second};
+      // custom read_vector to emit deliminators
+      emit_to_buffer("(");
+      auto length{read_int(iter, end)};
+      std::vector<ast::node> args;
+      args.reserve(length);
+      for (size_t i{0}; i < length; i++) {
+        if (i > 0) {
+          emit_to_buffer(", ");
+        }
+        args.emplace_back(read_node(iter, end, type, paren_precedence));
+      }
+      emit_to_buffer(")");
+
+      return ast::make<ast::system_function_call>(func, std::move(args));
     }
   }
 
@@ -515,30 +600,30 @@ struct store : base_store::impl<store> {
   void write_node(const ast::program& program) {
     write_key(key::program);
     write_vector(program.blocks());
-  };
+  }
 
   void write_node(const ast::on_start& block) {
     write_key(key::on_start);
     write_vector(block.statements());
-  };
+  }
 
   void write_node(const ast::assignment& assignment) {
     write_key(key::assignment);
     write_base(*assignment.variable());
     write_base(*assignment.value());
-  };
+  }
 
   void write_node(const ast::print_statement& print) {
     write_key(key::print);
     write_base(*print.value());
-  };
+  }
 
   void write_node(const ast::if_statement& statement) {
     write_key(key::if_else);
     write_bool(false);
     write_base(*statement.condition());
     write_vector(statement.statements());
-  };
+  }
 
   void write_node(const ast::if_else_statement& statement) {
     write_key(key::if_else);
@@ -548,48 +633,67 @@ struct store : base_store::impl<store> {
     write_vector(statement.alternate());
   }
 
+  void write_node(const ast::while_statement& statement) {
+    write_key(key::while_loop);
+    write_base(*statement.condition());
+    write_vector(statement.statements());
+  }
+
+  void write_node(const ast::for_statement& statement) {
+    write_key(key::for_loop);
+    write_base(*statement.variable());
+    write_base(*statement.list());
+    write_vector(statement.statements());
+  }
+
   void write_node(const ast::variable_placeholder& placeholder) {
     write_key(key::placeholder);
     write_string(placeholder.name);
-  };
+  }
 
   void write_node(const ast::variable_name& variable) {
     write_key(key::identifier);
     write_string(variable.name);
-  };
+  }
 
   void write_node(const ast::expression_placeholder& placeholder) {
     write_key(key::placeholder);
     write_string(placeholder.name);
-  };
+  }
 
   void write_node(const ast::unary_expression& unary) {
     write_key(key::unary);
     write_symbol(ast::symbol_for(unary.op));
     write_base(*unary.argument());
-  };
+  }
 
   void write_node(const ast::binary_expression& binary) {
     write_key(key::binary);
     write_symbol(ast::symbol_for(binary.op));
     write_base(*binary.left());
     write_base(*binary.right());
-  };
+  }
+
+  void write_node(const ast::system_function_call& call) {
+    write_key(key::system_function);
+    write_symbol(ast::name_for(call.func));
+    write_vector(call.arguments());
+  }
 
   void write_node(const ast::identifier& identifier) {
     write_key(key::identifier);
     write_string(identifier.name);
-  };
+  }
 
   void write_node(const ast::number_literal& literal) {
     write_key(key::number);
     write_string(literal.value);
-  };
+  }
 
   void write_node(const ast::string_literal& literal) {
     write_key(key::string);
     write_string(literal.value);
-  };
+  }
 };  // namespace v1
 
 }  // namespace v1
