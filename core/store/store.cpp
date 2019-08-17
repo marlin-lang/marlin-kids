@@ -7,7 +7,7 @@
 
 namespace marlin::store {
 
-[[nodiscard]] reconstruction_result read(std::string_view data,
+[[nodiscard]] reconstruction_result read(data_view data,
                                          const ast::base& parent,
                                          size_t start_line) {
   auto* s{base_store::corresponding_store(data)};
@@ -29,7 +29,7 @@ namespace marlin::store {
   return s->read(std::move(data), {start_line, 1}, indent, type);
 }
 
-[[nodiscard]] reconstruction_result read(std::string_view data,
+[[nodiscard]] reconstruction_result read(data_view data,
                                          const ast::base& target) {
   auto* s{base_store::corresponding_store(data)};
 
@@ -59,13 +59,13 @@ namespace marlin::store {
                  paren_precedence);
 }
 
-[[nodiscard]] reconstruction_result read(std::string_view data,
+[[nodiscard]] reconstruction_result read(data_view data,
                                          type_expectation type) {
   auto* s{base_store::corresponding_store(data)};
   return s->read(std::move(data), {1, 1}, 0, type);
 }
 
-[[nodiscard]] std::string write(std::vector<const ast::base*> nodes) {
+[[nodiscard]] data_vector write(std::vector<const ast::base*> nodes) {
   return latest_store::_singleton.write(nodes);
 }
 

@@ -1,4 +1,5 @@
 set(HEADERS
+    byte_span.hpp
     store.hpp
     store_definition.hpp
     store_errors.hpp

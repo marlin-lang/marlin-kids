@@ -5,17 +5,17 @@
 
 namespace marlin::store {
 
-[[nodiscard]] reconstruction_result read(std::string_view data,
+[[nodiscard]] reconstruction_result read(data_view data,
                                          const ast::base& parent,
                                          size_t start_line);
 
-[[nodiscard]] reconstruction_result read(std::string_view data,
+[[nodiscard]] reconstruction_result read(data_view data,
                                          const ast::base& target);
 
 [[nodiscard]] reconstruction_result read(
-    std::string_view data, type_expectation type = type_expectation::any);
+    data_view data, type_expectation type = type_expectation::any);
 
-[[nodiscard]] std::string write(std::vector<const ast::base*> nodes);
+[[nodiscard]] data_vector write(std::vector<const ast::base*> nodes);
 
 }  // namespace marlin::store
 
