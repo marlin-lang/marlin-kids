@@ -8,48 +8,61 @@
 namespace marlin::store {
 
 [[nodiscard]] reconstruction_result read(std::string_view data,
-                                         const ast::base* parent,
+                                         const ast::base& parent,
                                          size_t start_line) {
-  for (auto* s : base_store::get_stores()) {
-    if (s->recognize(data)) {
-      size_t indent{0};
-      if (parent != nullptr) {
-        const ast::base* curr_parent{parent};
-        while (curr_parent->has_parent()) {
-          indent++;
-          curr_parent = &curr_parent->parent();
-        }
-      }
+  auto* s{base_store::corresponding_store(data)};
 
-      return s->read(std::move(data), {start_line, 1}, indent);
-    }
+  type_expectation type;
+  if (parent.is<ast::program>()) {
+    type = type_expectation::block;
+  } else {
+    type = type_expectation::statement;
   }
-  throw read_error{"Unrecognized data format!"};
+
+  size_t indent{0};
+  const ast::base* curr_parent{&parent};
+  while (curr_parent->has_parent()) {
+    indent++;
+    curr_parent = &curr_parent->parent();
+  }
+
+  return s->read(std::move(data), {start_line, 1}, indent, type);
 }
 
 [[nodiscard]] reconstruction_result read(std::string_view data,
                                          const ast::base& target) {
-  for (auto* s : base_store::get_stores()) {
-    if (s->recognize(data)) {
-      size_t paren_precedence{0};
-      if (target.has_parent()) {
-        if (target.parent().is<ast::unary_expression>()) {
-          paren_precedence = ast::unary_op_precedence;
-        } else if (target.parent().is<ast::binary_expression>()) {
-          auto& binary{target.parent().as<ast::binary_expression>()};
-          if (&target == binary.left().get()) {
-            paren_precedence = precedence_for(binary.op) - 1;
-          } else {
-            paren_precedence = precedence_for(binary.op);
-          }
-        }
-      }
+  auto* s{base_store::corresponding_store(data)};
 
-      return s->read(std::move(data), target.source_code_range.begin, 0,
-                     paren_precedence);
+  type_expectation type;
+  if (target.is<ast::variable_placeholder>() ||
+      target.is<ast::variable_name>()) {
+    type = type_expectation::lvalue;
+  } else {
+    type = type_expectation::rvalue;
+  }
+
+  size_t paren_precedence{0};
+  if (target.has_parent()) {
+    if (target.parent().is<ast::unary_expression>()) {
+      paren_precedence = ast::unary_op_precedence;
+    } else if (target.parent().is<ast::binary_expression>()) {
+      auto& binary{target.parent().as<ast::binary_expression>()};
+      if (&target == binary.left().get()) {
+        paren_precedence = precedence_for(binary.op) - 1;
+      } else {
+        paren_precedence = precedence_for(binary.op);
+      }
     }
   }
-  throw read_error{"Unrecognized data format!"};
+
+  return s->read(std::move(data), target.source_code_range.begin, 0, type,
+                 paren_precedence);
+}
+
+[[nodiscard]] reconstruction_result read(std::string_view data,
+                                         type_expectation type) {
+  auto* s{base_store::corresponding_store(data)};
+  return s->read(std::move(data), {1, 1}, 0, type);
 }
 
 [[nodiscard]] std::string write(std::vector<const ast::base*> nodes) {

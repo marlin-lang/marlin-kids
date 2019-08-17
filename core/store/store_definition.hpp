@@ -6,9 +6,12 @@
 #include <vector>
 
 #include "node.hpp"
+#include "store_errors.hpp"
 #include "utils.hpp"
 
 namespace marlin::store {
+
+enum class type_expectation { program, block, statement, lvalue, rvalue, any };
 
 enum class highlight_token_type {
   keyword,
@@ -41,19 +44,23 @@ struct reconstruction_result {
 };
 
 struct base_store {
-  friend reconstruction_result read(std::string_view data,
-                                    const ast::base* parent, size_t start_line);
-  friend reconstruction_result read(std::string_view data,
-                                    const ast::base& target);
-
   template <typename store_type>
   struct impl;
+
+  static base_store* corresponding_store(std::string_view data) {
+    for (auto* s : get_stores()) {
+      if (s->recognize(data)) {
+        return s;
+      }
+    }
+    throw read_error{"Unrecognized data format!"};
+  }
 
   virtual ~base_store() noexcept = default;
 
   virtual bool recognize(std::string_view data) = 0;
   virtual reconstruction_result read(std::string_view data, source_loc start,
-                                     size_t indent,
+                                     size_t indent, type_expectation type,
                                      size_t paren_precedence = 0) = 0;
 
   // The latest version also needs to implement

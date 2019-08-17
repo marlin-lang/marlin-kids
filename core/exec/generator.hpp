@@ -15,6 +15,8 @@ struct generator {
 
   std::string generate(ast::base& c) {
     jsast::generator gen;
+
+    _errors.clear();
     gen.write(get_node(c));
     if (_errors.size()) {
       auto errors{std::move(_errors)};

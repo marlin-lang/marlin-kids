@@ -53,14 +53,16 @@ struct statement_prototype
 
   [[nodiscard]] virtual std::string_view name() const = 0;
   [[nodiscard]] virtual std::pair<ast::node, source_insertion> construct(
-      const ast::base* parent, size_t line) const = 0;
+      const ast::base& parent, size_t line) const = 0;
 };
 
 template <typename prototype>
 struct statement_prototype::impl : statement_prototype,
                                    statement_prototype::element<prototype> {
   [[nodiscard]] std::pair<ast::node, source_insertion> construct(
-      const ast::base* parent, size_t line) const override {
+      const ast::base& parent, size_t line) const override {
+    // store::read throws exceptions,
+    // but we assert that reading prototype data does not
     auto result{store::read(prototype::data, parent, line)};
     assert(result.nodes.size() == 1);
     return std::make_pair(
@@ -88,6 +90,8 @@ struct expression_prototype::impl : expression_prototype,
   [[nodiscard]] std::pair<ast::node, source_replacement> construct(
       const ast::base& target) const override {
     const auto original{target.source_code_range};
+    // store::read throws exceptions,
+    // but we assert that reading prototype data does not
     auto result{store::read(prototype::data, target)};
     assert(result.nodes.size() == 1);
     return std::make_pair(std::move(result.nodes[0]),

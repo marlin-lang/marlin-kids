@@ -6,15 +6,14 @@
 namespace marlin::store {
 
 [[nodiscard]] reconstruction_result read(std::string_view data,
-                                         const ast::base* parent,
+                                         const ast::base& parent,
                                          size_t start_line);
 
 [[nodiscard]] reconstruction_result read(std::string_view data,
                                          const ast::base& target);
 
-[[nodiscard]] inline reconstruction_result read(std::string_view data) {
-  return read(std::move(data), nullptr, 1);
-}
+[[nodiscard]] reconstruction_result read(
+    std::string_view data, type_expectation type = type_expectation::any);
 
 [[nodiscard]] std::string write(std::vector<const ast::base*> nodes);
 

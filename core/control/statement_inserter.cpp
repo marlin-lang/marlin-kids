@@ -6,7 +6,7 @@ source_insertion statement_inserter::insert_prototype(size_t index) {
   assert(_loc.has_value());
 
   auto [node, source_update]{
-      statement_prototypes[index]->construct(_loc->parent, _loc->line)};
+      statement_prototypes[index]->construct(*_loc->parent, _loc->line)};
   auto line_offset{static_cast<ptrdiff_t>(node->source_code_range.end.line) +
                    1 - static_cast<ptrdiff_t>(_loc->line)};
 

@@ -57,7 +57,7 @@ TEST_CASE("store::Write and read statements", "[store]") {
       std::move(inner_if_statements), std::vector<marlin::ast::node>{})};
 
   auto data{marlin::store::write({assignment.get(), inner_if.get()})};
-  auto result{marlin::store::read(data, &outer_if_ref, 3)};
+  auto result{marlin::store::read(data, outer_if_ref, 3)};
   REQUIRE(result.nodes.size() == 2);
   REQUIRE(result.source ==
           "    needs_print = 0;\n"
@@ -65,4 +65,25 @@ TEST_CASE("store::Write and read statements", "[store]") {
           "      print(\"\\\"Hello, world!\\\"\");\n"
           "    } else {\n"
           "    }\n");
+}
+
+TEST_CASE("store::Report type error", "[store]") {
+  auto node{marlin::ast::make<marlin::ast::binary_expression>(
+      marlin::ast::make<marlin::ast::expression_placeholder>("left"),
+      marlin::ast::binary_op::multiply,
+      marlin::ast::make<marlin::ast::expression_placeholder>("right"))};
+  auto data{marlin::store::write({node.get()})};
+
+  auto result{marlin::store::read(data)};
+  REQUIRE(result.nodes.size() == 1);
+  REQUIRE(result.source == "@left * @right");
+
+  auto& left = *result.nodes[0]->as<marlin::ast::binary_expression>().left();
+
+  auto inner_node{marlin::ast::make<marlin::ast::if_statement>(
+      marlin::ast::make<marlin::ast::expression_placeholder>("con"),
+      std::vector<marlin::ast::node>{})};
+  auto inner_data{marlin::store::write({inner_node.get()})};
+
+  REQUIRE_THROWS(marlin::store::read(inner_data, left));
 }
