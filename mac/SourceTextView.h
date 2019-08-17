@@ -30,6 +30,8 @@
            withSource:(std::string_view)source
            highlights:(std::vector<marlin::control::highlight_token>)highlights;
 
-- (NSUInteger)characterIndexOfErrorAtSourceRange:(marlin::source_range)range;
+- (NSUInteger)addErrorAtSourceRange:(marlin::source_range)range;
+
+- (void)clearErrors;
 
 @end

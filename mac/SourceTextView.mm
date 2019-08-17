@@ -205,10 +205,15 @@
   [self didChangeText];
 }
 
-- (NSUInteger)characterIndexOfErrorAtSourceRange:(marlin::source_range)range {
+- (NSUInteger)addErrorAtSourceRange:(marlin::source_range)range {
   auto charRange = [self rangeOfSourceRange:range];
   _errors.push_back(charRange);
   return charRange.location;
+}
+
+- (void)clearErrors {
+  _errors.clear();
+  [self setNeedsDisplayInRect:self.bounds avoidAdditionalLayout:YES];
 }
 
 - (void)drawErrorMessage {
@@ -247,15 +252,6 @@
     _selection = std::nullopt;
     _selectionRange = NSMakeRange(0, 0);
   }
-}
-
-#pragma mark - NSViewToolTipOwner implementation
-
-- (NSString*)view:(NSView*)view
-    stringForToolTip:(NSToolTipTag)tag
-               point:(NSPoint)point
-            userData:(void*)data {
-  return @"";  //_errorMessage;
 }
 
 @end

@@ -29,6 +29,7 @@
 
 - (void)clearErrors {
   [_errors removeAllObjects];
+  [self setNeedsDisplay:YES];
 }
 
 - (void)mouseDown:(NSEvent*)event {
