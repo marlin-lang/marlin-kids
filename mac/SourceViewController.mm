@@ -46,12 +46,13 @@
 }
 
 - (IBAction)execute:(id)sender {
+  [self.lineNumberView clearErrors];
   auto &doc = self.document.content;
   doc.execute([self](const marlin::ast::base &node, const std::string &message) {
-    [self.sourceTextView addError:[NSString stringWithStringView:message]
-                    atSourceRange:node.source_code_range];
+    auto index = [self.sourceTextView addErrorAtSourceRange:node.source_code_range];
+    [self.lineNumberView addError:@(message.c_str()) atIndex:index];
   });
-  [self.sourceTextView showErrors];
+  [self.sourceTextView setNeedsDisplayInRect:self.sourceTextView.bounds avoidAdditionalLayout:YES];
   self.outputTextField.stringValue = [NSString stringWithStringView:doc.output()];
 }
 
@@ -123,7 +124,8 @@
 #pragma mark - NSTextViewDelegate implementation
 
 - (void)textDidChange:(NSNotification *)notification {
-  [self.lineNumberView setNeedsDisplay:YES];
+  [self.sourceTextView clearErrors];
+  [self.lineNumberView clearErrors];
 }
 
 #pragma mark - SourceTextViewDataSource implementation
