@@ -10,7 +10,7 @@ namespace marlin::control {
 struct assignment_prototype : statement_prototype::impl<assignment_prototype> {
   [[nodiscard]] std::string_view name() const override { return "assign"; }
 
-  inline static const std::string data{[]() {
+  inline static const store::data_vector data{[]() {
     const auto node{ast::make<ast::assignment>(
         ast::make<ast::variable_placeholder>(
             std::string{placeholder::get<ast::assignment>(0)}),
@@ -23,7 +23,7 @@ struct assignment_prototype : statement_prototype::impl<assignment_prototype> {
 struct print_prototype : statement_prototype::impl<print_prototype> {
   [[nodiscard]] std::string_view name() const override { return "print"; }
 
-  inline static const std::string data{[]() {
+  inline static const store::data_vector data{[]() {
     const auto node{
         ast::make<ast::print_statement>(ast::make<ast::expression_placeholder>(
             std::string{placeholder::get<ast::print_statement>(0)}))};
@@ -34,7 +34,7 @@ struct print_prototype : statement_prototype::impl<print_prototype> {
 struct if_prototype : statement_prototype::impl<if_prototype> {
   [[nodiscard]] std::string_view name() const override { return "if"; }
 
-  inline static const std::string data{[]() {
+  inline static const store::data_vector data{[]() {
     const auto node{ast::make<ast::if_statement>(
         ast::make<ast::expression_placeholder>(
             std::string{placeholder::get<ast::if_statement>(0)}),
@@ -46,7 +46,7 @@ struct if_prototype : statement_prototype::impl<if_prototype> {
 struct if_else_prototype : statement_prototype::impl<if_else_prototype> {
   [[nodiscard]] std::string_view name() const override { return "if-else"; }
 
-  inline static const std::string data{[]() {
+  inline static const store::data_vector data{[]() {
     const auto node{ast::make<ast::if_else_statement>(
         ast::make<ast::expression_placeholder>(
             std::string{placeholder::get<ast::if_else_statement>(0)}),
@@ -61,7 +61,7 @@ struct unary_prototype : expression_prototype::impl<unary_prototype<_op>> {
     return symbol_for(_op);
   }
 
-  inline static const std::string data{[]() {
+  inline static const store::data_vector data{[]() {
     const auto node{ast::make<ast::unary_expression>(
         _op, ast::make<ast::expression_placeholder>(
                  std::string{placeholder::get<ast::unary_expression>(0)}))};
@@ -77,7 +77,7 @@ struct binary_prototype : expression_prototype::impl<binary_prototype<_op>> {
     return symbol_for(_op);
   }
 
-  inline static const std::string data{[]() {
+  inline static const store::data_vector data{[]() {
     const auto node{ast::make<ast::binary_expression>(
         ast::make<ast::expression_placeholder>(
             std::string{placeholder::get<ast::binary_expression>(0)}),
@@ -96,6 +96,11 @@ template struct binary_prototype<ast::binary_op::divide>;
 // Construct literal prototypes manually for now
 
 struct number_prototype {
+  static store::data_vector data(std::string_view value) {
+    auto node = ast::make<ast::number_literal>(std::string{std::move(value)});
+    return store::write({node.get()});
+  }
+
   static auto construct(source_range original, std::string value) {
     auto node = ast::make<ast::number_literal>(value);
     node->source_code_range = {
@@ -110,6 +115,11 @@ struct number_prototype {
 };
 
 struct string_prototype {
+  static store::data_vector data(std::string_view value) {
+    auto node = ast::make<ast::string_literal>(std::string{std::move(value)});
+    return store::write({node.get()});
+  }
+
   static auto construct(source_range original, std::string str) {
     auto quoted_string{quoted(str)};
     auto node = ast::make<ast::string_literal>(std::move(str));
@@ -125,6 +135,11 @@ struct string_prototype {
 };
 
 struct variable_name_prototype {
+  static store::data_vector data(std::string_view value) {
+    auto node = ast::make<ast::variable_name>(std::string{std::move(value)});
+    return store::write({node.get()});
+  }
+
   static auto construct(source_range original, std::string name) {
     auto node = ast::make<ast::variable_name>(name);
     node->source_code_range = {
@@ -136,6 +151,11 @@ struct variable_name_prototype {
 };
 
 struct identifier_prototype {
+  static store::data_vector data(std::string_view value) {
+    auto node = ast::make<ast::identifier>(std::string{std::move(value)});
+    return store::write({node.get()});
+  }
+
   static auto construct(source_range original, std::string name) {
     auto node = ast::make<ast::identifier>(name);
     node->source_code_range = {

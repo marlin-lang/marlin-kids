@@ -1,7 +1,8 @@
 #ifndef marlin_store_v1_store_hpp
 #define marlin_store_v1_store_hpp
 
-#include <string_view>
+#include <algorithm>
+#include <type_traits>
 #include <unordered_map>
 
 #include "base.hpp"
@@ -35,40 +36,44 @@ inline const std::string_view string{"string"};
 }  // namespace key
 
 struct store : base_store::impl<store> {
-  bool recognize(std::string_view data) override {
-    return data.compare(0, _data_prefix.size(), _data_prefix) == 0;
+  bool recognize(data_view data) override {
+    return data.size() >= data_prefix().size() &&
+           std::equal(data.begin(), data.begin() + data_prefix().size(),
+                      data_prefix().begin(), data_prefix().end());
   }
 
-  reconstruction_result read(std::string_view data, source_loc start,
-                             size_t indent, type_expectation type,
+  reconstruction_result read(data_view data, source_loc start, size_t indent,
+                             type_expectation type,
                              size_t paren_precedence) override {
     assert(recognize(data));
 
-    _buffer.clear();
+    _source_buffer.clear();
     _highlights.clear();
     _current_loc = start;
     _indent = indent;
-    auto current{data.begin() + _data_prefix.size()};
+    auto current{data.begin() + data_prefix().size()};
     auto nodes{read_vector(current, data.end(), type, paren_precedence)};
 
-    reconstruction_result result{std::move(nodes), std::move(_buffer),
+    reconstruction_result result{std::move(nodes), std::move(_source_buffer),
                                  std::move(_highlights)};
-    _buffer = {};
+    _source_buffer = {};
     _highlights = {};
     return result;
   }
 
-  std::string write(std::vector<const ast::base*> nodes) {
-    _buffer = _data_prefix;
+  data_vector write(std::vector<const ast::base*> nodes) {
+    _data_buffer.clear();
+    write_bytes(data_prefix());
     write_vector(nodes);
-    auto result{std::move(_buffer)};
-    _buffer = {};
+    auto result{std::move(_data_buffer)};
+    _source_buffer = {};
     return result;
   }
 
  private:
   struct read_node_entry {
-    using callable_type = ast::node (store::*)(const char*&, const char*,
+    using callable_type = ast::node (store::*)(data_view::pointer&,
+                                               data_view::pointer,
                                                type_expectation, size_t);
 
     callable_type callable;
@@ -78,9 +83,15 @@ struct store : base_store::impl<store> {
         : callable{_callable}, is_statement{_is_statement} {}
   };
 
-  static constexpr std::string_view _data_prefix{"MKB\1"};
+  static data_view data_prefix() {
+    static const data_vector _data{std::byte{'M'}, std::byte{'K'},
+                                   std::byte{'B'}, std::byte{1}};
+    return _data;
+  }
 
-  std::string _buffer;
+  data_vector _data_buffer;
+
+  std::string _source_buffer;
   std::vector<highlight_token> _highlights;
   source_loc _current_loc;
   size_t _indent;
@@ -93,7 +104,7 @@ struct store : base_store::impl<store> {
   }
 
   void emit_to_buffer(std::string_view string) {
-    _buffer.append(string);
+    _source_buffer.append(string);
 
     // For now, assume that "\n" will be handled only in emit_new_line
     _current_loc.column += string.size();
@@ -131,22 +142,23 @@ struct store : base_store::impl<store> {
   }
 
   void emit_placeholder(std::string_view name) {
-    _highlights.emplace_back(highlight_token_type::placeholder, _buffer.size(),
-                             name.size() + 1);
+    _highlights.emplace_back(highlight_token_type::placeholder,
+                             _source_buffer.size(), name.size() + 1);
     emit_to_buffer("@");
     emit_to_buffer(std::move(name));
   }
 
   void emit_highlight(std::string_view string, highlight_token_type type) {
-    _highlights.emplace_back(type, _buffer.size(), string.size());
+    _highlights.emplace_back(type, _source_buffer.size(), string.size());
     emit_to_buffer(std::move(string));
   }
 
-  std::string_view read_zero_terminated(const char*& iter, const char* end) {
+  std::string_view read_zero_terminated(data_view::pointer& iter,
+                                        data_view::pointer end) {
     auto begin{iter};
     while (iter < end) {
-      if (*iter == '\0') {
-        std::string_view result{begin, static_cast<size_t>(iter - begin)};
+      if (*iter == std::byte{0}) {
+        data_view result{begin, iter};
         iter++;
         return result;
       } else {
@@ -156,7 +168,7 @@ struct store : base_store::impl<store> {
     throw read_error{"Unterminating character sequence!"};
   }
 
-  bool read_bool(const char*& iter, const char* end) {
+  bool read_bool(data_view::pointer& iter, data_view::pointer end) {
     if (iter < end) {
       return static_cast<uint8_t>(*iter++);
     } else {
@@ -164,7 +176,7 @@ struct store : base_store::impl<store> {
     }
   }
 
-  uint32_t read_int(const char*& iter, const char* end) {
+  uint32_t read_int(data_view::pointer& iter, data_view::pointer end) {
     if (iter + 4 <= end) {
       uint32_t result{static_cast<uint8_t>(*iter++)};
       for (size_t i{0}; i < 3; i++) {
@@ -177,10 +189,11 @@ struct store : base_store::impl<store> {
     }
   }
 
-  std::string_view read_string(const char*& iter, const char* end) {
+  std::string_view read_string(data_view::pointer& iter,
+                               data_view::pointer end) {
     auto length{read_int(iter, end)};
     if (iter + length <= end) {
-      std::string_view result{iter, length};
+      data_view result{iter, length};
       iter += length;
       return result;
     } else {
@@ -188,7 +201,8 @@ struct store : base_store::impl<store> {
     }
   }
 
-  std::vector<ast::node> read_vector(const char*& iter, const char* end,
+  std::vector<ast::node> read_vector(data_view::pointer& iter,
+                                     data_view::pointer end,
                                      type_expectation type,
                                      size_t paren_precedence = 0) {
     auto length{read_int(iter, end)};
@@ -200,8 +214,8 @@ struct store : base_store::impl<store> {
     return result;
   }
 
-  ast::node read_node(const char*& iter, const char* end, type_expectation type,
-                      size_t paren_precedence = 0) {
+  ast::node read_node(data_view::pointer& iter, data_view::pointer end,
+                      type_expectation type, size_t paren_precedence = 0) {
     static const std::unordered_map<std::string_view, read_node_entry>
         read_node_map{{key::program, {&store::read_program, true}},
                       {key::on_start, {&store::read_on_start, true}},
@@ -234,7 +248,7 @@ struct store : base_store::impl<store> {
     }
   }
 
-  ast::node read_program(const char*& iter, const char* end,
+  ast::node read_program(data_view::pointer& iter, data_view::pointer end,
                          type_expectation type, size_t paren_precedence) {
     assert_type<type_expectation::program>(type, "Unexpected program!");
 
@@ -242,7 +256,7 @@ struct store : base_store::impl<store> {
     return ast::make<ast::program>(std::move(blocks));
   }
 
-  ast::node read_on_start(const char*& iter, const char* end,
+  ast::node read_on_start(data_view::pointer& iter, data_view::pointer end,
                           type_expectation type, size_t paren_precedence) {
     assert_type<type_expectation::block>(type, "Unexpected block!");
 
@@ -256,7 +270,7 @@ struct store : base_store::impl<store> {
     return ast::make<ast::on_start>(std::move(statements));
   }
 
-  ast::node read_assignment(const char*& iter, const char* end,
+  ast::node read_assignment(data_view::pointer& iter, data_view::pointer end,
                             type_expectation type, size_t paren_precedence) {
     assert_type<type_expectation::statement>(type, "Unexpected statement!");
 
@@ -267,8 +281,8 @@ struct store : base_store::impl<store> {
     return ast::make<ast::assignment>(std::move(variable), std::move(value));
   }
 
-  ast::node read_print_statement(const char*& iter, const char* end,
-                                 type_expectation type,
+  ast::node read_print_statement(data_view::pointer& iter,
+                                 data_view::pointer end, type_expectation type,
                                  size_t paren_precedence) {
     assert_type<type_expectation::statement>(type, "Unexpected statement!");
 
@@ -278,7 +292,8 @@ struct store : base_store::impl<store> {
     return ast::make<ast::print_statement>(std::move(value));
   }
 
-  ast::node read_if_else_statement(const char*& iter, const char* end,
+  ast::node read_if_else_statement(data_view::pointer& iter,
+                                   data_view::pointer end,
                                    type_expectation type,
                                    size_t paren_precedence) {
     assert_type<type_expectation::statement>(type, "Unexpected statement!");
@@ -315,7 +330,7 @@ struct store : base_store::impl<store> {
     }
   }
 
-  ast::node read_placeholder(const char*& iter, const char* end,
+  ast::node read_placeholder(data_view::pointer& iter, data_view::pointer end,
                              type_expectation type, size_t paren_precedence) {
     assert_type<type_expectation::lvalue, type_expectation::rvalue>(
         type, "Unexpected placeholder!");
@@ -331,7 +346,7 @@ struct store : base_store::impl<store> {
     }
   }
 
-  ast::node read_identifier(const char*& iter, const char* end,
+  ast::node read_identifier(data_view::pointer& iter, data_view::pointer end,
                             type_expectation type, size_t paren_precedence) {
     assert_type<type_expectation::lvalue, type_expectation::rvalue>(
         type, "Unexpected identifier!");
@@ -345,8 +360,8 @@ struct store : base_store::impl<store> {
     }
   }
 
-  ast::node read_unary_expression(const char*& iter, const char* end,
-                                  type_expectation type,
+  ast::node read_unary_expression(data_view::pointer& iter,
+                                  data_view::pointer end, type_expectation type,
                                   size_t paren_precedence) {
     assert_type<type_expectation::rvalue>(type, "Unexpected expression!");
 
@@ -379,7 +394,8 @@ struct store : base_store::impl<store> {
     }
   }
 
-  ast::node read_binary_expression(const char*& iter, const char* end,
+  ast::node read_binary_expression(data_view::pointer& iter,
+                                   data_view::pointer end,
                                    type_expectation type,
                                    size_t paren_precedence) {
     assert_type<type_expectation::rvalue>(type, "Unexpected expression!");
@@ -417,8 +433,8 @@ struct store : base_store::impl<store> {
     }
   }
 
-  ast::node read_number_literal(const char*& iter, const char* end,
-                                type_expectation type,
+  ast::node read_number_literal(data_view::pointer& iter,
+                                data_view::pointer end, type_expectation type,
                                 size_t paren_precedence) {
     assert_type<type_expectation::rvalue>(type, "Unexpected literal!");
 
@@ -427,8 +443,8 @@ struct store : base_store::impl<store> {
     return ast::make<ast::number_literal>(std::string{std::move(string)});
   }
 
-  ast::node read_string_literal(const char*& iter, const char* end,
-                                type_expectation type,
+  ast::node read_string_literal(data_view::pointer& iter,
+                                data_view::pointer end, type_expectation type,
                                 size_t paren_precedence) {
     assert_type<type_expectation::rvalue>(type, "Unexpected literal!");
 
@@ -437,20 +453,35 @@ struct store : base_store::impl<store> {
     return ast::make<ast::string_literal>(std::string{std::move(string)});
   }
 
+  void write_byte(uint8_t byte) { _data_buffer.emplace_back(std::byte{byte}); }
+
+  template <typename byte_type,
+            typename = std::enable_if_t<std::is_same_v<byte_type, char> ||
+                                        std::is_same_v<byte_type, uint8_t> ||
+                                        std::is_same_v<byte_type, std::byte>>>
+  void write_bytes(const byte_type* begin, const byte_type* end) {
+    _data_buffer.insert(_data_buffer.end(),
+                        reinterpret_cast<const std::byte*>(begin),
+                        reinterpret_cast<const std::byte*>(end));
+  }
+
+  void write_bytes(data_view data) { write_bytes(data.begin(), data.end()); }
+
+  void write_bytes(std::string_view string) {
+    write_bytes(string.begin(), string.end());
+  }
+
   void write_key(std::string_view key) {
-    _buffer.append(key);
-    _buffer.append("\0", 1);
+    write_bytes(key.begin(), key.end());
+    write_byte(0);
   }
 
   void write_symbol(std::string_view symbol) {
-    _buffer.append(symbol);
-    _buffer.append("\0", 1);
+    write_bytes(symbol.begin(), symbol.end());
+    write_byte(0);
   }
 
-  void write_bool(bool value) {
-    uint8_t data{value};
-    _buffer.append(reinterpret_cast<char*>(&data), 1);
-  }
+  void write_bool(bool value) { write_byte(value); }
 
   void write_int(uint32_t value) {
     uint8_t data[4];
@@ -458,12 +489,12 @@ struct store : base_store::impl<store> {
     data[2] = static_cast<uint8_t>(value >> 8);
     data[1] = static_cast<uint8_t>(value >> 16);
     data[0] = static_cast<uint8_t>(value >> 24);
-    _buffer.append(reinterpret_cast<char*>(data), 4);
+    write_bytes(data, data + 4);
   }
 
-  void write_string(const std::string& value) {
+  void write_string(std::string_view value) {
     write_int(static_cast<uint32_t>(value.size()));
-    _buffer.append(value);
+    write_bytes(value.begin(), value.end());
   }
 
   template <typename vector_type>

@@ -2,9 +2,9 @@
 #define marlin_store_store_definition_hpp
 
 #include <string>
-#include <string_view>
 #include <vector>
 
+#include "byte_span.hpp"
 #include "node.hpp"
 #include "store_errors.hpp"
 #include "utils.hpp"
@@ -47,7 +47,7 @@ struct base_store {
   template <typename store_type>
   struct impl;
 
-  static base_store* corresponding_store(std::string_view data) {
+  static base_store* corresponding_store(data_view data) {
     for (auto* s : get_stores()) {
       if (s->recognize(data)) {
         return s;
@@ -58,13 +58,13 @@ struct base_store {
 
   virtual ~base_store() noexcept = default;
 
-  virtual bool recognize(std::string_view data) = 0;
-  virtual reconstruction_result read(std::string_view data, source_loc start,
+  virtual bool recognize(data_view data) = 0;
+  virtual reconstruction_result read(data_view data, source_loc start,
                                      size_t indent, type_expectation type,
                                      size_t paren_precedence = 0) = 0;
 
   // The latest version also needs to implement
-  // std::string write(std::vector<const ast::base*> node);
+  // data_vector write(std::vector<const ast::base*> node);
 
  private:
   [[nodiscard]] static std::vector<base_store*>& get_stores() {
@@ -75,7 +75,7 @@ struct base_store {
 
 template <typename store_type>
 struct base_store::impl : base_store {
-  friend std::string write(std::vector<const ast::base*> nodes);
+  friend data_vector write(std::vector<const ast::base*> nodes);
 
  protected:
   impl() { get_stores().emplace_back(&_singleton); }

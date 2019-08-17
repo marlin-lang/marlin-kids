@@ -4,7 +4,8 @@
 #include "store.hpp"
 
 TEST_CASE("store::Read unrecognized data", "[store]") {
-  REQUIRE_THROWS(marlin::store::read(""));
+  marlin::store::data_vector data;
+  REQUIRE_THROWS(marlin::store::read(data));
 }
 
 TEST_CASE("store::Write and read expressions", "[store]") {
