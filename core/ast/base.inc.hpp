@@ -33,11 +33,14 @@ struct type_map {
   X(print_statement)        \
   X(if_statement)           \
   X(if_else_statement)      \
+  X(while_statement)        \
+  X(for_statement)          \
   X(variable_placeholder)   \
   X(variable_name)          \
   X(expression_placeholder) \
   X(unary_expression)       \
   X(binary_expression)      \
+  X(system_function_call)   \
   X(identifier)             \
   X(number_literal)         \
   X(string_literal)

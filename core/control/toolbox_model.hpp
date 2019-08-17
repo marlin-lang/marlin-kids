@@ -4,6 +4,7 @@
 #include <array>
 #include <string>
 #include <string_view>
+#include <vector>
 
 #include "prototypes.hpp"
 
@@ -17,17 +18,21 @@ struct toolbox_model {
     pasteboard_t type;
   };
 
-  inline static const std::array<std::string_view, 2> sections{"statement",
-                                                               "expression"};
+  inline static const std::array<std::string_view, 3> sections{
+      "control flow", "statement", "expression"};
 
   inline static const std::array items{
-      std::array{
-          item{assignment_prototype::index(), pasteboard_t::statement},
+      std::vector{
           item{if_prototype::index(), pasteboard_t::statement},
           item{if_else_prototype::index(), pasteboard_t::statement},
+          item{while_prototype::index(), pasteboard_t::statement},
+          item{for_prototype::index(), pasteboard_t::statement},
+      },
+      std::vector{
+          item{assignment_prototype::index(), pasteboard_t::statement},
           item{print_prototype::index(), pasteboard_t::statement},
       },
-      std::array{
+      std::vector{
           item{binary_prototype<ast::binary_op::add>::index(),
                pasteboard_t::expression},
           item{binary_prototype<ast::binary_op::subtract>::index(),
@@ -35,6 +40,8 @@ struct toolbox_model {
           item{binary_prototype<ast::binary_op::multiply>::index(),
                pasteboard_t::expression},
           item{binary_prototype<ast::binary_op::divide>::index(),
+               pasteboard_t::expression},
+          item{system_function_prototype<ast::system_function::range>::index(),
                pasteboard_t::expression},
       },
   };

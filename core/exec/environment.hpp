@@ -9,11 +9,16 @@
 #include "exec_errors.hpp"
 #include "generator.hpp"
 #include "stacktrace.hpp"
+#include "standard_lib.hpp"
 
 namespace marlin::exec {
 
 struct environment {
   inline environment() {
+    _ctx.eval_script(standard_lib, "std.js");
+    assert(_ctx.ok());
+    _ctx.clear_exception();
+
     register_print_callback([](auto) {});
   }
 

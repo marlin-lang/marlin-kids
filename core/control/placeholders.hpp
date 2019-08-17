@@ -110,6 +110,24 @@ inline std::string_view placeholder::get<ast::if_else_statement>(
 }
 
 template <>
+inline std::string_view placeholder::get<ast::while_statement>(
+    size_t subnode_index, size_t node_index) {
+  if (subnode_index == 0) {
+    return "condition";
+  } else {
+    return default_text;
+  }
+}
+
+template <>
+inline std::string_view placeholder::get<ast::for_statement>(
+    size_t subnode_index, size_t node_index) {
+  static constexpr std::array<std::string_view, 3> subnodes{"variable", "list",
+                                                            default_text};
+  return subnodes[subnode_index];
+}
+
+template <>
 inline std::string_view placeholder::get<ast::unary_expression>(
     size_t subnode_index, size_t node_index) {
   return "argument";
@@ -120,6 +138,27 @@ inline std::string_view placeholder::get<ast::binary_expression>(
     size_t subnode_index, size_t node_index) {
   static constexpr std::array<std::string_view, 2> subnodes{"left", "right"};
   return subnodes[subnode_index];
+}
+
+struct placeholder_system_call_args {
+ private:
+  static const auto& placeholders() {
+    static const std::array _placeholders{
+        std::vector<std::string_view>{"end"} /* range */};
+    return _placeholders;
+  }
+
+ public:
+  static const std::vector<std::string_view>& args(ast::system_function func) {
+    return placeholders()[static_cast<size_t>(func)];
+  }
+};
+
+template <>
+inline std::string_view placeholder::get<ast::system_function_call>(
+    const ast::system_function_call& parent, size_t subnode_index,
+    size_t node_index) {
+  return placeholder_system_call_args::args(parent.func)[node_index];
 }
 
 }  // namespace marlin::control
