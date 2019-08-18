@@ -49,14 +49,19 @@
 - (void)refreshImage {
   auto time = std::chrono::high_resolution_clock::now();
   auto diff = std::chrono::duration_cast<std::chrono::milliseconds>(time - _refresh_time);
-  if (diff.count() > 40) {
+  constexpr double refresh_time_in_ms = 40;
+  if (diff.count() >= refresh_time_in_ms) {
     for (NSImageRep *rep in self.imageView.image.representations) {
       [self.imageView.image removeRepresentation:rep];
     }
     [self.imageView.image addRepresentation:_drawContext.imageRep];
     [self.imageView setNeedsDisplay:YES];
     _refresh_time = time;
-    [self performSelector:@selector(refreshImage) withObject:nil afterDelay:0.04];
+    dispatch_after(
+        dispatch_time(DISPATCH_TIME_NOW, (int64_t)(refresh_time_in_ms / 1000 * NSEC_PER_SEC)),
+        dispatch_get_main_queue(), ^{
+          [self refreshImage];
+        });
   }
 }
 

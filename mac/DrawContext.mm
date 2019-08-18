@@ -1,9 +1,16 @@
 #import "DrawContext.h"
 
 void DrawContext::initWithImage(NSImage* image, id<DrawContextDelegate> delegate) {
-  imageRep = [[NSBitmapImageRep alloc] initWithCGImage:[image CGImageForProposedRect:nil
-                                                                              context:nil
-                                                                                hints:nil]];
+  imageRep = [[NSBitmapImageRep alloc] initWithBitmapDataPlanes:NULL
+                                                     pixelsWide:image.size.width
+                                                     pixelsHigh:image.size.height
+                                                  bitsPerSample:8
+                                                samplesPerPixel:4
+                                                       hasAlpha:YES
+                                                       isPlanar:NO
+                                                 colorSpaceName:NSDeviceRGBColorSpace
+                                                    bytesPerRow:4 * image.size.width
+                                                   bitsPerPixel:32];
   _delegate = delegate;
   [NSGraphicsContext saveGraphicsState];
   [NSGraphicsContext
@@ -13,16 +20,17 @@ void DrawContext::initWithImage(NSImage* image, id<DrawContextDelegate> delegate
   [NSColor.blackColor set];
   [rect fill];
   [NSGraphicsContext restoreGraphicsState];
-    [_delegate refreshImage];
+  [_delegate refreshImage];
 }
 
 void DrawContext::drawLine(NSPoint from, NSPoint to) {
-    execute([this, &from, &to]() {
-        [NSGraphicsContext saveGraphicsState];
-        [NSGraphicsContext
-         setCurrentContext:[NSGraphicsContext graphicsContextWithBitmapImageRep:imageRep]];
-        [NSColor.whiteColor set];
-        [NSBezierPath strokeLineFromPoint:from toPoint:to];
-        [NSGraphicsContext restoreGraphicsState];
-    });
+  execute([this, &from, &to]() {
+    [NSGraphicsContext saveGraphicsState];
+    [NSGraphicsContext
+        setCurrentContext:[NSGraphicsContext graphicsContextWithBitmapImageRep:imageRep]];
+    [NSColor.whiteColor set];
+    NSBezierPath.defaultLineWidth = 2;
+    [NSBezierPath strokeLineFromPoint:from toPoint:to];
+    [NSGraphicsContext restoreGraphicsState];
+  });
 }
