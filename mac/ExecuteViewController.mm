@@ -14,6 +14,7 @@
 @end
 
 @implementation ExecuteViewController {
+  std::optional<marlin::control::exec_environment> _environment;
   DrawContext _drawContext;
   std::chrono::high_resolution_clock::time_point _refresh_time;
 }
@@ -39,6 +40,10 @@
   [self stopExecute];
 }
 
+- (void)setEnvironment:(marlin::control::exec_environment)environment {
+  _environment = std::move(environment);
+}
+
 #pragma mark - DrawContextDelegate implementation
 
 - (void)applyImageRep:(NSBitmapImageRep *)imageRep {
@@ -56,19 +61,54 @@
 #pragma mark - Private methods
 
 - (void)startExecute {
-  assert(self.environment.has_value());
+  assert(_environment.has_value());
 
-  self.environment->execute([self](std::string value) {
+  _environment->register_print_callback([self](std::string value) {
     dispatch_sync(dispatch_get_main_queue(), ^{
       self.outputTextField.stringValue = [self.outputTextField.stringValue
           stringByAppendingString:[NSString stringWithStringView:value]];
     });
   });
+  _environment->add_custom_callback("draw_line", [self](auto ctx, auto, auto args, auto exception) {
+    if (args.size() != 4) {
+      *exception = ctx.error("Incorrect number of arguments!");
+    } else {
+      double start_x = args[0].to_number();
+      if (!ctx.ok()) {
+        *exception = ctx.get_exception();
+        return;
+      }
+
+      double start_y = args[1].to_number();
+      if (!ctx.ok()) {
+        *exception = ctx.get_exception();
+        return;
+      }
+
+      double end_x = args[2].to_number();
+      if (!ctx.ok()) {
+        *exception = ctx.get_exception();
+        return;
+      }
+
+      double end_y = args[3].to_number();
+      if (!ctx.ok()) {
+        *exception = ctx.get_exception();
+        return;
+      }
+
+      auto start = NSMakePoint(static_cast<CGFloat>(start_x), static_cast<CGFloat>(start_y));
+      auto end = NSMakePoint(static_cast<CGFloat>(end_x), static_cast<CGFloat>(end_y));
+      _drawContext.drawLine(start, end);
+    }
+  });
+
+  _environment->execute();
 }
 
 - (void)stopExecute {
-  if (self.environment.has_value()) {
-    self.environment->terminate();
+  if (_environment.has_value()) {
+    _environment->terminate();
   }
 }
 

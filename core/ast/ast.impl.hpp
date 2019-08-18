@@ -46,6 +46,19 @@ struct print_statement : base::impl<print_statement, subnode::concrete>,
   using base_type::impl;
 };
 
+struct system_procedure_call
+    : base::impl<system_procedure_call, subnode::vector>,
+      expression {
+  system_procedure proc;
+
+  [[nodiscard]] decltype(auto) arguments() { return get_subnode<0>(); }
+  [[nodiscard]] decltype(auto) arguments() const { return get_subnode<0>(); }
+
+  explicit system_procedure_call(system_procedure _proc,
+                                 std::vector<node> _args)
+      : base_type{std::move(_args)}, proc{_proc} {}
+};
+
 struct if_statement
     : base::impl<if_statement, subnode::concrete, subnode::vector>,
       statement {

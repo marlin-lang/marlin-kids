@@ -38,6 +38,16 @@ static constexpr std::array binary_op_precedence_map{
   return binary_op_precedence_map[static_cast<uint8_t>(op)];
 }
 
+enum class system_procedure : size_t { draw_line };
+
+static constexpr std::array<std::string_view, 1> system_procedure_name_map{
+    "draw_line" /* draw_line */
+};
+[[nodiscard]] inline constexpr std::string_view name_for(
+    system_procedure proc) noexcept {
+  return system_procedure_name_map[static_cast<size_t>(proc)];
+}
+
 enum class system_function : size_t { range1, range2, range3 };
 
 static constexpr std::array<std::string_view, 3> system_function_name_map{

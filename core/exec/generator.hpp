@@ -105,6 +105,20 @@ struct generator {
         jsast::ast::identifier{"print"}, {get_node(*statement.value())}}};
   }
 
+  auto get_jsast(ast::system_procedure_call& call) {
+    static constexpr std::array<jsast::ast::node (*)(), 3> callee_map{
+        []() {
+          return jsast::ast::node{jsast::ast::identifier{"draw_line"}};
+        } /* draw_line */
+    };
+    jsast::utils::move_vector<jsast::ast::node> args;
+    for (auto& arg : call.arguments()) {
+      args.emplace_back(get_node(*arg));
+    }
+    return jsast::ast::call_expression{
+        callee_map[static_cast<size_t>(call.proc)](), std::move(args)};
+  }
+
   auto get_jsast(ast::if_statement& statement) {
     return jsast::ast::if_statement{get_node(*statement.condition()),
                                     get_block(statement.statements())};

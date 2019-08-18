@@ -9,7 +9,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 @interface ExecuteViewController : NSViewController <DrawContextDelegate>
 
-@property std::optional<marlin::control::exec_environment> environment;
+- (void)setEnvironment:(marlin::control::exec_environment)environment;
 
 @end
 

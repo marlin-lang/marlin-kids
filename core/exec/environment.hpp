@@ -58,6 +58,12 @@ struct environment {
         });
   }
 
+  template <typename callback_type>
+  inline void add_custom_callback(const std::string& name,
+                                  callback_type&& callback) {
+    _ctx.root()[name] = _ctx.callable(std::forward<callback_type>(callback));
+  }
+
   inline void execute(ast::base& c, const std::string& script,
                       bool is_async = false,
                       const std::string& source_url = "<anonymous>") {

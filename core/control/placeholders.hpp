@@ -140,13 +140,37 @@ inline std::string_view placeholder::get<ast::binary_expression>(
   return subnodes[subnode_index];
 }
 
-struct placeholder_system_call_args {
+struct placeholder_system_procedure_args {
+ private:
+  static const auto& placeholders() {
+    static const std::array _placeholders{
+        std::vector<std::string_view>{"start_x", "start_y", "end_x",
+                                      "end_y"} /* draw_line */,
+    };
+    return _placeholders;
+  }
+
+ public:
+  static const std::vector<std::string_view>& args(ast::system_procedure func) {
+    return placeholders()[static_cast<size_t>(func)];
+  }
+};
+
+template <>
+inline std::string_view placeholder::get<ast::system_procedure_call>(
+    const ast::system_procedure_call& parent, size_t subnode_index,
+    size_t node_index) {
+  return placeholder_system_procedure_args::args(parent.proc)[node_index];
+}
+
+struct placeholder_system_function_args {
  private:
   static const auto& placeholders() {
     static const std::array _placeholders{
         std::vector<std::string_view>{"end"} /* range1 */,
         std::vector<std::string_view>{"begin", "end"} /* range2 */,
-        std::vector<std::string_view>{"begin", "end", "step"} /* range3 */};
+        std::vector<std::string_view>{"begin", "end", "step"} /* range3 */
+    };
     return _placeholders;
   }
 
@@ -160,7 +184,7 @@ template <>
 inline std::string_view placeholder::get<ast::system_function_call>(
     const ast::system_function_call& parent, size_t subnode_index,
     size_t node_index) {
-  return placeholder_system_call_args::args(parent.func)[node_index];
+  return placeholder_system_function_args::args(parent.func)[node_index];
 }
 
 }  // namespace marlin::control

@@ -21,6 +21,7 @@ inline const std::string_view on_start{"on_start"};
 
 inline const std::string_view assignment{"assign"};
 inline const std::string_view print{"print"};
+inline const std::string_view system_procedure{"sys_proc"};
 
 inline const std::string_view if_else{"if"};
 inline const std::string_view while_loop{"while"};
@@ -229,6 +230,7 @@ struct store : base_store::impl<store> {
             {key::on_start, {&store::read_on_start, true}},
             {key::assignment, {&store::read_assignment, true}},
             {key::print, {&store::read_print_statement, true}},
+            {key::system_procedure, {&store::read_system_procedure, true}},
             {key::if_else, {&store::read_if_else_statement, true}},
             {key::while_loop, {&store::read_while_statement, true}},
             {key::for_loop, {&store::read_for_statement, true}},
@@ -301,6 +303,49 @@ struct store : base_store::impl<store> {
     auto value{read_node(iter, end, type_expectation::rvalue)};
     emit_to_buffer(");");
     return ast::make<ast::print_statement>(std::move(value));
+  }
+
+  ast::node read_system_procedure(data_view::pointer& iter,
+                                  data_view::pointer end, type_expectation type,
+                                  size_t paren_precedence) {
+    assert_type<type_expectation::statement>(type, "Unexpected statement!");
+
+    static const auto system_procedure_inverse_name_map{[]() {
+      std::unordered_map<std::string_view, ast::system_procedure> map;
+      for (size_t i{0}; i < ast::system_procedure_name_map.size(); i++) {
+        map[ast::system_procedure_name_map[i]] = {i};
+      }
+      return map;
+    }()};
+
+    static constexpr std::array<std::string_view, 3>
+        system_procedure_display_map{
+            "draw_line" /* draw_line */
+        };
+
+    auto name{read_zero_terminated(iter, end)};
+    auto it{system_procedure_inverse_name_map.find(name)};
+    if (it == system_procedure_inverse_name_map.end()) {
+      throw read_error{"Unknown system function encountered!"};
+    } else {
+      const auto proc{it->second};
+      emit_to_buffer(system_procedure_display_map[static_cast<size_t>(proc)]);
+
+      // custom read_vector to emit deliminators
+      emit_to_buffer("(");
+      auto length{read_int(iter, end)};
+      std::vector<ast::node> args;
+      args.reserve(length);
+      for (size_t i{0}; i < length; i++) {
+        if (i > 0) {
+          emit_to_buffer(", ");
+        }
+        args.emplace_back(read_node(iter, end, type_expectation::rvalue));
+      }
+      emit_to_buffer(");");
+
+      return ast::make<ast::system_procedure_call>(proc, std::move(args));
+    }
   }
 
   ast::node read_if_else_statement(data_view::pointer& iter,
@@ -518,7 +563,7 @@ struct store : base_store::impl<store> {
         if (i > 0) {
           emit_to_buffer(", ");
         }
-        args.emplace_back(read_node(iter, end, type, paren_precedence));
+        args.emplace_back(read_node(iter, end, type_expectation::rvalue));
       }
       emit_to_buffer(")");
 
@@ -621,6 +666,12 @@ struct store : base_store::impl<store> {
   void write_node(const ast::print_statement& print) {
     write_key(key::print);
     write_base(*print.value());
+  }
+
+  void write_node(const ast::system_procedure_call& call) {
+    write_key(key::system_procedure);
+    write_symbol(ast::name_for(call.proc));
+    write_vector(call.arguments());
   }
 
   void write_node(const ast::if_statement& statement) {

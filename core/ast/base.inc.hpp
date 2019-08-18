@@ -31,6 +31,7 @@ struct type_map {
   X(on_start)               \
   X(assignment)             \
   X(print_statement)        \
+  X(system_procedure_call)  \
   X(if_statement)           \
   X(if_else_statement)      \
   X(while_statement)        \

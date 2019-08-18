@@ -31,6 +31,29 @@ struct print_prototype : statement_prototype::impl<print_prototype> {
   }()};
 };
 
+template <ast::system_procedure _proc>
+struct system_procedure_prototype
+    : statement_prototype::impl<system_procedure_prototype<_proc>> {
+  [[nodiscard]] std::string_view name() const override {
+    return name_for(_proc);
+  }
+
+  inline static const store::data_vector _data{[]() {
+    const auto& placeholders{placeholder_system_procedure_args::args(_proc)};
+    std::vector<ast::node> args;
+    args.reserve(placeholders.size());
+    for (const auto& arg : placeholders) {
+      args.emplace_back(
+          ast::make<ast::expression_placeholder>(std::string{arg}));
+    }
+    const auto node{
+        ast::make<ast::system_procedure_call>(_proc, std::move(args))};
+    return store::write({node.get()});
+  }()};
+};
+
+template struct system_procedure_prototype<ast::system_procedure::draw_line>;
+
 struct if_prototype : statement_prototype::impl<if_prototype> {
   [[nodiscard]] std::string_view name() const override { return "if"; }
 
@@ -127,7 +150,7 @@ struct system_function_prototype
   }
 
   inline static const store::data_vector _data{[]() {
-    const auto& placeholders{placeholder_system_call_args::args(_func)};
+    const auto& placeholders{placeholder_system_function_args::args(_func)};
     std::vector<ast::node> args;
     args.reserve(placeholders.size());
     for (const auto& arg : placeholders) {
