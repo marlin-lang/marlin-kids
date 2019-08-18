@@ -2,6 +2,7 @@
 
 #import <optional>
 
+#import "NSData+DataView.h"
 #import "NSObject+Casting.h"
 #import "SourceViewController.h"
 
@@ -26,11 +27,17 @@
   return self;
 }
 
-- (marlin::control::source_initialization)initialize {
-  auto [doc, source] = marlin::control::document::make_document(nullptr, 0);
-  self.initialData = nil;
-  _content = std::move(doc);
-  return source;
+- (std::optional<marlin::control::source_initialization>)initialize {
+  if (auto result{self.initialData == nil
+                      ? marlin::control::document::make_document()
+                      : marlin::control::document::make_document(self.initialData.dataView)}) {
+    auto [doc, source]{*std::move(result)};
+    self.initialData = nil;
+    _content = std::move(doc);
+    return source;
+  } else {
+    return std::nullopt;
+  }
 }
 
 - (marlin::control::document &)content {
@@ -47,20 +54,11 @@
 }
 
 - (NSData *)dataOfType:(NSString *)typeName error:(NSError **)outError {
-  // Insert code here to write your document to data of the specified type. If outError != NULL,
-  // ensure that you create and set an appropriate error if you return nil. Alternatively, you could
-  // remove this method and override -fileWrapperOfType:error:, -writeToURL:ofType:error:, or
-  // -writeToURL:ofType:forSaveOperation:originalContentsURL:error: instead.
-  [NSException raise:@"UnimplementedMethod"
-              format:@"%@ is unimplemented", NSStringFromSelector(_cmd)];
-  return nil;
+  return [NSData dataWithDataView:_content->write()];
 }
 
 - (BOOL)readFromData:(NSData *)data ofType:(NSString *)typeName error:(NSError **)outError {
   self.initialData = data;
-  // NSString *source = [[NSString alloc] initWithData:data encoding:NSASCIIStringEncoding];
-  // _content = marlin::control::document{source.UTF8String};
-  // [self update];
   return YES;
 }
 

@@ -6,7 +6,7 @@
 
 @interface Document : NSDocument
 
-- (marlin::control::source_initialization)initialize;
+- (std::optional<marlin::control::source_initialization>)initialize;
 
 - (marlin::control::document&)content;
 

@@ -273,7 +273,8 @@ struct store : base_store::impl<store> {
                           type_expectation type, size_t paren_precedence) {
     assert_type<type_expectation::block>(type, "Unexpected block!");
 
-    emit_to_buffer("on_start {");
+    emit_highlight("on_start", highlight_token_type::keyword);
+    emit_to_buffer(" {");
     emit_new_line();
     _indent++;
     auto statements{read_vector(iter, end, type_expectation::statement)};

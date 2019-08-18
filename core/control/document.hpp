@@ -10,6 +10,7 @@
 #include "exec_env.hpp"
 #include "prototypes.hpp"
 #include "source_modifications.hpp"
+#include "store.hpp"
 
 namespace marlin::control {
 
@@ -22,24 +23,29 @@ struct document {
   friend struct statement_inserter;
   friend struct expression_inserter;
 
-  static std::pair<document, source_initialization> make_document(
-      const char* data, size_t size) {
-    // TODO: parse data
-    std::vector<ast::node> statements;
+  inline static const store::data_vector default_data{[]() {
     std::vector<ast::node> blocks;
+    blocks.emplace_back(ast::make<ast::on_start>(std::vector<ast::node>{}));
+    auto node{ast::make<ast::program>(std::move(blocks))};
+    return store::write({node.get()});
+  }()};
 
-    blocks.emplace_back(ast::make<ast::on_start>(std::move(statements)));
-    blocks[0]->source_code_range = {{1, 1}, {2, 1}};
-    auto program = ast::make<ast::program>(std::move(blocks));
-    program->source_code_range = {{1, 1}, {2, 1}};
-    return {document{std::move(program)},
-            source_initialization{
-                "on start {\n}\n",
-                {highlight_token{highlight_token_type::keyword, 0, 8}}}};
+  static std::optional<std::pair<document, source_initialization>>
+  make_document(store::data_view data = default_data) {
+    try {
+      auto result{store::read(data, store::type_expectation::program)};
+      assert(result.nodes.size() == 1);
+      return std::make_pair(
+          document{std::move(result.nodes[0])},
+          source_initialization{std::move(result.source),
+                                std::move(result.highlights)});
+    } catch (const store::read_error&) {
+      return std::nullopt;
+    }
   }
 
   explicit document(ast::node program) noexcept
-      : _program(std::move(program)) {}
+      : _program(std::move(program)){}
 
   [[nodiscard]] ast::base& locate(source_loc loc) {
     return _program->locate(loc);
@@ -71,6 +77,8 @@ struct document {
   }
 
   exec_environment generate_exec_environment() { return {*_program}; }
+
+  store::data_vector write() const { return store::write({_program.get()}); }
 
  private:
   ast::node _program;

@@ -29,10 +29,11 @@
 - (void)setDocument:(Document *)document {
   _document = document;
 
-  auto initialData = [self.document initialize];
-  [self.sourceTextView updateInRange:NSMakeRange(0, 0)
-                          withSource:std::move(initialData.source)
-                          highlights:std::move(initialData.highlights)];
+  if (auto initialData = [self.document initialize]) {
+    [self.sourceTextView updateInRange:NSMakeRange(0, 0)
+                            withSource:std::move(initialData->source)
+                            highlights:std::move(initialData->highlights)];
+  }
 }
 
 - (void)viewDidLoad {

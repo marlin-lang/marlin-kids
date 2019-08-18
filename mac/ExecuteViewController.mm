@@ -128,6 +128,7 @@ constexpr double refreshTimeInMS = 40;
                      [self refreshImage];
                    }
                  });
+  _needRefreshImage = NO;
 }
 
 @end
