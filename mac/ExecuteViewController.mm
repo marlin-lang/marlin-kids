@@ -41,15 +41,17 @@
 
 #pragma mark - DrawContextDelegate implementation
 
-- (void)applyImageRep:(NSBitmapImageRep *)imageRep {
+- (void)refreshImage {
   auto time = std::chrono::high_resolution_clock::now();
   auto diff = std::chrono::duration_cast<std::chrono::milliseconds>(time - _refresh_time);
   if (diff.count() > 40) {
     for (NSImageRep *rep in self.imageView.image.representations) {
       [self.imageView.image removeRepresentation:rep];
     }
-    [self.imageView.image addRepresentation:imageRep];
+    [self.imageView.image addRepresentation:_drawContext.imageRep];
     [self.imageView setNeedsDisplay:YES];
+    _refresh_time = time;
+    [self performSelector:@selector(refreshImage) withObject:nil afterDelay:0.04];
   }
 }
 
