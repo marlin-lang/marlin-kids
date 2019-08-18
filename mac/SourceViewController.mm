@@ -1,5 +1,7 @@
 #import "SourceViewController.h"
 
+#import <optional>
+
 #import "toolbox_model.hpp"
 
 #import "Document.h"
@@ -11,7 +13,9 @@
 #import "ToolBoxHeaderView.h"
 #import "ToolBoxItem.h"
 
-@interface SourceViewController ()
+@interface SourceViewController () {
+  std::optional<marlin::control::exec_environment> _exec_env;
+}
 
 @property(weak) IBOutlet NSCollectionView *toolBoxView;
 @property(weak) IBOutlet SourceTextView *sourceTextView;
@@ -46,15 +50,33 @@
 
 - (void)prepareForSegue:(NSStoryboardSegue *)segue sender:(id)sender {
   if ([segue.destinationController isKindOfClass:[ExecuteViewController class]]) {
+    assert(_exec_env.has_value());
+
     auto *vc = (ExecuteViewController *)segue.destinationController;
-    vc.delegate = self;
-    vc.document = self.document;
+    vc.environment = *std::move(_exec_env);
+    _exec_env = std::nullopt;
   }
 }
 
 - (void)execute {
   [self.lineNumberView clearErrors];
-  [self performSegueWithIdentifier:@"ExecuteViewController" sender:self];
+  _exec_env = std::nullopt;
+  try {
+    _exec_env = self.document.content.generate_exec_environment();
+  } catch (marlin::exec::collected_generation_error &e) {
+    for (auto &err : e.errors()) {
+      const auto index = [self.sourceTextView addErrorAtSourceRange:err.node().source_code_range];
+      [self.lineNumberView addError:[NSString stringWithCString:err.what()
+                                                       encoding:NSUTF8StringEncoding]
+                            atIndex:index];
+      [self.sourceTextView setNeedsDisplayInRect:self.sourceTextView.bounds
+                           avoidAdditionalLayout:YES];
+    }
+  }
+
+  if (_exec_env.has_value()) {
+    [self performSegueWithIdentifier:@"ExecuteViewController" sender:self];
+  }
 }
 
 #pragma mark - NSCollectionViewDataSource implementation
@@ -127,14 +149,6 @@
 - (void)textDidChange:(NSNotification *)notification {
   [self.sourceTextView clearErrors];
   [self.lineNumberView clearErrors];
-}
-
-#pragma mark - ExecuteViewControllerDelegate implementation
-
-- (void)addErrorAt:(const marlin::ast::base &)node message:(const std::string &)message {
-  auto index = [self.sourceTextView addErrorAtSourceRange:node.source_code_range];
-  [self.lineNumberView addError:@(message.c_str()) atIndex:index];
-  [self.sourceTextView setNeedsDisplayInRect:self.sourceTextView.bounds avoidAdditionalLayout:YES];
 }
 
 #pragma mark - SourceTextViewDataSource implementation

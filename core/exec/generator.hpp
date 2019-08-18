@@ -12,7 +12,7 @@
 namespace marlin::exec {
 
 struct generator {
-  generator() noexcept = default;
+  generator(bool is_async = false) : _is_async{is_async} {}
 
   std::string generate(ast::base& c) {
     jsast::generator gen;
@@ -31,9 +31,10 @@ struct generator {
  private:
   static constexpr const char* main_name{"__main__"};
 
+  bool _is_async;
   std::vector<generation_error> _errors;
 
-  jsast::ast::node scoped_callee_with_name(std::string name) {
+  static jsast::ast::node scoped_callee_with_name(std::string name) {
     return jsast::ast::member_expression{
         jsast::ast::object_expression{
             {jsast::ast::property{jsast::ast::member_identifier{"__thefunc__"},
@@ -41,11 +42,19 @@ struct generator {
         jsast::ast::member_identifier{"__thefunc__"}};
   }
 
+  static jsast::ast::node check_termination() {
+    return jsast::ast::call_expression{
+        jsast::ast::identifier{"check_termination"}, {}};
+  }
+
   template <typename vector_type>
   auto get_block(vector_type vector) {
     jsast::utils::move_vector<jsast::ast::node> statements;
     for (auto& statement : vector) {
       statements.emplace_back(get_node(*statement));
+    }
+    if (_is_async) {
+      statements.emplace_back(check_termination());
     }
     return jsast::ast::block_statement{std::move(statements)};
   }

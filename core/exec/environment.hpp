@@ -20,13 +20,14 @@ struct environment {
     _ctx.clear_exception();
 
     register_print_callback([](auto) {});
+    register_termination_flag([]() { return false; });
   }
 
   template <typename callback_type>
   inline void register_print_callback(callback_type callback) {
     _ctx.root()["print"] =
-        _ctx.callable([callback{std::move(callback)}](auto ctx, auto, auto args,
-                                                      auto exception) {
+        _ctx.callable([callback{std::forward<callback_type>(callback)}](
+                          auto ctx, auto, auto args, auto exception) {
           if (args.size() == 0) {
             *exception = ctx.error("To few arguments!");
           } else {
@@ -43,17 +44,40 @@ struct environment {
         });
   }
 
-  inline void execute(ast::base& c,
+  // terminate_check() shall return true for termination
+  template <typename terminate_check_type>
+  inline void register_termination_flag(
+      terminate_check_type&& terminate_check) {
+    _ctx.root()["_check_termination"] = _ctx.callable(
+        [terminate_check{std::forward<terminate_check_type>(terminate_check)}](
+            auto ctx, auto, auto args, auto exception) {
+          assert(args.size() == 0);
+          if (terminate_check()) {
+            *exception = ctx.root()["__interrupt__"].get().to_object().call();
+          }
+        });
+  }
+
+  inline void execute(ast::base& c, const std::string& script,
+                      bool is_async = false,
                       const std::string& source_url = "<anonymous>") {
-    generator gen;
-    const auto javascript = gen.generate(c);
     _ctx.clear_exception();
-    _ctx.eval_script(javascript, source_url);
+    _ctx.eval_script(script, source_url);
     if (!_ctx.ok()) {
-      std::string stack{
+      const auto stack{
           _ctx.get_exception().to_object()["stack"].get().to_string()};
-      throw runtime_error{_ctx.get_exception().to_string(),
-                          parse_stacktrace(stack, source_url, c)};
+      auto stack_vector{parse_stacktrace(stack, source_url, c)};
+
+      if (is_async && _ctx.root()["is_external_interrupt"]
+                          .get()
+                          .to_object()
+                          .call(_ctx.get_exception())
+                          .to_boolean()) {
+        throw external_interrupt{std::move(stack_vector)};
+      } else {
+        throw runtime_error{_ctx.get_exception().to_string(),
+                            std::move(stack_vector)};
+      }
     }
   }
 

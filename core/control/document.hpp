@@ -7,8 +7,7 @@
 #include <utility>
 
 #include "base.hpp"
-#include "environment.hpp"
-#include "exec_errors.hpp"
+#include "exec_env.hpp"
 #include "prototypes.hpp"
 #include "source_modifications.hpp"
 
@@ -71,26 +70,10 @@ struct document {
                                              std::move(tokens)});
   }
 
-  std::string_view output() const noexcept { return _output; }
-
-  template <typename error_block>
-  void execute(error_block block) {
-    _output.clear();
-    marlin::exec::environment env;
-    env.register_print_callback(
-        [this](const auto& string) { _output += string; });
-    try {
-      env.execute(*_program);
-    } catch (exec::collected_generation_error& e) {
-      for (auto& err : e.errors()) {
-        block(err.node(), err.what());
-      }
-    }
-  }
+  exec_environment generate_exec_environment() { return {*_program}; }
 
  private:
   ast::node _program;
-  std::string _output;
 
   ast::node replace_expression(ast::base& existing, ast::node replacement) {
     assert(existing.has_parent());

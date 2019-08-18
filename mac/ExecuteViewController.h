@@ -1,22 +1,14 @@
 #import <Cocoa/Cocoa.h>
 
-#import "Document.h"
+#import <optional>
+
+#import "exec_env.hpp"
 
 NS_ASSUME_NONNULL_BEGIN
 
-@class ExecuteViewController;
-
-@protocol ExecuteViewControllerDelegate <NSObject>
-
-- (void)addErrorAt:(const marlin::ast::base &)node message:(const std::string &)message;
-
-@end
-
 @interface ExecuteViewController : NSViewController
 
-@property(nonatomic, weak) id<ExecuteViewControllerDelegate> delegate;
-
-@property(nonatomic, weak) Document* document;
+@property std::optional<marlin::control::exec_environment> environment;
 
 @end
 

@@ -17,11 +17,20 @@
 - (void)viewDidAppear {
   [super viewDidAppear];
 
-  auto &doc = self.document.content;
-  doc.execute([self](const marlin::ast::base &node, const std::string &message) {
-    [self.delegate addErrorAt:node message:message];
+  assert(self.environment.has_value());
+
+  self.environment->execute([self](std::string value) {
+    dispatch_sync(dispatch_get_main_queue(), ^{
+      self.outputTextField.stringValue = [self.outputTextField.stringValue
+          stringByAppendingString:[NSString stringWithStringView:value]];
+    });
   });
-  self.outputTextField.stringValue = [NSString stringWithStringView:doc.output()];
+}
+
+- (void)viewWillDisappear {
+  if (self.environment.has_value()) {
+    self.environment->terminate();
+  }
 }
 
 @end

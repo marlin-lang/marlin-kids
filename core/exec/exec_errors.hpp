@@ -8,6 +8,8 @@
 
 namespace marlin::exec {
 
+struct execution_clash_error : std::exception {};
+
 // Generation errors will only be reported using
 // collected_generation_error
 
@@ -58,6 +60,23 @@ struct runtime_error : std::exception {
 
  private:
   std::string _message;
+  std::vector<ast::base*> _stack;
+};
+
+struct external_interrupt : std::exception {
+  inline external_interrupt(std::vector<ast::base*> stack)
+      : _stack{std::move(stack)} {}
+
+  [[nodiscard]] const char* what() const noexcept override {
+    return "External interrupt received!";
+  }
+
+  [[nodiscard]] inline size_t stack_depth() const { return _stack.size(); }
+  [[nodiscard]] inline ast::base& stack(size_t index) const noexcept {
+    return *_stack[index];
+  }
+
+ private:
   std::vector<ast::base*> _stack;
 };
 

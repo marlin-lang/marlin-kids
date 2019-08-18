@@ -7,7 +7,32 @@ namespace marlin::exec {
 
 inline const std::string standard_lib{
     R"std(
-  function* range(first, second = undefined, third = undefined) {
+
+class ExternalInterrupt extends Error {
+	constructor(message = "") {
+        super(message);
+        this.name = "ExternalInterrupt";
+    }
+}
+
+var global_time = Date.now() + 100;
+function check_termination() {
+    var time = Date.now();
+    if (time > global_time) {
+        _check_termination();
+        global_time = time + 100;
+    }
+}
+
+function __interrupt__() {
+    return new ExternalInterrupt();
+}
+
+function is_external_interrupt(exc) {
+    return exc instanceof ExternalInterrupt;
+}
+
+function* range(first, second = undefined, third = undefined) {
     var begin = 0, end, step = 1;
     if (second != undefined) {
         begin = first;
@@ -21,7 +46,8 @@ inline const std::string standard_lib{
     for (var i = begin; step >= 0 ? i < end : i > end; i += step) {
         yield i;
     }
-  }
+}
+
 )std"};
 
 };  // namespace marlin::exec
