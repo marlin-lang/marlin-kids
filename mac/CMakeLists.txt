@@ -1,6 +1,7 @@
 set(HEADERS
     AppDelegate.h
     Document.h
+    DrawContext.h
     EditorViewController.h
     ExecuteViewController.h
     LineNumberView.h
@@ -19,6 +20,7 @@ set(HEADERS
 set(SOURCES
     AppDelegate.mm
     Document.mm
+    DrawContext.mm
     EditorViewController.mm
     ExecuteViewController.mm
     LineNumberView.mm

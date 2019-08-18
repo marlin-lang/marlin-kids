@@ -904,21 +904,23 @@ DQ
                                     <color key="backgroundColor" name="textBackgroundColor" catalog="System" colorSpace="catalog"/>
                                 </textFieldCell>
                             </textField>
-                            <customView translatesAutoresizingMaskIntoConstraints="NO" id="fQm-0K-zE9">
+                            <imageView horizontalHuggingPriority="251" verticalHuggingPriority="251" translatesAutoresizingMaskIntoConstraints="NO" id="eLe-5A-r3P">
                                 <rect key="frame" x="0.0" y="100" width="1024" height="668"/>
-                            </customView>
+                                <imageCell key="cell" refusesFirstResponder="YES" alignment="left" imageScaling="proportionallyDown" id="VF2-3n-D1f"/>
+                            </imageView>
                         </subviews>
                         <constraints>
                             <constraint firstAttribute="trailing" secondItem="e4E-Q7-q4U" secondAttribute="trailing" id="0eZ-gv-drC"/>
                             <constraint firstAttribute="bottom" secondItem="e4E-Q7-q4U" secondAttribute="bottom" id="1mK-Nq-4jD"/>
-                            <constraint firstItem="fQm-0K-zE9" firstAttribute="leading" secondItem="Ur2-6d-aSj" secondAttribute="leading" id="WOU-KB-4Ku"/>
-                            <constraint firstItem="fQm-0K-zE9" firstAttribute="top" secondItem="Ur2-6d-aSj" secondAttribute="top" id="YF6-a0-5kT"/>
-                            <constraint firstItem="e4E-Q7-q4U" firstAttribute="top" secondItem="fQm-0K-zE9" secondAttribute="bottom" id="hKL-FF-x7i"/>
-                            <constraint firstAttribute="trailing" secondItem="fQm-0K-zE9" secondAttribute="trailing" id="lDj-ad-oQq"/>
+                            <constraint firstAttribute="trailing" secondItem="eLe-5A-r3P" secondAttribute="trailing" id="AhD-7s-gho"/>
+                            <constraint firstItem="e4E-Q7-q4U" firstAttribute="top" secondItem="eLe-5A-r3P" secondAttribute="bottom" id="ajz-mq-mSg"/>
+                            <constraint firstItem="eLe-5A-r3P" firstAttribute="top" secondItem="Ur2-6d-aSj" secondAttribute="top" id="b3P-pK-66t"/>
+                            <constraint firstItem="eLe-5A-r3P" firstAttribute="leading" secondItem="Ur2-6d-aSj" secondAttribute="leading" id="u15-mU-zK5"/>
                             <constraint firstItem="e4E-Q7-q4U" firstAttribute="leading" secondItem="Ur2-6d-aSj" secondAttribute="leading" id="vq9-hX-yDD"/>
                         </constraints>
                     </view>
                     <connections>
+                        <outlet property="imageView" destination="eLe-5A-r3P" id="xaa-Wr-VHV"/>
                         <outlet property="outputTextField" destination="e4E-Q7-q4U" id="iSM-65-GxR"/>
                     </connections>
                 </viewController>
