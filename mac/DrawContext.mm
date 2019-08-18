@@ -20,7 +20,7 @@ void DrawContext::initWithImage(NSImage* image, id<DrawContextDelegate> delegate
   [NSColor.blackColor set];
   [rect fill];
   [NSGraphicsContext restoreGraphicsState];
-  [_delegate refreshImage];
+  [_delegate setNeedRefreshImage];
 }
 
 void DrawContext::drawLine(NSPoint from, NSPoint to) {

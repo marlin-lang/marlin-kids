@@ -5,6 +5,8 @@
 #import "DrawContext.h"
 #import "NSString+StringView.h"
 
+constexpr double refreshTimeInMS = 40;
+
 @interface ExecuteViewController ()
 
 @property(weak) IBOutlet NSImageView *imageView;
@@ -16,6 +18,8 @@
 @implementation ExecuteViewController {
   std::optional<marlin::control::exec_environment> _environment;
   DrawContext _drawContext;
+
+  bool _needRefreshImage;
   std::chrono::high_resolution_clock::time_point _refresh_time;
 }
 
@@ -28,6 +32,7 @@
                                    return YES;
                                  }];
   _drawContext.initWithImage(self.imageView.image, self);
+  _needRefreshImage = NO;
 }
 
 - (void)viewDidAppear {
@@ -46,22 +51,13 @@
 
 #pragma mark - DrawContextDelegate implementation
 
-- (void)refreshImage {
+- (void)setNeedRefreshImage {
   auto time = std::chrono::high_resolution_clock::now();
   auto diff = std::chrono::duration_cast<std::chrono::milliseconds>(time - _refresh_time);
-  constexpr double refresh_time_in_ms = 40;
-  if (diff.count() >= refresh_time_in_ms) {
-    for (NSImageRep *rep in self.imageView.image.representations) {
-      [self.imageView.image removeRepresentation:rep];
-    }
-    [self.imageView.image addRepresentation:_drawContext.imageRep];
-    [self.imageView setNeedsDisplay:YES];
-    _refresh_time = time;
-    dispatch_after(
-        dispatch_time(DISPATCH_TIME_NOW, (int64_t)(refresh_time_in_ms / 1000 * NSEC_PER_SEC)),
-        dispatch_get_main_queue(), ^{
-          [self refreshImage];
-        });
+  if (diff.count() < refreshTimeInMS) {
+    _needRefreshImage = YES;
+  } else {
+    [self refreshImage];
   }
 }
 
@@ -117,6 +113,21 @@
   if (_environment.has_value()) {
     _environment->terminate();
   }
+}
+
+- (void)refreshImage {
+  for (NSImageRep *rep in self.imageView.image.representations) {
+    [self.imageView.image removeRepresentation:rep];
+  }
+  [self.imageView.image addRepresentation:_drawContext.imageRep];
+  [self.imageView setNeedsDisplay:YES];
+  _refresh_time = std::chrono::high_resolution_clock::now();
+  dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(refreshTimeInMS / 1000 * NSEC_PER_SEC)),
+                 dispatch_get_main_queue(), ^{
+                   if (self->_needRefreshImage) {
+                     [self refreshImage];
+                   }
+                 });
 }
 
 @end

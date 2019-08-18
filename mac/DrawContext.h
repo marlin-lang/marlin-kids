@@ -4,7 +4,7 @@
 
 @protocol DrawContextDelegate <NSObject>
 
-- (void)refreshImage;
+- (void)setNeedRefreshImage;
 
 @end
 
@@ -20,11 +20,11 @@ struct DrawContext {
   void execute(Block&& block) {
     if (NSThread.isMainThread) {
       block();
-      [_delegate refreshImage];
+      [_delegate setNeedRefreshImage];
     } else {
       dispatch_sync(dispatch_get_main_queue(), ^{
         block();
-        [_delegate refreshImage];
+        [_delegate setNeedRefreshImage];
       });
     }
   }
