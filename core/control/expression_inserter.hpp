@@ -40,8 +40,7 @@ struct expression_inserter {
                                                    arg_type&&... args) {
     switch (type) {
       case literal_data_type::variable_name:
-        return insert(
-            variable_name_prototype::data(std::forward<arg_type>(args)...));
+        [[fallthrough]];
       case literal_data_type::identifier:
         return insert(
             identifier_prototype::data(std::forward<arg_type>(args)...));

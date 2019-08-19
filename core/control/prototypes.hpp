@@ -184,13 +184,6 @@ struct string_prototype {
   }
 };
 
-struct variable_name_prototype {
-  static store::data_vector data(std::string_view value) {
-    auto node = ast::make<ast::variable_name>(std::string{std::move(value)});
-    return store::write({node.get()});
-  }
-};
-
 struct identifier_prototype {
   static store::data_vector data(std::string_view value) {
     auto node = ast::make<ast::identifier>(std::string{std::move(value)});

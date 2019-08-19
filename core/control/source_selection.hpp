@@ -50,7 +50,8 @@ struct source_selection {
 
   template <typename node_type>
   literal_content get_literal_content(const node_type& node) const {
-    // Default value
+    // Not literal
+    assert(false);
     return {literal_data_type::number, ""};
   }
 };
@@ -71,6 +72,13 @@ source_selection::get_literal_content<ast::variable_name>(
 
 template <>
 inline source_selection::literal_content
+source_selection::get_literal_content<ast::expression_placeholder>(
+    const ast::expression_placeholder& node) const {
+  return {literal_data_type::number, ""};
+}
+
+template <>
+inline source_selection::literal_content
 source_selection::get_literal_content<ast::number_literal>(
     const ast::number_literal& node) const {
   return {literal_data_type::number, node.value};
@@ -80,14 +88,14 @@ template <>
 inline source_selection::literal_content
 source_selection::get_literal_content<ast::string_literal>(
     const ast::string_literal& node) const {
-  return {literal_data_type::number, node.value};
+  return {literal_data_type::string, node.value};
 }
 
 template <>
 inline source_selection::literal_content
 source_selection::get_literal_content<ast::identifier>(
     const ast::identifier& node) const {
-  return {literal_data_type::number, node.name};
+  return {literal_data_type::identifier, node.name};
 }
 
 };  // namespace marlin::control
