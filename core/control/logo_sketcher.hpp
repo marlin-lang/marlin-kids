@@ -12,7 +12,11 @@ constexpr double rad_per_deg = pi / 180;
 
 template <typename draw_context_type>
 struct logo_sketcher {
-  void set_context(draw_context_type& ctx) { _ctx = &ctx; }
+  void set_context(draw_context_type& ctx) {
+    _ctx = &ctx;
+    _x = _ctx->width() / 2;
+    _y = _ctx->height() / 2;
+  }
 
   void forward(double length) {
     auto original_x{_x};

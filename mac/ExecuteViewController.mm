@@ -209,7 +209,7 @@ constexpr double refreshTimeInMS = 40;
   for (NSImageRep *rep in self.imageView.image.representations) {
     [self.imageView.image removeRepresentation:rep];
   }
-  [self.imageView.image addRepresentation:_drawContext.imageRep];
+  [self.imageView.image addRepresentation:_drawContext.imageRep()];
   [self.imageView setNeedsDisplay:YES];
   _refresh_time = std::chrono::high_resolution_clock::now();
   _needRefreshImage = NO;
