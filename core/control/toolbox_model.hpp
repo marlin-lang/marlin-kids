@@ -52,6 +52,8 @@ struct toolbox_model {
                pasteboard_t::expression},
           item{system_function_prototype<ast::system_function::range3>::index(),
                pasteboard_t::expression},
+          item{system_function_prototype<ast::system_function::time>::index(),
+               pasteboard_t::expression},
       },
   };
 

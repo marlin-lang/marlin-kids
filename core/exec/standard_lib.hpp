@@ -19,8 +19,11 @@ var global_time = Date.now() + 100;
 function check_termination() {
     var time = Date.now();
     if (time > global_time) {
-        _check_termination();
-        global_time = time + 100;
+        if (__interrupt__()) {
+            throw new ExternalInterrupt();
+        } else {
+            global_time = time + 100;
+        }
     }
 }
 

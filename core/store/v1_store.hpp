@@ -542,9 +542,10 @@ struct store : base_store::impl<store> {
       return map;
     }()};
 
-    static constexpr std::array<std::string_view, 3>
+    static constexpr std::array<std::string_view, 4>
         system_function_display_map{
-            "range" /* range1 */, "range" /* range2 */, "range" /* range3 */
+            "range" /* range1 */, "range" /* range2 */, "range" /* range3 */,
+            "time" /* time */
         };
 
     auto name{read_zero_terminated(iter, end)};

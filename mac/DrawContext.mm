@@ -24,13 +24,12 @@ void DrawContext::initWithImage(NSImage* image, id<DrawContextDelegate> delegate
 }
 
 void DrawContext::drawLine(NSPoint from, NSPoint to) {
-  execute([this, &from, &to]() {
-    [NSGraphicsContext saveGraphicsState];
-    [NSGraphicsContext
-        setCurrentContext:[NSGraphicsContext graphicsContextWithBitmapImageRep:imageRep]];
-    [NSColor.whiteColor set];
-    NSBezierPath.defaultLineWidth = 2;
-    [NSBezierPath strokeLineFromPoint:from toPoint:to];
-    [NSGraphicsContext restoreGraphicsState];
-  });
+  [NSGraphicsContext saveGraphicsState];
+  [NSGraphicsContext
+      setCurrentContext:[NSGraphicsContext graphicsContextWithBitmapImageRep:imageRep]];
+  [NSColor.whiteColor set];
+  NSBezierPath.defaultLineWidth = 2;
+  [NSBezierPath strokeLineFromPoint:from toPoint:to];
+  [NSGraphicsContext restoreGraphicsState];
+  [_delegate setNeedRefreshImage];
 }

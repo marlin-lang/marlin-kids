@@ -169,7 +169,8 @@ struct placeholder_system_function_args {
     static const std::array _placeholders{
         std::vector<std::string_view>{"end"} /* range1 */,
         std::vector<std::string_view>{"begin", "end"} /* range2 */,
-        std::vector<std::string_view>{"begin", "end", "step"} /* range3 */
+        std::vector<std::string_view>{"begin", "end", "step"} /* range3 */,
+        std::vector<std::string_view>{} /* time */
     };
     return _placeholders;
   }

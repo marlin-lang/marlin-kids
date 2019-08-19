@@ -48,13 +48,11 @@ struct environment {
   template <typename terminate_check_type>
   inline void register_termination_flag(
       terminate_check_type&& terminate_check) {
-    _ctx.root()["_check_termination"] = _ctx.callable(
+    _ctx.root()["__interrupt__"] = _ctx.callable(
         [terminate_check{std::forward<terminate_check_type>(terminate_check)}](
-            auto ctx, auto, auto args, auto exception) {
+            auto ctx, auto, auto args, auto) {
           assert(args.size() == 0);
-          if (terminate_check()) {
-            *exception = ctx.root()["__interrupt__"].get().to_object().call();
-          }
+          return ctx.val(terminate_check());
         });
   }
 

@@ -43,8 +43,8 @@ struct generator {
   }
 
   static jsast::ast::node check_termination() {
-    return jsast::ast::call_expression{
-        jsast::ast::identifier{"check_termination"}, {}};
+    return jsast::ast::expression_statement{jsast::ast::call_expression{
+        jsast::ast::identifier{"check_termination"}, {}}};
   }
 
   template <typename vector_type>
@@ -163,7 +163,7 @@ struct generator {
   }
 
   auto get_jsast(ast::system_function_call& call) {
-    static constexpr std::array<jsast::ast::node (*)(), 3> callee_map{
+    static constexpr std::array<jsast::ast::node (*)(), 4> callee_map{
         []() {
           return jsast::ast::node{jsast::ast::identifier{"range"}};
         } /* range1 */,
@@ -172,6 +172,11 @@ struct generator {
         } /* range2 */,
         []() {
           return jsast::ast::node{jsast::ast::identifier{"range"}};
+        } /* range3 */,
+        []() {
+          return jsast::ast::node{jsast::ast::member_expression{
+              jsast::ast::identifier{"Date"},
+              jsast::ast::member_identifier{"now"}}};
         } /* range3 */
     };
     jsast::utils::move_vector<jsast::ast::node> args;

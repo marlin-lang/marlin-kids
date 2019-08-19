@@ -16,18 +16,5 @@ struct DrawContext {
   void drawLine(NSPoint from, NSPoint to);
 
  private:
-  template <typename Block>
-  void execute(Block&& block) {
-    if (NSThread.isMainThread) {
-      block();
-      [_delegate setNeedRefreshImage];
-    } else {
-      dispatch_sync(dispatch_get_main_queue(), ^{
-        block();
-        [_delegate setNeedRefreshImage];
-      });
-    }
-  }
-
   __weak id<DrawContextDelegate> _delegate;
 };

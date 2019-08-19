@@ -2,6 +2,7 @@
 #define marlin_control_exec_env_hpp
 
 #include <atomic>
+#include <memory>
 #include <string_view>
 #include <thread>
 
@@ -42,9 +43,11 @@ struct exec_environment {
   }
 
   void execute() {
-    _should_terminate.store(false);
-    _env.register_termination_flag(
-        [this]() { return _should_terminate.load(std::memory_order_acquire); });
+    assert(!_in_execution);
+    _should_terminate->store(false);
+    _env.register_termination_flag([tflag{_should_terminate}]() {
+      return tflag->load(std::memory_order_acquire);
+    });
 
     // For now, assume that one exec_environment supports only one run
     _in_execution = true;
@@ -63,16 +66,21 @@ struct exec_environment {
     exec_thread.detach();
   }
 
-  void terminate() { _should_terminate.store(true, std::memory_order_release); }
+  void terminate() {
+    _should_terminate->store(true, std::memory_order_release);
+  }
 
  private:
   ast::base* _program;
   std::string _script;
 
   bool _in_execution{false};
+  // _env is valid only before execution starts, i.e. _in_execution == false
+  // Upon execution, its value is moved to the execution thread
   exec::environment _env;
 
-  std::atomic<bool> _should_terminate;
+  std::shared_ptr<std::atomic<bool>> _should_terminate{
+      std::make_shared<std::atomic<bool>>(false)};
 };
 
 }  // namespace marlin::control

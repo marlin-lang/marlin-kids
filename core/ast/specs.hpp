@@ -48,10 +48,11 @@ static constexpr std::array<std::string_view, 1> system_procedure_name_map{
   return system_procedure_name_map[static_cast<size_t>(proc)];
 }
 
-enum class system_function : size_t { range1, range2, range3 };
+enum class system_function : size_t { range1, range2, range3, time };
 
-static constexpr std::array<std::string_view, 3> system_function_name_map{
-    "range1" /* range1 */, "range2" /* range2 */, "range3" /* range3 */
+static constexpr std::array<std::string_view, 4> system_function_name_map{
+    "range1" /* range1 */, "range2" /* range2 */, "range3" /* range3 */,
+    "time" /* time */
 };
 [[nodiscard]] inline constexpr std::string_view name_for(
     system_function func) noexcept {
