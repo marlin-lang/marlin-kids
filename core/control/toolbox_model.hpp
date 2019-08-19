@@ -34,6 +34,18 @@ struct toolbox_model {
           item{system_procedure_prototype<
                    ast::system_procedure::draw_line>::index(),
                pasteboard_t::statement},
+          item{system_procedure_prototype<
+                   ast::system_procedure::logo_forward>::index(),
+               pasteboard_t::statement},
+          item{system_procedure_prototype<
+                   ast::system_procedure::logo_backward>::index(),
+               pasteboard_t::statement},
+          item{system_procedure_prototype<
+                   ast::system_procedure::logo_turn_left>::index(),
+               pasteboard_t::statement},
+          item{system_procedure_prototype<
+                   ast::system_procedure::logo_turn_right>::index(),
+               pasteboard_t::statement},
       },
       std::vector{
           item{binary_prototype<ast::binary_op::add>::index(),

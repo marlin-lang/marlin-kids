@@ -1,6 +1,8 @@
 #import "ExecuteViewController.h"
 
-#import "chrono"
+#import <chrono>
+
+#import "logo_sketcher.hpp"
 
 #import "DrawContext.h"
 #import "NSString+StringView.h"
@@ -26,6 +28,7 @@ constexpr double refreshTimeInMS = 40;
 @implementation ExecuteViewController {
   std::optional<marlin::control::exec_environment> _environment;
   DrawContext _drawContext;
+  marlin::control::logo_sketcher<DrawContext> _logoSketcher;
 
   bool _needRefreshImage;
   std::chrono::high_resolution_clock::time_point _refresh_time;
@@ -40,6 +43,7 @@ constexpr double refreshTimeInMS = 40;
                                    return YES;
                                  }];
   _drawContext.initWithImage(self.imageView.image, self);
+  _logoSketcher.set_context(_drawContext);
   _needRefreshImage = NO;
 }
 
@@ -81,6 +85,7 @@ constexpr double refreshTimeInMS = 40;
           stringByAppendingString:[NSString stringWithStringView:value]];
     });
   });
+
   _environment->add_custom_callback(
       "draw_line", [weakSelf](auto ctx, auto, auto args, auto exception) {
         if (args.size() != 4) {
@@ -110,15 +115,86 @@ constexpr double refreshTimeInMS = 40;
             return;
           }
 
-          auto start = NSMakePoint(static_cast<CGFloat>(start_x), static_cast<CGFloat>(start_y));
-          auto end = NSMakePoint(static_cast<CGFloat>(end_x), static_cast<CGFloat>(end_y));
           dispatch_on_main(^{
             if (auto strongSelf = weakSelf) {
-              strongSelf->_drawContext.drawLine(start, end);
+              strongSelf->_drawContext.draw_line(start_x, start_y, end_x, end_y);
             }
           });
         }
       });
+
+  _environment->add_custom_callback("logo_forward",
+                                    [weakSelf](auto ctx, auto, auto args, auto exception) {
+                                      if (args.size() != 1) {
+                                        *exception = ctx.error("Incorrect number of arguments!");
+                                      } else {
+                                        double length = args[0].to_number();
+                                        if (!ctx.ok()) {
+                                          *exception = ctx.get_exception();
+                                          return;
+                                        }
+
+                                        dispatch_on_main(^{
+                                          if (auto strongSelf = weakSelf) {
+                                            strongSelf->_logoSketcher.forward(length);
+                                          }
+                                        });
+                                      }
+                                    });
+  _environment->add_custom_callback("logo_backward",
+                                    [weakSelf](auto ctx, auto, auto args, auto exception) {
+                                      if (args.size() != 1) {
+                                        *exception = ctx.error("Incorrect number of arguments!");
+                                      } else {
+                                        double length = args[0].to_number();
+                                        if (!ctx.ok()) {
+                                          *exception = ctx.get_exception();
+                                          return;
+                                        }
+
+                                        dispatch_on_main(^{
+                                          if (auto strongSelf = weakSelf) {
+                                            strongSelf->_logoSketcher.backward(length);
+                                          }
+                                        });
+                                      }
+                                    });
+  _environment->add_custom_callback("logo_turn_left",
+                                    [weakSelf](auto ctx, auto, auto args, auto exception) {
+                                      if (args.size() != 1) {
+                                        *exception = ctx.error("Incorrect number of arguments!");
+                                      } else {
+                                        double degree = args[0].to_number();
+                                        if (!ctx.ok()) {
+                                          *exception = ctx.get_exception();
+                                          return;
+                                        }
+
+                                        dispatch_on_main(^{
+                                          if (auto strongSelf = weakSelf) {
+                                            strongSelf->_logoSketcher.turn_left(degree);
+                                          }
+                                        });
+                                      }
+                                    });
+  _environment->add_custom_callback("logo_turn_right",
+                                    [weakSelf](auto ctx, auto, auto args, auto exception) {
+                                      if (args.size() != 1) {
+                                        *exception = ctx.error("Incorrect number of arguments!");
+                                      } else {
+                                        double degree = args[0].to_number();
+                                        if (!ctx.ok()) {
+                                          *exception = ctx.get_exception();
+                                          return;
+                                        }
+
+                                        dispatch_on_main(^{
+                                          if (auto strongSelf = weakSelf) {
+                                            strongSelf->_logoSketcher.turn_right(degree);
+                                          }
+                                        });
+                                      }
+                                    });
 
   _environment->execute();
 }

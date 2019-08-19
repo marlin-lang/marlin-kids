@@ -13,7 +13,7 @@ struct DrawContext {
 
   void initWithImage(NSImage* image, id<DrawContextDelegate> delegate);
 
-  void drawLine(NSPoint from, NSPoint to);
+  void draw_line(double from_x, double from_y, double to_x, double to_y);
 
  private:
   __weak id<DrawContextDelegate> _delegate;

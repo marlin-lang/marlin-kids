@@ -53,6 +53,13 @@ struct system_procedure_prototype
 };
 
 template struct system_procedure_prototype<ast::system_procedure::draw_line>;
+template struct system_procedure_prototype<ast::system_procedure::logo_forward>;
+template struct system_procedure_prototype<
+    ast::system_procedure::logo_backward>;
+template struct system_procedure_prototype<
+    ast::system_procedure::logo_turn_left>;
+template struct system_procedure_prototype<
+    ast::system_procedure::logo_turn_right>;
 
 struct if_prototype : statement_prototype::impl<if_prototype> {
   [[nodiscard]] std::string_view name() const override { return "if"; }

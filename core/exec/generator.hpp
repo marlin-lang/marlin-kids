@@ -106,10 +106,22 @@ struct generator {
   }
 
   auto get_jsast(ast::system_procedure_call& call) {
-    static constexpr std::array<jsast::ast::node (*)(), 3> callee_map{
+    static constexpr std::array<jsast::ast::node (*)(), 5> callee_map{
         []() {
           return jsast::ast::node{jsast::ast::identifier{"draw_line"}};
-        } /* draw_line */
+        } /* draw_line */,
+        []() {
+          return jsast::ast::node{jsast::ast::identifier{"logo_forward"}};
+        } /* logo_forward */,
+        []() {
+          return jsast::ast::node{jsast::ast::identifier{"logo_backward"}};
+        } /* logo_backward */,
+        []() {
+          return jsast::ast::node{jsast::ast::identifier{"logo_turn_left"}};
+        } /* logo_turn_left */,
+        []() {
+          return jsast::ast::node{jsast::ast::identifier{"logo_turn_right"}};
+        } /* logo_turn_right */
     };
     jsast::utils::move_vector<jsast::ast::node> args;
     for (auto& arg : call.arguments()) {

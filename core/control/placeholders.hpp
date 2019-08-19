@@ -146,6 +146,10 @@ struct placeholder_system_procedure_args {
     static const std::array _placeholders{
         std::vector<std::string_view>{"start_x", "start_y", "end_x",
                                       "end_y"} /* draw_line */,
+        std::vector<std::string_view>{"length"} /* logo_forward */,
+        std::vector<std::string_view>{"length"} /* logo_backward */,
+        std::vector<std::string_view>{"degree"} /* logo_turn_left */,
+        std::vector<std::string_view>{"degree"} /* logo_turn_right */
     };
     return _placeholders;
   }

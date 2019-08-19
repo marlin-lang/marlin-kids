@@ -319,9 +319,12 @@ struct store : base_store::impl<store> {
       return map;
     }()};
 
-    static constexpr std::array<std::string_view, 3>
+    static constexpr std::array<std::string_view, 5>
         system_procedure_display_map{
-            "draw_line" /* draw_line */
+            "draw_line" /* draw_line */, "logo_forward" /* logo_forward */,
+            "logo_backward" /* logo_backward */,
+            "logo_turn_left" /* logo_turn_left */,
+            "logo_turn_right" /* logo_turn_right */
         };
 
     auto name{read_zero_terminated(iter, end)};

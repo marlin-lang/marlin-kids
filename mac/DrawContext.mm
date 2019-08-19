@@ -23,7 +23,10 @@ void DrawContext::initWithImage(NSImage* image, id<DrawContextDelegate> delegate
   [_delegate setNeedRefreshImage];
 }
 
-void DrawContext::drawLine(NSPoint from, NSPoint to) {
+void DrawContext::draw_line(double from_x, double from_y, double to_x, double to_y) {
+  auto from = NSMakePoint(static_cast<CGFloat>(from_x), static_cast<CGFloat>(from_y));
+  auto to = NSMakePoint(static_cast<CGFloat>(to_x), static_cast<CGFloat>(to_y));
+
   [NSGraphicsContext saveGraphicsState];
   [NSGraphicsContext
       setCurrentContext:[NSGraphicsContext graphicsContextWithBitmapImageRep:imageRep]];
