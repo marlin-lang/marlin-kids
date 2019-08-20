@@ -1,9 +1,12 @@
 #ifndef marlin_control_source_selection_hpp
 #define marlin_control_source_selection_hpp
 
+#include <optional>
+
 #include "ast.hpp"
 #include "document.hpp"
 #include "expression_inserter.hpp"
+#include "store.hpp"
 
 namespace marlin::control {
 
@@ -23,6 +26,11 @@ struct source_selection {
     return _selection->source_code_range;
   }
 
+  bool is_statement() const { return _selection->inherits<ast::statement>(); }
+  bool is_expression() const {
+    return is_literal() || _selection->inherits<ast::expression>();
+  }
+
   bool is_literal() const {
     return _selection->is<marlin::ast::variable_placeholder>() ||
            _selection->is<marlin::ast::expression_placeholder>() ||
@@ -31,6 +39,7 @@ struct source_selection {
            _selection->is<marlin::ast::string_literal>() ||
            _selection->is<marlin::ast::identifier>();
   }
+
   literal_content get_literal_content() const {
     assert(is_literal());
     return _selection->apply<literal_content>(
@@ -41,6 +50,17 @@ struct source_selection {
     // For now only placeholders and literals can be directly overridden
     assert(is_literal());
     return {*_doc, _loc, *_selection};
+  }
+
+  store::data_vector get_data() const { return store::write({_selection}); }
+
+  std::optional<source_replacement> remove_from_document() const {
+    if (is_expression()) {
+      return _doc->remove_expression(*_selection).second;
+    } else {
+      // Removing statements are yet to be implemented
+      return std::nullopt;
+    }
   }
 
  private:

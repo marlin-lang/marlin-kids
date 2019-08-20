@@ -21,7 +21,9 @@
 @end
 
 @implementation SourceTextView {
+  bool _potentialDrag;
   std::optional<marlin::control::source_selection> _selection;
+  std::optional<marlin::control::source_selection> _draggingSelection;
   std::optional<marlin::control::expression_inserter> _expressionInserter;
   std::optional<marlin::control::statement_inserter> _statementInserter;
   NSRange _selectionRange;
@@ -39,6 +41,7 @@
     self.textContainer.containerSize = NSMakeSize(FLT_MAX, FLT_MAX);
     self.textContainer.widthTracksTextView = NO;
 
+    _potentialDrag = false;
     _selectionRange = NSMakeRange(0, 0);
     _statementInsertionPoint = -1;
   }
@@ -46,32 +49,42 @@
 }
 
 - (void)mouseDown:(NSEvent*)event {
-  [super mouseDown:event];
-
   auto location = [self convertPoint:event.locationInWindow fromView:nil];
   auto index = [self characterIndexForInsertionAtPoint:location];
-  _selection = [self.dataSource textView:self selectionAt:[self sourceLocOfIndex:index]];
-  _selectionRange = [self rangeOfSourceRange:_selection->get_range()];
-  [self setNeedsDisplayInRect:self.bounds avoidAdditionalLayout:YES];
-  if (_selection->is_literal()) {
-    NSStoryboard* storyboard = [NSStoryboard storyboardWithName:@"Main" bundle:nil];
-    EditorViewController* vc =
-        [storyboard instantiateControllerWithIdentifier:@"EditorViewController"];
-    vc.delegate = self;
+  auto selected = [self sourceLocOfIndex:index];
+  if (_selection.has_value() && _selection->get_range().contains(selected)) {
+    _draggingSelection = _selection;
+    self.selectedRange = _selectionRange;
+    [self dragSelectionWithEvent:event offset:NSMakeSize(0, 0) slideBack:true];
+  } else {
+    [super mouseDown:event];
 
-    self.popover = [NSPopover new];
-    self.popover.behavior = NSPopoverBehaviorTransient;
-    self.popover.contentViewController = vc;
-    auto rect = [self rectOfRange:_selectionRange];
-    [self.popover showRelativeToRect:rect ofView:self preferredEdge:NSMinYEdge];
+    _selection = [self.dataSource textView:self selectionAt:selected];
+    _selectionRange = [self rangeOfSourceRange:_selection->get_range()];
+    [self setNeedsDisplayInRect:self.bounds avoidAdditionalLayout:YES];
 
-    auto [type, data] = _selection->get_literal_content();
-    vc.type = type;
-    vc.editorTextField.stringValue = [NSString stringWithStringView:data];
+    if (_selection->is_literal()) {
+      NSStoryboard* storyboard = [NSStoryboard storyboardWithName:@"Main" bundle:nil];
+      EditorViewController* vc =
+          [storyboard instantiateControllerWithIdentifier:@"EditorViewController"];
+      vc.delegate = self;
+
+      self.popover = [NSPopover new];
+      self.popover.behavior = NSPopoverBehaviorTransient;
+      self.popover.contentViewController = vc;
+      auto rect = [self rectOfRange:_selectionRange];
+      [self.popover showRelativeToRect:rect ofView:self preferredEdge:NSMinYEdge];
+
+      auto [type, data] = _selection->get_literal_content();
+      vc.type = type;
+      vc.editorTextField.stringValue = [NSString stringWithStringView:data];
+    }
   }
 }
 
 - (void)mouseMoved:(NSEvent*)event {
+  [super mouseMoved:event];
+
   [NSCursor.arrowCursor set];
 }
 
@@ -275,6 +288,43 @@
   ];
 }
 
+- (NSArray<NSPasteboardType>*)writablePasteboardTypes {
+  return @[
+    pasteboardOfType(marlin::control::pasteboard_t::statement),
+    pasteboardOfType(marlin::control::pasteboard_t::expression)
+  ];
+}
+
+- (BOOL)writeSelectionToPasteboard:(NSPasteboard*)pboard types:(NSArray<NSPasteboardType>*)types {
+  assert(_selection.has_value());
+
+  if (_selection->is_statement()) {
+    [pboard setData:[NSData dataWithDataView:_selection->get_data()]
+            forType:pasteboardOfType(marlin::control::pasteboard_t::statement)];
+    return true;
+  } else if (_selection->is_expression()) {
+    [pboard setData:[NSData dataWithDataView:_selection->get_data()]
+            forType:pasteboardOfType(marlin::control::pasteboard_t::expression)];
+    return true;
+  } else {
+    return false;
+  }
+}
+
+- (void)draggingSession:(NSDraggingSession*)session
+           endedAtPoint:(NSPoint)screenPoint
+              operation:(NSDragOperation)operation {
+  if (_draggingSelection.has_value() && operation == NSDragOperationMove) {
+    if (auto update = _draggingSelection->remove_from_document()) {
+      _draggingSelection = std::nullopt;
+      auto range = [self rangeOfSourceRange:update->range];
+      [self updateInRange:range
+               withSource:std::move(update->source)
+               highlights:std::move(update->highlights)];
+    }
+  }
+}
+
 - (NSDragOperation)dragOperationForDraggingInfo:(id<NSDraggingInfo>)dragInfo
                                            type:(NSPasteboardType)type {
   auto location = [self convertPoint:dragInfo.draggingLocation fromView:nil];
@@ -290,7 +340,7 @@
       _statementInsertionPoint =
           [self.textStorage.string lineRangeForRange:NSMakeRange(index, 0)].location;
       [self setNeedsDisplayInRect:self.bounds avoidAdditionalLayout:NO];
-      return NSDragOperationCopy;
+      return NSDragOperationMove;
     } else {
       _statementInsertionPoint = -1;
       [self setNeedsDisplayInRect:self.bounds avoidAdditionalLayout:NO];
@@ -303,7 +353,7 @@
     if (_expressionInserter->can_insert()) {
       _selectionRange = [self rangeOfSourceRange:_expressionInserter->get_range()];
       [self setNeedsDisplayInRect:self.bounds avoidAdditionalLayout:YES];
-      return NSDragOperationCopy;
+      return NSDragOperationMove;
     } else {
       _selectionRange = NSMakeRange(0, 0);
       [self setNeedsDisplayInRect:self.bounds avoidAdditionalLayout:YES];
@@ -345,6 +395,7 @@
   _statementInserter = std::nullopt;
   _expressionInserter = std::nullopt;
   _statementInsertionPoint = -1;
+  _selection = std::nullopt;
   _selectionRange = NSMakeRange(0, 0);
   [self setNeedsDisplayInRect:self.bounds avoidAdditionalLayout:YES];
 }
