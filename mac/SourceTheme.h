@@ -1,6 +1,6 @@
 #import <Cocoa/Cocoa.h>
 
-#import "source_modifications.hpp"
+#import "source_update.hpp"
 
 @interface SourceTheme : NSObject
 

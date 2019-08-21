@@ -24,7 +24,7 @@ struct statement_inserter {
     }
   }
 
-  std::optional<source_insertion> insert(store::data_view data);
+  std::optional<source_update> insert(store::data_view data);
 
  private:
   struct location {
@@ -58,48 +58,9 @@ struct statement_inserter {
   template <typename node_type, typename = enable_if_ast_t<node_type>>
   std::optional<location> find_statement_insert_location_in_node(
       size_t line, node_type& node, size_t current_indent) {
+    // Impossible for insert location to be here
+    assert(false);
     return std::nullopt;
-  }
-
-  std::optional<location> find_statement_insert_location_in_node(
-      size_t line, ast::program& node, size_t current_indent) {
-    return find_statement_insert_location_in_vector<false>(
-        line, node, node.blocks(), current_indent);
-  }
-
-  std::optional<location> find_statement_insert_location_in_node(
-      size_t line, ast::on_start& node, size_t current_indent) {
-    return find_statement_insert_location_in_vector<true>(
-        line, node, node.statements(), current_indent);
-  }
-
-  std::optional<location> find_statement_insert_location_in_node(
-      size_t line, ast::if_statement& node, size_t current_indent) {
-    return find_statement_insert_location_in_vector<true>(
-        line, node, node.statements(), current_indent);
-  }
-
-  std::optional<location> find_statement_insert_location_in_node(
-      size_t line, ast::if_else_statement& node, size_t current_indent) {
-    if (line <= node.else_loc.line) {
-      return find_statement_insert_location_in_vector<true>(
-          line, node, node.consequence(), current_indent);
-    } else {
-      return find_statement_insert_location_in_vector<true>(
-          line, node, node.alternate(), current_indent);
-    }
-  }
-
-  std::optional<location> find_statement_insert_location_in_node(
-      size_t line, ast::while_statement& node, size_t current_indent) {
-    return find_statement_insert_location_in_vector<true>(
-        line, node, node.statements(), current_indent);
-  }
-
-  std::optional<location> find_statement_insert_location_in_node(
-      size_t line, ast::for_statement& node, size_t current_indent) {
-    return find_statement_insert_location_in_vector<true>(
-        line, node, node.statements(), current_indent);
   }
 
   template <bool vector_is_block>
@@ -107,6 +68,61 @@ struct statement_inserter {
       size_t line, ast::base& parent,
       ast::subnode::vector_view<ast::base> vector, size_t current_indent);
 };
+
+template <>
+inline std::optional<statement_inserter::location>
+statement_inserter::find_statement_insert_location_in_node<ast::program>(
+    size_t line, ast::program& node, size_t current_indent) {
+  return find_statement_insert_location_in_vector<false>(
+      line, node, node.blocks(), current_indent);
+}
+
+template <>
+inline std::optional<statement_inserter::location>
+statement_inserter::find_statement_insert_location_in_node<ast::on_start>(
+    size_t line, ast::on_start& node, size_t current_indent) {
+  return find_statement_insert_location_in_vector<true>(
+      line, node, node.statements(), current_indent);
+}
+
+template <>
+inline std::optional<statement_inserter::location>
+statement_inserter::find_statement_insert_location_in_node<ast::if_statement>(
+    size_t line, ast::if_statement& node, size_t current_indent) {
+  return find_statement_insert_location_in_vector<true>(
+      line, node, node.statements(), current_indent);
+}
+
+template <>
+inline std::optional<statement_inserter::location>
+statement_inserter::find_statement_insert_location_in_node<
+    ast::if_else_statement>(size_t line, ast::if_else_statement& node,
+                            size_t current_indent) {
+  if (line <= node.else_loc.line) {
+    return find_statement_insert_location_in_vector<true>(
+        line, node, node.consequence(), current_indent);
+  } else {
+    return find_statement_insert_location_in_vector<true>(
+        line, node, node.alternate(), current_indent);
+  }
+}
+
+template <>
+inline std::optional<statement_inserter::location>
+statement_inserter::find_statement_insert_location_in_node<
+    ast::while_statement>(size_t line, ast::while_statement& node,
+                          size_t current_indent) {
+  return find_statement_insert_location_in_vector<true>(
+      line, node, node.statements(), current_indent);
+}
+
+template <>
+inline std::optional<statement_inserter::location>
+statement_inserter::find_statement_insert_location_in_node<ast::for_statement>(
+    size_t line, ast::for_statement& node, size_t current_indent) {
+  return find_statement_insert_location_in_vector<true>(
+      line, node, node.statements(), current_indent);
+}
 
 }  // namespace marlin::control
 

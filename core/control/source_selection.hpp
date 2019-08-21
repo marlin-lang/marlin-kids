@@ -2,10 +2,12 @@
 #define marlin_control_source_selection_hpp
 
 #include <optional>
+#include <utility>
 
 #include "ast.hpp"
 #include "document.hpp"
 #include "expression_inserter.hpp"
+#include "placeholders.hpp"
 #include "store.hpp"
 
 namespace marlin::control {
@@ -54,11 +56,14 @@ struct source_selection {
 
   store::data_vector get_data() const { return store::write({_selection}); }
 
-  std::optional<source_replacement> remove_from_document() const {
-    if (is_expression()) {
-      return _doc->remove_expression(*_selection).second;
+  std::optional<source_update> remove_from_document() const {
+    if (is_statement()) {
+      return remove_statement();
+    } else if (is_expression()) {
+      return remove_expression();
     } else {
-      // Removing statements are yet to be implemented
+      // For now we are not dragging blocks
+      assert(false);
       return std::nullopt;
     }
   }
@@ -73,6 +78,39 @@ struct source_selection {
     // Not literal
     assert(false);
     return {literal_data_type::number, ""};
+  }
+
+  source_update remove_statement() const {
+    assert(_selection->has_parent());
+
+    source_range statement_range{
+        {_selection->source_code_range.begin.line, 1},
+        {_selection->source_code_range.end.line + 1, 1}};
+    auto line_offset{static_cast<ptrdiff_t>(statement_range.begin.line) -
+                     static_cast<ptrdiff_t>(statement_range.end.line)};
+    _doc->update_source_line_after_node(*_selection, line_offset);
+    _doc->remove_line(*_selection);
+    return source_update{statement_range, "", {}};
+  }
+
+  source_update remove_expression() const {
+    assert(_selection->has_parent());
+
+    auto placeholder_name{placeholder::get_replacing_node(*_selection)};
+    std::string source{"@"};
+    source.append(placeholder_name);
+    auto placeholder{ast::make<ast::expression_placeholder>(
+        std::string{std::move(placeholder_name)})};
+    auto original_range{_selection->source_code_range};
+    placeholder->source_code_range = {
+        original_range.begin,
+        {original_range.begin.line,
+         original_range.begin.column + source.size()}};
+    _doc->replace_expression(*_selection, std::move(placeholder));
+    return source_update{
+        original_range,
+        std::move(source),
+        {highlight_token{highlight_token_type::placeholder, 0, source.size()}}};
   }
 };
 

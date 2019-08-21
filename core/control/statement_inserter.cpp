@@ -4,8 +4,7 @@
 
 namespace marlin::control {
 
-std::optional<source_insertion> statement_inserter::insert(
-    store::data_view data) {
+std::optional<source_update> statement_inserter::insert(store::data_view data) {
   assert(_loc.has_value());
 
   std::optional<store::reconstruction_result> try_result;
@@ -27,9 +26,9 @@ std::optional<source_insertion> statement_inserter::insert(
     }
     _doc->update_source_line_after_node(*_loc->block[_loc->index], line_offset);
 
-    return source_insertion{{_loc->line, 1},
-                            std::move(result.source),
-                            std::move(result.highlights)};
+    return source_update{{{_loc->line, 1}, {_loc->line, 1}},
+                         std::move(result.source),
+                         std::move(result.highlights)};
   } else {
     return std::nullopt;
   }

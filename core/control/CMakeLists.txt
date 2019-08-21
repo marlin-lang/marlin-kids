@@ -6,7 +6,7 @@ set(HEADERS
     placeholders.hpp
     prototype_definition.hpp
     prototypes.hpp
-    source_modifications.hpp
+    source_update.hpp
     source_selection.hpp
     statement_inserter.hpp
     toolbox_model.hpp)

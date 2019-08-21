@@ -344,6 +344,7 @@
     } else {
       _statementInsertionPoint = -1;
       [self setNeedsDisplayInRect:self.bounds avoidAdditionalLayout:NO];
+      return NSDragOperationNone;
     }
   } else if (type == pasteboardOfType(marlin::control::pasteboard_t::expression)) {
     if (!_expressionInserter.has_value()) {
@@ -357,10 +358,11 @@
     } else {
       _selectionRange = NSMakeRange(0, 0);
       [self setNeedsDisplayInRect:self.bounds avoidAdditionalLayout:YES];
+      return NSDragOperationNone;
     }
+  } else {
+    return NSDragOperationNone;
   }
-
-  return NSDragOperationNone;
 }
 
 - (BOOL)performDragOperation:(id<NSDraggingInfo>)sender {

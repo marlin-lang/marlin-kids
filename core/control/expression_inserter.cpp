@@ -4,7 +4,7 @@
 
 namespace marlin::control {
 
-std::optional<source_replacement> expression_inserter::insert(
+std::optional<source_update> expression_inserter::insert(
     store::data_view data) {
   assert(_selection != nullptr);
 
@@ -21,8 +21,8 @@ std::optional<source_replacement> expression_inserter::insert(
 
     auto original{_selection->source_code_range};
     _doc->replace_expression(*_selection, std::move(result.nodes[0]));
-    return source_replacement{original, std::move(result.source),
-                              std::move(result.highlights)};
+    return source_update{original, std::move(result.source),
+                         std::move(result.highlights)};
   } else {
     return std::nullopt;
   }

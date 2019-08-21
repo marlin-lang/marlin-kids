@@ -27,7 +27,7 @@
   return self;
 }
 
-- (std::optional<marlin::control::source_initialization>)initialize {
+- (std::optional<marlin::control::source_update>)initialize {
   if (auto result{self.initialData == nil
                       ? marlin::control::document::make_document()
                       : marlin::control::document::make_document(self.initialData.dataView)}) {

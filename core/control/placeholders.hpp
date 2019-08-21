@@ -39,10 +39,9 @@ struct placeholder {
       const ast::base::impl<node_type, subnode_type...>& parent,
       const ast::base& node) {
     if constexpr (index < sizeof...(subnode_type)) {
-      auto result{try_get_at_subnode_index(
-          reinterpret_cast<const node_type&>(parent), index,
-          parent.template get_subnode<index>(), node)};
-      if (result.has_value()) {
+      if (auto result{try_get_at_subnode_index(
+              reinterpret_cast<const node_type&>(parent), index,
+              parent.template get_subnode<index>(), node)}) {
         return *std::move(result);
       } else {
         return get_from_parent<index + 1>(parent, node);

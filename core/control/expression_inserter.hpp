@@ -36,8 +36,8 @@ struct expression_inserter {
   }
 
   template <typename... arg_type>
-  std::optional<source_replacement> insert_literal(literal_data_type type,
-                                                   arg_type&&... args) {
+  std::optional<source_update> insert_literal(literal_data_type type,
+                                              arg_type&&... args) {
     switch (type) {
       case literal_data_type::variable_name:
         [[fallthrough]];
@@ -51,7 +51,7 @@ struct expression_inserter {
     }
   }
 
-  std::optional<source_replacement> insert(store::data_view data);
+  std::optional<source_update> insert(store::data_view data);
 
  private:
   document* _doc;

@@ -9,7 +9,7 @@
 #include "base.hpp"
 #include "exec_env.hpp"
 #include "prototypes.hpp"
-#include "source_modifications.hpp"
+#include "source_update.hpp"
 #include "store.hpp"
 
 namespace marlin::control {
@@ -22,58 +22,40 @@ using enable_if_ast_t =
 struct document {
   friend struct statement_inserter;
   friend struct expression_inserter;
+  friend struct source_selection;
 
-  inline static const store::data_vector default_data{[]() {
-    std::vector<ast::node> blocks;
-    blocks.emplace_back(ast::make<ast::on_start>(std::vector<ast::node>{}));
-    auto node{ast::make<ast::program>(std::move(blocks))};
-    return store::write({node.get()});
-  }()};
+  static store::data_view default_data() {
+    static const store::data_vector _data{[]() {
+      std::vector<ast::node> blocks;
+      blocks.emplace_back(ast::make<ast::on_start>(std::vector<ast::node>{}));
+      auto node{ast::make<ast::program>(std::move(blocks))};
+      return store::write({node.get()});
+    }()};
+    return _data;
+  }
 
-  static std::optional<std::pair<document, source_initialization>>
-  make_document(store::data_view data = default_data) {
+  static std::optional<std::pair<document, source_update>> make_document(
+      store::data_view data = default_data()) {
     try {
       auto result{store::read(data, store::type_expectation::program)};
       assert(result.nodes.size() == 1);
-      return std::make_pair(
-          document{std::move(result.nodes[0])},
-          source_initialization{std::move(result.source),
-                                std::move(result.highlights)});
+      return std::make_pair(document{std::move(result.nodes[0])},
+                            source_update{{{1, 1}, {1, 1}},
+                                          std::move(result.source),
+                                          std::move(result.highlights)});
     } catch (const store::read_error&) {
       return std::nullopt;
     }
   }
 
   explicit document(ast::node program) noexcept
-      : _program(std::move(program)){}
+      : _program(std::move(program)) {}
 
   [[nodiscard]] ast::base& locate(source_loc loc) {
     return _program->locate(loc);
   }
   [[nodiscard]] const ast::base& locate(source_loc loc) const {
     return _program->locate(loc);
-  }
-
-  std::pair<ast::node, source_replacement> remove_expression(
-      ast::base& existing) {
-    assert(existing.has_parent());
-
-    auto placeholder_name{placeholder::get_replacing_node(existing)};
-    std::string source{"@"};
-    source.append(placeholder_name);
-    auto placeholder = ast::make<ast::expression_placeholder>(
-        std::string{std::move(placeholder_name)});
-    auto original_range{existing.source_code_range};
-    placeholder->source_code_range = {
-        original_range.begin,
-        {original_range.begin.line,
-         original_range.begin.column + source.size()}};
-    auto node{replace_expression(existing, std::move(placeholder))};
-    std::vector<highlight_token> tokens{
-        highlight_token{highlight_token_type::placeholder, 0, source.size()}};
-    return std::make_pair(std::move(node),
-                          source_replacement{original_range, std::move(source),
-                                             std::move(tokens)});
   }
 
   exec_environment generate_exec_environment() { return {*_program}; }
@@ -83,6 +65,9 @@ struct document {
  private:
   ast::node _program;
 
+  // Convenient functions to modify _program
+  // Implemented for use of friend structs
+
   ast::node replace_expression(ast::base& existing, ast::node replacement) {
     assert(existing.has_parent());
 
@@ -90,10 +75,10 @@ struct document {
     assert(existing.source_code_range.end.line ==
            replacement->source_code_range.end.line);
 
-    auto offset =
+    auto offset{
         static_cast<ptrdiff_t>(replacement->source_code_range.end.column) -
-        static_cast<ptrdiff_t>(existing.source_code_range.end.column);
-    auto& placed = *replacement;
+        static_cast<ptrdiff_t>(existing.source_code_range.end.column)};
+    auto& placed{*replacement};
 
     auto result{
         existing.parent().replace_child(existing, std::move(replacement))};
@@ -101,6 +86,46 @@ struct document {
       update_source_column_after_node(placed, offset);
     }
     return result;
+  }
+
+  ast::node remove_line(ast::base& target) {
+    // Statement must be in a vector of statements
+    assert(target.has_parent());
+
+    return target.parent().apply<ast::node>([this, &target](auto& n) {
+      return remove_line_from_parent<0>(n, target);
+    });
+  }
+
+  template <size_t index, typename node_type, typename... subnode_type>
+  ast::node remove_line_from_parent(
+      ast::base::impl<node_type, subnode_type...>& parent, ast::base& target) {
+    if constexpr (index < sizeof...(subnode_type)) {
+      if (auto result{try_remove_line_from_subnode(
+              parent.template get_subnode<index>(), target)}) {
+        return *std::move(result);
+      } else {
+        return remove_line_from_parent<index + 1>(parent, target);
+      }
+    } else {
+      assert(false);
+      return ast::make<ast::program>(std::vector<ast::node>{});
+    }
+  }
+
+  std::optional<ast::node> try_remove_line_from_subnode(
+      ast::subnode::concrete_view<ast::base>, ast::base&) {
+    return std::nullopt;
+  }
+
+  std::optional<ast::node> try_remove_line_from_subnode(
+      ast::subnode::vector_view<ast::base> view, ast::base& target) {
+    for (size_t i{0}; i < view.size(); i++) {
+      if (view[i].get() == &target) {
+        return view.pop(i);
+      }
+    }
+    return std::nullopt;
   }
 
   void update_source_column_after_node(ast::base& node,

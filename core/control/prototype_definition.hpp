@@ -6,7 +6,7 @@
 #include <utility>
 
 #include "node.hpp"
-#include "source_modifications.hpp"
+#include "source_update.hpp"
 
 namespace marlin::control {
 
