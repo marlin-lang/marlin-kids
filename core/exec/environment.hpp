@@ -18,9 +18,6 @@ struct environment {
     _ctx.eval_script(standard_lib, "std.js");
     assert(_ctx.ok());
     _ctx.clear_exception();
-
-    register_print_callback([](auto) {});
-    register_termination_flag([]() { return false; });
   }
 
   template <typename callback_type>

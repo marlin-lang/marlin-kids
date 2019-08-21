@@ -44,7 +44,10 @@ struct generator {
 
   static jsast::ast::node check_termination() {
     return jsast::ast::expression_statement{jsast::ast::call_expression{
-        jsast::ast::identifier{"check_termination"}, {}}};
+        jsast::ast::member_expression{
+            jsast::ast::identifier{"global_clock"},
+            jsast::ast::member_identifier{"check_termination"}},
+        {}}};
   }
 
   template <typename vector_type>

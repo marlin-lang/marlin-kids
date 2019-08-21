@@ -15,25 +15,32 @@ class ExternalInterrupt extends Error {
     }
 }
 
-var global_time = Date.now() + 100;
-function check_termination() {
-    var time = Date.now();
-    if (time > global_time) {
-        if (__interrupt__()) {
-            throw new ExternalInterrupt();
-        } else {
-            global_time = time + 100;
+function __interrupt__() { return false; }
+
+let interrupt_step = 100;
+class GlobalClock {
+    constructor() {
+        this.previous_time = Date.now() + interrupt_step;
+    }
+    check_termination() {
+        let time = Date.now();
+        if (time > this.previous_time) {
+            if (__interrupt__()) {
+                throw new ExternalInterrupt();
+            } else {
+                this.previous_time = time + interrupt_step;
+            }
         }
     }
 }
-
-function __interrupt__() {
-    return new ExternalInterrupt();
-}
+let global_clock = new GlobalClock();
 
 function is_external_interrupt(exc) {
     return exc instanceof ExternalInterrupt;
 }
+
+// Arbitrary number of arguments
+function print() {}
 
 function* range(first, second = undefined, third = undefined) {
     var begin = 0, end, step = 1;
