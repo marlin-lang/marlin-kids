@@ -34,9 +34,9 @@ NS_ASSUME_NONNULL_BEGIN
               withSource:(std::string_view)source
               highlights:(std::vector<marlin::control::highlight_token>)highlights;
 
-- (void)updateInRange:(NSRange)range
-           withSource:(std::string_view)source
-           highlights:(std::vector<marlin::control::highlight_token>)highlights;
+- (void)updateInSourceRange:(marlin::source_range)sourceRange
+                 withSource:(std::string_view)source
+                 highlights:(std::vector<marlin::control::highlight_token>)highlights;
 
 - (marlin::source_loc)sourceLocationOfPoint:(NSPoint)point;
 

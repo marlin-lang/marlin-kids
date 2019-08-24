@@ -87,6 +87,22 @@
   [self setFrameSize:NSMakeSize(width, height)];
 }
 
+- (void)updateInSourceRange:(marlin::source_range)sourceRange
+                 withSource:(std::string_view)source
+                 highlights:(std::vector<marlin::control::highlight_token>)highlights {
+  NSAssert(sourceRange.begin.line == sourceRange.end.line, @"Only support one line expression");
+  NSAssert(sourceRange.begin.line > 0 && sourceRange.begin.line <= _strings.count, @"");
+  NSMutableAttributedString* str = [_strings objectAtIndex:sourceRange.begin.line - 1];
+  auto range =
+      NSMakeRange(sourceRange.begin.column - 1, sourceRange.end.column - sourceRange.begin.column);
+  [str replaceCharactersInRange:range withString:[NSString stringWithStringView:source]];
+  [[SourceTheme new] applyTo:str range:range withHighlights:highlights];
+  auto width = str.size.width + _insets.left + _insets.right;
+  if (width > self.frame.size.width) {
+    [self setFrameSize:NSMakeSize(width, self.frame.size.height)];
+  }
+}
+
 - (marlin::source_loc)sourceLocationOfPoint:(NSPoint)point {
   if (_strings.count > 0) {
     auto oneCharSize = [@"a" sizeWithAttributes:[SourceTheme new].allAttrs];
@@ -125,6 +141,7 @@
 
 - (void)drawBackgroundInRect:(NSRect)rect {
   [self drawStatementInsertionPointInRect:rect];
+  [self drawSelection];
 }
 
 - (void)drawStatementInsertionPointInRect:(NSRect)rect {
@@ -142,6 +159,36 @@
       [line stroke];
       [NSGraphicsContext restoreGraphicsState];
     }
+  }
+}
+
+- (void)drawSelection {
+  if (_selectionRange.end > _selectionRange.begin) {
+    auto selectionRect = [self rectOfSourceRange:_selectionRange];
+    [NSGraphicsContext saveGraphicsState];
+    NSBezierPath* path = [NSBezierPath bezierPathWithRoundedRect:selectionRect
+                                                         xRadius:5.0f
+                                                         yRadius:5.0f];
+    NSColor* fillColor = [NSColor colorWithCalibratedRed:237.0 / 255.0
+                                                   green:243.0 / 255.0
+                                                    blue:252.0 / 255.0
+                                                   alpha:1];
+    NSColor* strokeColor = [NSColor colorWithCalibratedRed:163.0 / 255.0
+                                                     green:188.0 / 255.0
+                                                      blue:234.0 / 255.0
+                                                     alpha:1];
+    [path addClip];
+    [fillColor setFill];
+    [strokeColor setStroke];
+    NSRectFillUsingOperation(selectionRect, NSCompositingOperationSourceOver);
+    NSAffineTransform* transform = [NSAffineTransform transform];
+    [transform translateXBy:0.5 yBy:0.5];
+    [path transformUsingAffineTransform:transform];
+    [path stroke];
+    [transform translateXBy:-1.5 yBy:-1.5];
+    [path transformUsingAffineTransform:transform];
+    [path stroke];
+    [NSGraphicsContext restoreGraphicsState];
   }
 }
 
@@ -179,64 +226,17 @@
   }*/
 }
 
-- (void)mouseMoved:(NSEvent*)event {
-  [super mouseMoved:event];
-
-  [NSCursor.arrowCursor set];
+- (NSRect)rectOfSourceRange:(marlin::source_range)range {
+  NSAssert(range.end.line == range.begin.line, @"");
+  NSSize oneCharSize = [@"a" sizeWithAttributes:[SourceTheme new].allAttrs];
+  auto x = (range.begin.column - 1) * oneCharSize.width + _insets.left - oneCharSize.width * 0.25;
+  auto y = (range.begin.line - 1) * oneCharSize.height + _insets.top;
+  auto width =
+      (range.end.column - range.begin.column) * oneCharSize.width + oneCharSize.width * 0.5;
+  return NSMakeRect(x, y, width, oneCharSize.height);
 }
 
-- (NSRange)selectionRangeForProposedRange:(NSRange)proposedCharRange
-                              granularity:(NSSelectionGranularity)granularity {
-  return NSMakeRange(0, 0);
-}
-
-/*- (void)drawViewBackgroundInRect:(NSRect)rect {
-  [super drawViewBackgroundInRect:rect];
-  if (_selectionRange.length > 0) {
-    auto selectionRect = [self rectOfRange:_selectionRange];
-    [NSGraphicsContext saveGraphicsState];
-    NSBezierPath* path = [NSBezierPath bezierPathWithRoundedRect:selectionRect
-                                                         xRadius:5.0f
-                                                         yRadius:5.0f];
-    NSColor* fillColor = [NSColor colorWithCalibratedRed:237.0 / 255.0
-                                                   green:243.0 / 255.0
-                                                    blue:252.0 / 255.0
-                                                   alpha:1];
-    NSColor* strokeColor = [NSColor colorWithCalibratedRed:163.0 / 255.0
-                                                     green:188.0 / 255.0
-                                                      blue:234.0 / 255.0
-                                                     alpha:1];
-    [path addClip];
-    [fillColor setFill];
-    [strokeColor setStroke];
-    NSRectFillUsingOperation(selectionRect, NSCompositingOperationSourceOver);
-    NSAffineTransform* transform = [NSAffineTransform transform];
-    [transform translateXBy:0.5 yBy:0.5];
-    [path transformUsingAffineTransform:transform];
-    [path stroke];
-    [transform translateXBy:-1.5 yBy:-1.5];
-    [path transformUsingAffineTransform:transform];
-    [path stroke];
-    [NSGraphicsContext restoreGraphicsState];
-  }
-  [self drawStatementInsertionPoint];
-  [self drawErrorMessage];
-}
-
-- (NSRect)rectOfRange:(NSRange)range {
-  auto* theme = [SourceTheme new];
-  NSSize oneCharSize = [@"a" sizeWithAttributes:theme.allAttrs];
-  NSRange glyphRange = [self.layoutManager glyphRangeForCharacterRange:range
-                                                  actualCharacterRange:NULL];
-  NSRect rect = [self.layoutManager boundingRectForGlyphRange:glyphRange
-                                              inTextContainer:self.textContainer];
-  rect.origin.x += self.textContainerOrigin.x;
-  rect.origin.y += self.textContainerOrigin.y;
-  return NSMakeRect(rect.origin.x - oneCharSize.width * 0.25, rect.origin.y + 1,
-                    rect.size.width + oneCharSize.width * 0.5, rect.size.height);
-}
-
-- (marlin::source_loc)sourceLocOfIndex:(NSUInteger)index {
+/*- (marlin::source_loc)sourceLocOfIndex:(NSUInteger)index {
   NSUInteger currentLineIndex = 0;
   NSUInteger previousLineIndex = 0;
   NSUInteger numberOfLines = 0;
@@ -272,19 +272,6 @@
   auto end = [self indexOfSourceLoc:sourceRange.end];
   return NSMakeRange(begin, end - begin);
 }*/
-
-- (void)updateInRange:(NSRange)range
-           withSource:(std::string_view)source
-           highlights:(std::vector<marlin::control::highlight_token>)highlights {
-  /*[self.textStorage beginEditing];
-  NSString* newString = [NSString stringWithStringView:source];
-  [self.textStorage replaceCharactersInRange:range withString:newString];
-  [[SourceTheme new] applyTo:self.textStorage
-                       range:NSMakeRange(range.location, newString.length)
-              withHighlights:highlights];
-  [self.textStorage endEditing];
-  [self didChangeText];*/
-}
 
 - (NSUInteger)addErrorAtSourceRange:(marlin::source_range)range {
   /*auto charRange = [self rangeOfSourceRange:range];
@@ -404,9 +391,9 @@
       auto* data = [sender.draggingPasteboard
           dataForType:pasteboardOfType(marlin::control::pasteboard_t::expression)];
       if (auto update = _expressionInserter->insert(data.dataView)) {
-        //[self updateInRange:_selectionRange
-        //       withSource:std::move(update->source)
-        //     highlights:std::move(update->highlights)];
+        [self updateInSourceRange:_selectionRange
+                       withSource:update->source
+                       highlights:update->highlights];
         return YES;
       }
     }
@@ -416,11 +403,13 @@
 
 - (void)draggingEnded:(id<NSDraggingInfo>)sender {
   _insertLineNumber = 0;
+  _selectionRange = {};
   [self setNeedsDisplayInRect:self.bounds];
 }
 
 - (void)draggingExited:(id<NSDraggingInfo>)sender {
   _insertLineNumber = 0;
+  _selectionRange = {};
   [self setNeedsDisplayInRect:self.bounds];
 }
 
