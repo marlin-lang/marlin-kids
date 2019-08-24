@@ -23,14 +23,16 @@
 @end
 
 @implementation SourceViewController {
-    std::optional<marlin::control::exec_environment> _exec_env;
+  std::optional<marlin::control::exec_environment> _exec_env;
 }
 
 - (void)setDocument:(Document *)document {
   _document = document;
 
   if (auto initialData = [self.document initialize]) {
-      [self.sourceTextView insertBeforeLine:1 withSource:std::move(initialData->source) highlights:std::move(initialData->highlights)];
+    [self.sourceTextView insertBeforeLine:1
+                               withSource:std::move(initialData->source)
+                               highlights:std::move(initialData->highlights)];
   }
 }
 
@@ -38,9 +40,8 @@
   [super viewDidLoad];
 
   self.sourceTextView.dataSource = self;
-  //self.sourceTextView.delegate = self;
 
-    self.sourceTextView.enclosingScrollView.rulersVisible = YES;
+  self.sourceTextView.enclosingScrollView.rulersVisible = YES;
   self.sourceTextView.enclosingScrollView.hasHorizontalRuler = NO;
   self.sourceTextView.enclosingScrollView.hasVerticalRuler = YES;
   self.lineNumberView = [[LineNumberView alloc] initWithTextView:self.sourceTextView];
@@ -64,12 +65,10 @@
     _exec_env = self.document.content.generate_exec_environment();
   } catch (marlin::exec::collected_generation_error &e) {
     for (auto &err : e.errors()) {
-      const auto index = [self.sourceTextView addErrorAtSourceRange:err.node().source_code_range];
+      [self.sourceTextView addErrorInSourceRange:err.node().source_code_range];
       [self.lineNumberView addError:[NSString stringWithCString:err.what()
                                                        encoding:NSUTF8StringEncoding]
-                            atIndex:index];
-      //[self.sourceTextView setNeedsDisplayInRect:self.sourceTextView.bounds
-      //                     avoidAdditionalLayout:YES];
+                             atLine:err.node().source_code_range.begin.line];
     }
   }
 

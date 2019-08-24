@@ -8,7 +8,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 - (instancetype)initWithTextView:(SourceTextView*)textView;
 
-- (void)addError:(NSString*)message atIndex:(NSUInteger)index;
+- (void)addError:(NSString*)message atLine:(NSUInteger)line;
 
 - (void)clearErrors;
 

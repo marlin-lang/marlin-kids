@@ -44,7 +44,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 - (CGFloat)lineTopOfNumber:(NSUInteger)number;
 
-- (NSUInteger)addErrorAtSourceRange:(marlin::source_range)range;
+- (void)addErrorInSourceRange:(marlin::source_range)range;
 
 - (void)clearErrors;
 

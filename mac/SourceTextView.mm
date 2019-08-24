@@ -18,7 +18,6 @@
   NSEdgeInsets _insets;
   NSMutableArray* _strings;
 
-  bool _potentialDrag;
   std::optional<marlin::control::statement_inserter> _statementInserter;
   std::optional<marlin::control::expression_inserter> _expressionInserter;
   std::optional<marlin::control::source_selection> _selection;
@@ -26,8 +25,7 @@
 
   NSUInteger _insertLineNumber;
   marlin::source_range _selectionRange;
-
-  std::vector<NSRange> _errors;
+  std::vector<marlin::source_range> _errors;
 }
 
 - (instancetype)initWithCoder:(NSCoder*)coder {
@@ -36,8 +34,6 @@
     _strings = [NSMutableArray new];
     _insets = NSEdgeInsetsMake(5, 5, 5, 5);
     _insertLineNumber = 0;
-
-    _potentialDrag = false;
 
     [self setupDragDrop];
   }
@@ -141,6 +137,7 @@
 - (void)drawBackgroundInRect:(NSRect)rect {
   [self drawSelection];
   [self drawStatementInsertionPointInRect:rect];
+  [self drawErrorMessage];
 }
 
 - (void)drawStatementInsertionPointInRect:(NSRect)rect {
@@ -247,21 +244,19 @@
   _selectionRange = {};
 }
 
-- (NSUInteger)addErrorAtSourceRange:(marlin::source_range)range {
-  /*auto charRange = [self rangeOfSourceRange:range];
-  _errors.push_back(charRange);
-  return charRange.location;*/
-  return 0;
+- (void)addErrorInSourceRange:(marlin::source_range)range {
+  _errors.push_back(range);
+  [self setNeedsDisplayInRect:self.bounds];
 }
 
 - (void)clearErrors {
-  // _errors.clear();
-  // [self setNeedsDisplayInRect:self.bounds avoidAdditionalLayout:YES];
+  _errors.clear();
+  [self setNeedsDisplayInRect:self.bounds];
 }
 
-/*- (void)drawErrorMessage {
+- (void)drawErrorMessage {
   for (auto errorRange : _errors) {
-    auto rect = [self rectOfRange:errorRange];
+    auto rect = [self rectOfSourceRange:errorRange];
     [NSGraphicsContext saveGraphicsState];
     NSBezierPath* line = [NSBezierPath bezierPath];
     [line moveToPoint:NSMakePoint(rect.origin.x, rect.origin.y + rect.size.height)];
@@ -274,7 +269,7 @@
     [line stroke];
     [NSGraphicsContext restoreGraphicsState];
   }
-}*/
+}
 
 #pragma mark - EditorViewControllerDelegate implementation
 

@@ -6,6 +6,8 @@
 @implementation LineNumberView {
   NSPopover* _popover;
   NSMutableDictionary* _errors;
+
+  CGFloat _inset;
 }
 
 - (instancetype)initWithTextView:(SourceTextView*)textView {
@@ -13,18 +15,19 @@
     self.clientView = textView;
     self.ruleThickness = 45;
     _errors = [NSMutableDictionary new];
+    _inset = 5;
   }
   return self;
 }
 
-- (void)addError:(NSString*)message atIndex:(NSUInteger)index {
-  /*auto* number = [NSNumber numberWithInteger:[self lineNumberContainsCharacterAtIndex:index]];
+- (void)addError:(NSString*)message atLine:(NSUInteger)line {
+  auto* number = [NSNumber numberWithInteger:line];
   if (NSMutableString* string = [_errors objectForKey:number]) {
     [string appendString:@"\n"];
     [string appendString:message];
   } else {
     [_errors setObject:[message mutableCopy] forKey:number];
-  }*/
+  }
 }
 
 - (void)clearErrors {
@@ -35,7 +38,7 @@
 - (void)mouseDown:(NSEvent*)event {
   [super mouseDown:event];
 
-  /*auto location = [self convertPoint:event.locationInWindow fromView:nil];
+  auto location = [self convertPoint:event.locationInWindow fromView:nil];
   auto lineNumber = [self lineNumberOfLocation:location];
   if (NSString* message = [_errors objectForKey:[NSNumber numberWithInteger:lineNumber]]) {
     auto* storyboard = [NSStoryboard storyboardWithName:@"Main" bundle:nil];
@@ -44,15 +47,14 @@
     _popover = [NSPopover new];
     _popover.behavior = NSPopoverBehaviorTransient;
     _popover.contentViewController = vc;
-    auto* textView = (NSTextView*)self.clientView;
+    auto* textView = (SourceTextView*)self.clientView;
     auto offset = [self convertPoint:NSZeroPoint fromView:textView];
-    auto height = self.lineHeight;
-    auto y = textView.textContainerInset.height + (lineNumber - 1) * height + offset.y;
-    auto size = self.lineHeight - 10;
-    auto errorRect = NSMakeRect(5, y + 5, size, size);
+    auto y = [textView lineTopOfNumber:lineNumber] + offset.y;
+    auto size = textView.lineHeight - _inset * 2;
+    auto errorRect = NSMakeRect(_inset, y + _inset, size, size);
     [_popover showRelativeToRect:errorRect ofView:self preferredEdge:NSMinYEdge];
     vc.messageTextField.stringValue = message;
-  }*/
+  }
 }
 
 - (void)drawHashMarksAndLabelsInRect:(NSRect)rect {
@@ -65,17 +67,18 @@
   auto [endLine, endColumn] = [textView sourceLocationOfPoint:endPoint];
   auto offset = [self convertPoint:NSZeroPoint fromView:textView];
   auto height = textView.lineHeight;
-  auto errorSize = height - 10;
+  auto errorSize = height - _inset * 2;
   auto y = [textView lineTopOfNumber:startLine] + offset.y;
   for (auto line = startLine; line <= endLine; ++line) {
-    auto errorRect = NSMakeRect(5, y + 5, errorSize, errorSize);
+    auto errorRect = NSMakeRect(_inset, y + _inset, errorSize, errorSize);
     [self drawErrorIndicatorOfLine:line atRect:errorRect];
 
     auto* string = [NSString stringWithFormat:@"%lu", line];
     auto* attrString =
         [[NSAttributedString alloc] initWithString:string
                                         attributes:[SourceTheme new].lineNumberAttrs];
-    [attrString drawAtPoint:NSMakePoint(self.ruleThickness - 5 - attrString.size.width, y + 5)];
+    [attrString
+        drawAtPoint:NSMakePoint(self.ruleThickness - _inset - attrString.size.width, y + _inset)];
     y += height;
   }
 }
@@ -90,11 +93,11 @@
   }
 }
 
-/*- (NSUInteger)lineNumberContainsCharacterAtIndex:(NSUInteger)index {
-  auto* textView = (NSTextView*)self.clientView;
-  auto* layoutManager = textView.layoutManager;
-  auto lineRect = [layoutManager lineFragmentRectForGlyphAtIndex:index effectiveRange:nil];
-  return (lineRect.origin.y - textView.textContainerInset.height) / lineRect.size.height + 1;
-}*/
+- (NSUInteger)lineNumberOfLocation:(NSPoint)loc {
+  auto* textView = (SourceTextView*)self.clientView;
+  auto textViewLocation = [self convertPoint:loc toView:textView];
+  auto [line, column] = [textView sourceLocationOfPoint:textViewLocation];
+  return line;
+}
 
 @end
