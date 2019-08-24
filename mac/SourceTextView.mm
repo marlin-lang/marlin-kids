@@ -83,21 +83,42 @@
     ++lineIndex;
   }
   auto width = fmax(maxLineWidth + _insets.left + _insets.right, self.bounds.size.width);
-  auto oneCharSize = [@"a" sizeWithAttributes:[SourceTheme new].allAttrs];
-  auto height = oneCharSize.height * _strings.count + _insets.top + _insets.bottom;
+  auto height = self.lineHeight * _strings.count + _insets.top + _insets.bottom;
   [self setFrameSize:NSMakeSize(width, height)];
+}
+
+- (marlin::source_loc)sourceLocationOfPoint:(NSPoint)point {
+  if (_strings.count > 0) {
+    auto oneCharSize = [@"a" sizeWithAttributes:[SourceTheme new].allAttrs];
+    size_t line = fmin(_strings.count - 1, fmax(0, point.y - _insets.top) / oneCharSize.height) + 1;
+    NSAttributedString* string = [_strings objectAtIndex:line - 1];
+    size_t column =
+        fmin(string.string.length - 1, fmax(0, point.x - _insets.left) / oneCharSize.width) + 1;
+    return {line, column};
+  } else {
+    return {0, 0};
+  }
+}
+
+- (CGFloat)lineHeight {
+  auto oneCharSize = [@"a" sizeWithAttributes:[SourceTheme new].allAttrs];
+  return oneCharSize.height;
+}
+
+- (CGFloat)lineTopOfNumber:(NSUInteger)number {
+  return (number - 1) * self.lineHeight + _insets.top;
 }
 
 - (void)drawRect:(NSRect)dirtyRect {
   [self drawBackgroundInRect:dirtyRect];
-  auto oneCharSize = [@"a" sizeWithAttributes:[SourceTheme new].allAttrs];
-  NSUInteger beginLine = fmax(0, dirtyRect.origin.y - _insets.top) / oneCharSize.height;
-  NSUInteger endLine = fmin(
-      fmax(0, dirtyRect.origin.y + dirtyRect.size.height - 1 - _insets.top) / oneCharSize.height,
-      _strings.count - 1);
-  for (auto line = beginLine; line <= endLine; ++line) {
-    auto y = line * oneCharSize.height + _insets.top;
-    NSAttributedString* string = [_strings objectAtIndex:line];
+  auto lineHeight = self.lineHeight;
+  NSUInteger beginIndex = fmax(0, dirtyRect.origin.y - _insets.top) / lineHeight;
+  NSUInteger endIndex =
+      fmin(fmax(0, dirtyRect.origin.y + dirtyRect.size.height - 1 - _insets.top) / lineHeight,
+           _strings.count - 1);
+  for (auto index = beginIndex; index <= endIndex; ++index) {
+    auto y = index * lineHeight + _insets.top;
+    NSAttributedString* string = [_strings objectAtIndex:index];
     [string drawAtPoint:NSMakePoint(_insets.left, y)];
   }
 }
@@ -162,19 +183,6 @@
   [super mouseMoved:event];
 
   [NSCursor.arrowCursor set];
-}
-
-- (marlin::source_loc)lineNumberOfLocation:(NSPoint)loc {
-  if (_strings.count > 0) {
-    auto oneCharSize = [@"a" sizeWithAttributes:[SourceTheme new].allAttrs];
-    size_t line = fmin(_strings.count - 1, fmax(0, loc.y - _insets.top) / oneCharSize.height) + 1;
-    NSAttributedString* string = [_strings objectAtIndex:line - 1];
-    size_t column =
-        fmin(string.string.length - 1, fmax(0, loc.x - _insets.left) / oneCharSize.width) + 1;
-    return {line, column};
-  } else {
-    return {0, 0};
-  }
 }
 
 - (NSRange)selectionRangeForProposedRange:(NSRange)proposedCharRange
@@ -344,7 +352,7 @@
 
 - (NSDragOperation)draggingUpdated:(id<NSDraggingInfo>)sender {
   auto location = [self convertPoint:sender.draggingLocation fromView:nil];
-  auto source_loc = [self lineNumberOfLocation:location];
+  auto source_loc = [self sourceLocationOfPoint:location];
 
   auto* type = [sender.draggingPasteboard availableTypeFromArray:self.acceptableDragTypes];
   if ([type isEqualToString:pasteboardOfType(marlin::control::pasteboard_t::statement)]) {

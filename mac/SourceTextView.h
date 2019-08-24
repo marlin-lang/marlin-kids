@@ -9,6 +9,8 @@
 
 #import "EditorViewController.h"
 
+NS_ASSUME_NONNULL_BEGIN
+
 @class SourceTextView;
 
 @protocol SourceTextViewDataSource
@@ -22,9 +24,11 @@
 
 @end
 
-@interface SourceTextView : NSView <EditorViewControllerDelegate>
+@interface SourceTextView : NSView<EditorViewControllerDelegate>
 
 @property(weak) id<SourceTextViewDataSource> dataSource;
+
+@property(readonly) CGFloat lineHeight;
 
 - (void)insertBeforeLine:(NSUInteger)line
               withSource:(std::string_view)source
@@ -34,8 +38,16 @@
            withSource:(std::string_view)source
            highlights:(std::vector<marlin::control::highlight_token>)highlights;
 
+- (marlin::source_loc)sourceLocationOfPoint:(NSPoint)point;
+
+- (CGFloat)lineHeight;
+
+- (CGFloat)lineTopOfNumber:(NSUInteger)number;
+
 - (NSUInteger)addErrorAtSourceRange:(marlin::source_range)range;
 
 - (void)clearErrors;
 
 @end
+
+NS_ASSUME_NONNULL_END

@@ -40,11 +40,11 @@
   self.sourceTextView.dataSource = self;
   //self.sourceTextView.delegate = self;
 
-  //self.sourceTextView.rulerVisible = YES;
+    self.sourceTextView.enclosingScrollView.rulersVisible = YES;
   self.sourceTextView.enclosingScrollView.hasHorizontalRuler = NO;
   self.sourceTextView.enclosingScrollView.hasVerticalRuler = YES;
-  //self.lineNumberView = [[LineNumberView alloc] initWithTextView:self.sourceTextView];
-  //self.sourceTextView.enclosingScrollView.verticalRulerView = self.lineNumberView;
+  self.lineNumberView = [[LineNumberView alloc] initWithTextView:self.sourceTextView];
+  self.sourceTextView.enclosingScrollView.verticalRulerView = self.lineNumberView;
 }
 
 - (void)prepareForSegue:(NSStoryboardSegue *)segue sender:(id)sender {
