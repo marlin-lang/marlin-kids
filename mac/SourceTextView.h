@@ -22,9 +22,13 @@
 
 @end
 
-@interface SourceTextView : NSTextView <EditorViewControllerDelegate, NSViewToolTipOwner>
+@interface SourceTextView : NSView <EditorViewControllerDelegate>
 
 @property(weak) id<SourceTextViewDataSource> dataSource;
+
+- (void)insertBeforeLine:(NSUInteger)line
+              withSource:(std::string_view)source
+              highlights:(std::vector<marlin::control::highlight_token>)highlights;
 
 - (void)updateInRange:(NSRange)range
            withSource:(std::string_view)source

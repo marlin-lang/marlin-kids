@@ -17,7 +17,7 @@
 @property(readonly) NSDictionary* stringAttrs;
 @property(readonly) NSDictionary* placeholderAttrs;
 
-- (void)applyTo:(NSTextStorage*)textStorage
+- (void)applyTo:(NSMutableAttributedString*)attributedString
              range:(NSRange)range
     withHighlights:(const std::vector<marlin::control::highlight_token>&)highlights;
 

@@ -1,7 +1,6 @@
 #import "SourceTextView.h"
 
 #import <optional>
-#import <utility>
 #import <vector>
 
 #import "prototype_definition.hpp"
@@ -21,35 +20,112 @@
 @end
 
 @implementation SourceTextView {
+  NSMutableArray* _strings;
+  NSEdgeInsets _insets;
+  NSUInteger _insertLineNumber;
+  marlin::source_range _selectionRange;
+
   bool _potentialDrag;
   std::optional<marlin::control::source_selection> _selection;
   std::optional<marlin::control::source_selection> _draggingSelection;
   std::optional<marlin::control::expression_inserter> _expressionInserter;
   std::optional<marlin::control::statement_inserter> _statementInserter;
-  NSRange _selectionRange;
-  NSInteger _statementInsertionPoint;
 
   std::vector<NSRange> _errors;
 }
 
+- (BOOL)isFlipped {
+  return YES;
+}
+
 - (instancetype)initWithCoder:(NSCoder*)coder {
   if (self = [super initWithCoder:coder]) {
-    self.enclosingScrollView.hasHorizontalScroller = YES;
-    self.horizontallyResizable = YES;
-    self.autoresizingMask = NSViewWidthSizable | NSViewHeightSizable;
-    self.maxSize = NSMakeSize(FLT_MAX, FLT_MAX);
-    self.textContainer.containerSize = NSMakeSize(FLT_MAX, FLT_MAX);
-    self.textContainer.widthTracksTextView = NO;
+    self.frame = NSZeroRect;
+    _strings = [NSMutableArray new];
+    _insets = NSEdgeInsetsMake(5, 5, 5, 5);
+    _insertLineNumber = 0;
 
     _potentialDrag = false;
-    _selectionRange = NSMakeRange(0, 0);
-    _statementInsertionPoint = -1;
+
+    [self setupDragDrop];
   }
   return self;
 }
 
+- (void)insertBeforeLine:(NSUInteger)line
+              withSource:(std::string_view)source
+              highlights:(std::vector<marlin::control::highlight_token>)highlights {
+  auto lineIndex = line - 1;
+  if (lineIndex > _strings.count) {
+    lineIndex = _strings.count;
+  }
+  auto lineBegin = 0;
+  CGFloat maxLineWidth = 0;
+  auto highlightIndex = 0;
+  while (lineBegin < source.size()) {
+    auto lineEnd = source.find_first_of('\n', lineBegin);
+    auto str_view = std::string_view{&source[lineBegin], lineEnd - lineBegin};
+    auto* str =
+        [[NSMutableAttributedString alloc] initWithString:[NSString stringWithStringView:str_view]];
+    std::vector<marlin::control::highlight_token> lineHighlights;
+    while (highlightIndex < highlights.size() && highlights[highlightIndex].offset < lineEnd) {
+      auto highlight = highlights[highlightIndex];
+      highlight.offset -= lineBegin;
+      lineHighlights.push_back(highlight);
+      ++highlightIndex;
+    }
+    [[SourceTheme new] applyTo:str
+                         range:NSMakeRange(0, str.string.length)
+                withHighlights:lineHighlights];
+    maxLineWidth = fmax(maxLineWidth, str.size.width);
+    [_strings insertObject:str atIndex:lineIndex];
+    lineBegin = lineEnd + 1;
+    ++lineIndex;
+  }
+  auto width = fmax(maxLineWidth + _insets.left + _insets.right, self.bounds.size.width);
+  auto oneCharSize = [@"a" sizeWithAttributes:[SourceTheme new].allAttrs];
+  auto height = oneCharSize.height * _strings.count + _insets.top + _insets.bottom;
+  [self setFrameSize:NSMakeSize(width, height)];
+}
+
+- (void)drawRect:(NSRect)dirtyRect {
+  [self drawBackgroundInRect:dirtyRect];
+  auto oneCharSize = [@"a" sizeWithAttributes:[SourceTheme new].allAttrs];
+  NSUInteger beginLine = fmax(0, dirtyRect.origin.y - _insets.top) / oneCharSize.height;
+  NSUInteger endLine = fmin(
+      fmax(0, dirtyRect.origin.y + dirtyRect.size.height - 1 - _insets.top) / oneCharSize.height,
+      _strings.count - 1);
+  for (auto line = beginLine; line <= endLine; ++line) {
+    auto y = line * oneCharSize.height + _insets.top;
+    NSAttributedString* string = [_strings objectAtIndex:line];
+    [string drawAtPoint:NSMakePoint(_insets.left, y)];
+  }
+}
+
+- (void)drawBackgroundInRect:(NSRect)rect {
+  [self drawStatementInsertionPointInRect:rect];
+}
+
+- (void)drawStatementInsertionPointInRect:(NSRect)rect {
+  if (_insertLineNumber > 0 && _statementInserter.has_value() && _statementInserter->can_insert()) {
+    auto oneCharSize = [@"a" sizeWithAttributes:[SourceTheme new].allAttrs];
+    auto x = oneCharSize.width * (_statementInserter->get_location().column - 1);
+    auto y = oneCharSize.height * (_insertLineNumber - 1) + _insets.top;
+    if (NSPointInRect(NSMakePoint(x, y), rect)) {
+      [NSGraphicsContext saveGraphicsState];
+      NSBezierPath* line = [NSBezierPath bezierPath];
+      [line moveToPoint:NSMakePoint(x, y)];
+      [line lineToPoint:NSMakePoint(x + 200, y)];
+      [line setLineWidth:5.0];
+      [[NSColor blueColor] set];
+      [line stroke];
+      [NSGraphicsContext restoreGraphicsState];
+    }
+  }
+}
+
 - (void)mouseDown:(NSEvent*)event {
-  auto location = [self convertPoint:event.locationInWindow fromView:nil];
+  /*auto location = [self convertPoint:event.locationInWindow fromView:nil];
   auto index = [self characterIndexForInsertionAtPoint:location];
   auto selected = [self sourceLocOfIndex:index];
   if (_selection.has_value() && _selection->get_range().contains(selected)) {
@@ -79,7 +155,7 @@
       vc.type = type;
       vc.editorTextField.stringValue = [NSString stringWithStringView:data];
     }
-  }
+  }*/
 }
 
 - (void)mouseMoved:(NSEvent*)event {
@@ -88,8 +164,17 @@
   [NSCursor.arrowCursor set];
 }
 
-- (BOOL)shouldDrawInsertionPoint {
-  return false;
+- (marlin::source_loc)lineNumberOfLocation:(NSPoint)loc {
+  if (_strings.count > 0) {
+    auto oneCharSize = [@"a" sizeWithAttributes:[SourceTheme new].allAttrs];
+    size_t line = fmin(_strings.count - 1, fmax(0, loc.y - _insets.top) / oneCharSize.height) + 1;
+    NSAttributedString* string = [_strings objectAtIndex:line - 1];
+    size_t column =
+        fmin(string.string.length - 1, fmax(0, loc.x - _insets.left) / oneCharSize.width) + 1;
+    return {line, column};
+  } else {
+    return {0, 0};
+  }
 }
 
 - (NSRange)selectionRangeForProposedRange:(NSRange)proposedCharRange
@@ -97,34 +182,7 @@
   return NSMakeRange(0, 0);
 }
 
-- (void)drawStatementInsertionPoint {
-  if (_statementInsertionPoint >= 0 && _statementInserter.has_value() &&
-      _statementInserter->can_insert()) {
-    auto* theme = [SourceTheme new];
-    NSSize oneCharSize = [@"a" sizeWithAttributes:theme.allAttrs];
-    CGFloat x = oneCharSize.width * (_statementInserter->get_location().column - 1);
-    CGFloat y = 0;
-    if (_statementInsertionPoint < self.textStorage.string.length) {
-      auto rect = [self.layoutManager lineFragmentRectForGlyphAtIndex:_statementInsertionPoint
-                                                       effectiveRange:nil];
-      y = rect.origin.y;
-    } else {
-      auto rect = [self.layoutManager lineFragmentRectForGlyphAtIndex:_statementInsertionPoint - 1
-                                                       effectiveRange:nil];
-      y = rect.origin.y + rect.size.height;
-    }
-    [NSGraphicsContext saveGraphicsState];
-    NSBezierPath* line = [NSBezierPath bezierPath];
-    [line moveToPoint:NSMakePoint(x + self.textContainer.lineFragmentPadding, y)];
-    [line lineToPoint:NSMakePoint(x + 200, y)];
-    [line setLineWidth:5.0];
-    [[NSColor blueColor] set];
-    [line stroke];
-    [NSGraphicsContext restoreGraphicsState];
-  }
-}
-
-- (void)drawViewBackgroundInRect:(NSRect)rect {
+/*- (void)drawViewBackgroundInRect:(NSRect)rect {
   [super drawViewBackgroundInRect:rect];
   if (_selectionRange.length > 0) {
     auto selectionRect = [self rectOfRange:_selectionRange];
@@ -205,33 +263,34 @@
   auto begin = [self indexOfSourceLoc:sourceRange.begin];
   auto end = [self indexOfSourceLoc:sourceRange.end];
   return NSMakeRange(begin, end - begin);
-}
+}*/
 
 - (void)updateInRange:(NSRange)range
            withSource:(std::string_view)source
            highlights:(std::vector<marlin::control::highlight_token>)highlights {
-  [self.textStorage beginEditing];
+  /*[self.textStorage beginEditing];
   NSString* newString = [NSString stringWithStringView:source];
   [self.textStorage replaceCharactersInRange:range withString:newString];
   [[SourceTheme new] applyTo:self.textStorage
                        range:NSMakeRange(range.location, newString.length)
               withHighlights:highlights];
   [self.textStorage endEditing];
-  [self didChangeText];
+  [self didChangeText];*/
 }
 
 - (NSUInteger)addErrorAtSourceRange:(marlin::source_range)range {
-  auto charRange = [self rangeOfSourceRange:range];
+  /*auto charRange = [self rangeOfSourceRange:range];
   _errors.push_back(charRange);
-  return charRange.location;
+  return charRange.location;*/
+  return 0;
 }
 
 - (void)clearErrors {
-  _errors.clear();
-  [self setNeedsDisplayInRect:self.bounds avoidAdditionalLayout:YES];
+  // _errors.clear();
+  // [self setNeedsDisplayInRect:self.bounds avoidAdditionalLayout:YES];
 }
 
-- (void)drawErrorMessage {
+/*- (void)drawErrorMessage {
   for (auto errorRange : _errors) {
     auto rect = [self rectOfRange:errorRange];
     [NSGraphicsContext saveGraphicsState];
@@ -246,14 +305,14 @@
     [line stroke];
     [NSGraphicsContext restoreGraphicsState];
   }
-}
+}*/
 
 #pragma mark - EditorViewControllerDelegate implementation
 
 - (void)viewController:(EditorViewController*)vc
     finishEditWithString:(NSString*)string
                   ofType:(EditorType)type {
-  [self.popover close];
+  /*[self.popover close];
   if (string.length > 0 && _selection.has_value()) {
     auto inserter = (*std::move(_selection)).as_expression_inserter();
     _selection = std::nullopt;
@@ -267,12 +326,10 @@
   } else {
     _selection = std::nullopt;
     _selectionRange = NSMakeRange(0, 0);
-  }
+  }*/
 }
 
-@end
-
-@implementation SourceTextView (DragAndDrop)
+#pragma mark - Drag and Drop
 
 - (NSArray<NSPasteboardType>*)acceptableDragTypes {
   return @[
@@ -281,19 +338,87 @@
   ];
 }
 
-- (NSArray<NSPasteboardType>*)readablePasteboardTypes {
-  return @[
-    pasteboardOfType(marlin::control::pasteboard_t::statement),
-    pasteboardOfType(marlin::control::pasteboard_t::expression)
-  ];
+- (void)setupDragDrop {
+  [self registerForDraggedTypes:self.acceptableDragTypes];
 }
 
-- (NSArray<NSPasteboardType>*)writablePasteboardTypes {
-  return @[
-    pasteboardOfType(marlin::control::pasteboard_t::statement),
-    pasteboardOfType(marlin::control::pasteboard_t::expression)
-  ];
+- (NSDragOperation)draggingUpdated:(id<NSDraggingInfo>)sender {
+  auto location = [self convertPoint:sender.draggingLocation fromView:nil];
+  auto source_loc = [self lineNumberOfLocation:location];
+
+  auto* type = [sender.draggingPasteboard availableTypeFromArray:self.acceptableDragTypes];
+  if ([type isEqualToString:pasteboardOfType(marlin::control::pasteboard_t::statement)]) {
+    if (!_statementInserter.has_value()) {
+      _statementInserter = [self.dataSource statementInserterForTextView:self];
+    }
+    _statementInserter->move_to_line(source_loc.line);
+    if (_statementInserter->can_insert()) {
+      _insertLineNumber = source_loc.line;
+      [self setNeedsDisplayInRect:self.bounds];
+      return NSDragOperationMove;
+    } else {
+      _insertLineNumber = 0;
+      return NSDragOperationNone;
+    }
+  } else if ([type isEqualToString:pasteboardOfType(marlin::control::pasteboard_t::expression)]) {
+    if (!_expressionInserter.has_value()) {
+      _expressionInserter = [self.dataSource expressionInserterForTextView:self];
+    }
+    _expressionInserter->move_to_loc(source_loc);
+    if (_expressionInserter->can_insert()) {
+      _selectionRange = _expressionInserter->get_range();
+      [self setNeedsDisplayInRect:self.bounds];
+      return NSDragOperationMove;
+    } else {
+      _selectionRange = {};
+      [self setNeedsDisplayInRect:self.bounds];
+      return NSDragOperationNone;
+    }
+  }
+  return NSDragOperationNone;
 }
+
+- (BOOL)performDragOperation:(id<NSDraggingInfo>)sender {
+  auto type = [sender.draggingPasteboard availableTypeFromArray:self.acceptableDragTypes];
+  if (type == pasteboardOfType(marlin::control::pasteboard_t::statement)) {
+    if (_statementInserter.has_value() && _statementInserter->can_insert()) {
+      auto* data = [sender.draggingPasteboard
+          dataForType:pasteboardOfType(marlin::control::pasteboard_t::statement)];
+      if (auto update = _statementInserter->insert(data.dataView)) {
+        [self insertBeforeLine:_insertLineNumber
+                    withSource:std::move(update->source)
+                    highlights:std::move(update->highlights)];
+        return YES;
+      }
+    }
+  } else if (type == pasteboardOfType(marlin::control::pasteboard_t::expression)) {
+    if (_expressionInserter.has_value() && _expressionInserter->can_insert()) {
+      auto* data = [sender.draggingPasteboard
+          dataForType:pasteboardOfType(marlin::control::pasteboard_t::expression)];
+      if (auto update = _expressionInserter->insert(data.dataView)) {
+        //[self updateInRange:_selectionRange
+        //       withSource:std::move(update->source)
+        //     highlights:std::move(update->highlights)];
+        return YES;
+      }
+    }
+  }
+  return NO;
+}
+
+- (void)draggingEnded:(id<NSDraggingInfo>)sender {
+  _insertLineNumber = 0;
+  [self setNeedsDisplayInRect:self.bounds];
+}
+
+- (void)draggingExited:(id<NSDraggingInfo>)sender {
+  _insertLineNumber = 0;
+  [self setNeedsDisplayInRect:self.bounds];
+}
+
+@end
+
+@implementation SourceTextView (DragAndDrop)
 
 - (BOOL)writeSelectionToPasteboard:(NSPasteboard*)pboard types:(NSArray<NSPasteboardType>*)types {
   assert(_selection.has_value());
@@ -314,7 +439,7 @@
 - (void)draggingSession:(NSDraggingSession*)session
            endedAtPoint:(NSPoint)screenPoint
               operation:(NSDragOperation)operation {
-  if (_draggingSelection.has_value() && operation == NSDragOperationMove) {
+  /*if (_draggingSelection.has_value() && operation == NSDragOperationMove) {
     if (auto update = _draggingSelection->remove_from_document()) {
       _draggingSelection = std::nullopt;
       auto range = [self rangeOfSourceRange:update->range];
@@ -322,84 +447,7 @@
                withSource:std::move(update->source)
                highlights:std::move(update->highlights)];
     }
-  }
-}
-
-- (NSDragOperation)dragOperationForDraggingInfo:(id<NSDraggingInfo>)dragInfo
-                                           type:(NSPasteboardType)type {
-  auto location = [self convertPoint:dragInfo.draggingLocation fromView:nil];
-  auto index = [self characterIndexForInsertionAtPoint:location];
-
-  if (type == pasteboardOfType(marlin::control::pasteboard_t::statement)) {
-    if (!_statementInserter.has_value()) {
-      _statementInserter = [self.dataSource statementInserterForTextView:self];
-    }
-    auto [line, column]{[self sourceLocOfIndex:index]};
-    _statementInserter->move_to_line(line);
-    if (_statementInserter->can_insert()) {
-      _statementInsertionPoint =
-          [self.textStorage.string lineRangeForRange:NSMakeRange(index, 0)].location;
-      [self setNeedsDisplayInRect:self.bounds avoidAdditionalLayout:NO];
-      return NSDragOperationMove;
-    } else {
-      _statementInsertionPoint = -1;
-      [self setNeedsDisplayInRect:self.bounds avoidAdditionalLayout:NO];
-      return NSDragOperationNone;
-    }
-  } else if (type == pasteboardOfType(marlin::control::pasteboard_t::expression)) {
-    if (!_expressionInserter.has_value()) {
-      _expressionInserter = [self.dataSource expressionInserterForTextView:self];
-    }
-    _expressionInserter->move_to_loc([self sourceLocOfIndex:index]);
-    if (_expressionInserter->can_insert()) {
-      _selectionRange = [self rangeOfSourceRange:_expressionInserter->get_range()];
-      [self setNeedsDisplayInRect:self.bounds avoidAdditionalLayout:YES];
-      return NSDragOperationMove;
-    } else {
-      _selectionRange = NSMakeRange(0, 0);
-      [self setNeedsDisplayInRect:self.bounds avoidAdditionalLayout:YES];
-      return NSDragOperationNone;
-    }
-  } else {
-    return NSDragOperationNone;
-  }
-}
-
-- (BOOL)performDragOperation:(id<NSDraggingInfo>)sender {
-  auto type = [sender.draggingPasteboard availableTypeFromArray:self.acceptableDragTypes];
-  if (type == pasteboardOfType(marlin::control::pasteboard_t::statement)) {
-    if (_statementInserter.has_value() && _statementInserter->can_insert()) {
-      auto* data = [sender.draggingPasteboard
-          dataForType:pasteboardOfType(marlin::control::pasteboard_t::statement)];
-      if (auto update = _statementInserter->insert(data.dataView)) {
-        [self updateInRange:NSMakeRange(_statementInsertionPoint, 0)
-                 withSource:std::move(update->source)
-                 highlights:std::move(update->highlights)];
-        return YES;
-      }
-    }
-  } else if (type == pasteboardOfType(marlin::control::pasteboard_t::expression)) {
-    if (_expressionInserter.has_value() && _expressionInserter->can_insert()) {
-      auto* data = [sender.draggingPasteboard
-          dataForType:pasteboardOfType(marlin::control::pasteboard_t::expression)];
-      if (auto update = _expressionInserter->insert(data.dataView)) {
-        [self updateInRange:_selectionRange
-                 withSource:std::move(update->source)
-                 highlights:std::move(update->highlights)];
-        return YES;
-      }
-    }
-  }
-  return NO;
-}
-
-- (void)cleanUpAfterDragOperation {
-  _statementInserter = std::nullopt;
-  _expressionInserter = std::nullopt;
-  _statementInsertionPoint = -1;
-  _selection = std::nullopt;
-  _selectionRange = NSMakeRange(0, 0);
-  [self setNeedsDisplayInRect:self.bounds avoidAdditionalLayout:YES];
+  }*/
 }
 
 @end

@@ -13,9 +13,7 @@
 #import "ToolBoxHeaderView.h"
 #import "ToolBoxItem.h"
 
-@interface SourceViewController () {
-  std::optional<marlin::control::exec_environment> _exec_env;
-}
+@interface SourceViewController ()
 
 @property(weak) IBOutlet NSCollectionView *toolBoxView;
 @property(weak) IBOutlet SourceTextView *sourceTextView;
@@ -24,15 +22,15 @@
 
 @end
 
-@implementation SourceViewController
+@implementation SourceViewController {
+    std::optional<marlin::control::exec_environment> _exec_env;
+}
 
 - (void)setDocument:(Document *)document {
   _document = document;
 
   if (auto initialData = [self.document initialize]) {
-    [self.sourceTextView updateInRange:NSMakeRange(0, 0)
-                            withSource:std::move(initialData->source)
-                            highlights:std::move(initialData->highlights)];
+      [self.sourceTextView insertBeforeLine:1 withSource:std::move(initialData->source) highlights:std::move(initialData->highlights)];
   }
 }
 
@@ -40,13 +38,13 @@
   [super viewDidLoad];
 
   self.sourceTextView.dataSource = self;
-  self.sourceTextView.delegate = self;
+  //self.sourceTextView.delegate = self;
 
-  self.sourceTextView.rulerVisible = YES;
+  //self.sourceTextView.rulerVisible = YES;
   self.sourceTextView.enclosingScrollView.hasHorizontalRuler = NO;
   self.sourceTextView.enclosingScrollView.hasVerticalRuler = YES;
-  self.lineNumberView = [[LineNumberView alloc] initWithTextView:self.sourceTextView];
-  self.sourceTextView.enclosingScrollView.verticalRulerView = self.lineNumberView;
+  //self.lineNumberView = [[LineNumberView alloc] initWithTextView:self.sourceTextView];
+  //self.sourceTextView.enclosingScrollView.verticalRulerView = self.lineNumberView;
 }
 
 - (void)prepareForSegue:(NSStoryboardSegue *)segue sender:(id)sender {
@@ -70,8 +68,8 @@
       [self.lineNumberView addError:[NSString stringWithCString:err.what()
                                                        encoding:NSUTF8StringEncoding]
                             atIndex:index];
-      [self.sourceTextView setNeedsDisplayInRect:self.sourceTextView.bounds
-                           avoidAdditionalLayout:YES];
+      //[self.sourceTextView setNeedsDisplayInRect:self.sourceTextView.bounds
+      //                     avoidAdditionalLayout:YES];
     }
   }
 
@@ -118,13 +116,13 @@
 - (NSSize)collectionView:(NSCollectionView *)collectionView
                     layout:(NSCollectionViewLayout *)collectionViewLayout
     sizeForItemAtIndexPath:(NSIndexPath *)indexPath {
-  return NSMakeSize(collectionView.bounds.size.width - 40, 30);
+  return NSMakeSize(collectionView.bounds.size.width - 10, 25);
 }
 
 - (NSSize)collectionView:(NSCollectionView *)collectionView
                              layout:(NSCollectionViewLayout *)collectionViewLayout
     referenceSizeForHeaderInSection:(NSInteger)section {
-  return NSMakeSize(collectionView.bounds.size.width - 40, 30);
+  return NSMakeSize(collectionView.bounds.size.width - 10, 30);
 }
 
 - (BOOL)collectionView:(NSCollectionView *)collectionView
