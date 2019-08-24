@@ -13,29 +13,21 @@
 #import "Pasteboard.h"
 #import "SourceTheme.h"
 
-@interface SourceTextView ()
-
-@property(nonatomic, strong) NSPopover* popover;
-
-@end
-
 @implementation SourceTextView {
-  NSMutableArray* _strings;
+  NSPopover* _popover;
   NSEdgeInsets _insets;
+  NSMutableArray* _strings;
+
+  bool _potentialDrag;
+  std::optional<marlin::control::statement_inserter> _statementInserter;
+  std::optional<marlin::control::expression_inserter> _expressionInserter;
+  std::optional<marlin::control::source_selection> _selection;
+  std::optional<marlin::control::source_selection> _draggingSelection;
+
   NSUInteger _insertLineNumber;
   marlin::source_range _selectionRange;
 
-  bool _potentialDrag;
-  std::optional<marlin::control::source_selection> _selection;
-  std::optional<marlin::control::source_selection> _draggingSelection;
-  std::optional<marlin::control::expression_inserter> _expressionInserter;
-  std::optional<marlin::control::statement_inserter> _statementInserter;
-
   std::vector<NSRange> _errors;
-}
-
-- (BOOL)isFlipped {
-  return YES;
 }
 
 - (instancetype)initWithCoder:(NSCoder*)coder {
@@ -50,6 +42,10 @@
     [self setupDragDrop];
   }
   return self;
+}
+
+- (BOOL)isFlipped {
+  return YES;
 }
 
 - (void)insertBeforeLine:(NSUInteger)line
@@ -85,6 +81,7 @@
   auto width = fmax(maxLineWidth + _insets.left + _insets.right, self.bounds.size.width);
   auto height = self.lineHeight * _strings.count + _insets.top + _insets.bottom;
   [self setFrameSize:NSMakeSize(width, height)];
+  [self setNeedsDisplayInRect:self.bounds];
 }
 
 - (void)updateInSourceRange:(marlin::source_range)sourceRange
@@ -96,11 +93,13 @@
   auto range =
       NSMakeRange(sourceRange.begin.column - 1, sourceRange.end.column - sourceRange.begin.column);
   [str replaceCharactersInRange:range withString:[NSString stringWithStringView:source]];
+  range.length = source.size();
   [[SourceTheme new] applyTo:str range:range withHighlights:highlights];
   auto width = str.size.width + _insets.left + _insets.right;
   if (width > self.frame.size.width) {
     [self setFrameSize:NSMakeSize(width, self.frame.size.height)];
   }
+  [self setNeedsDisplayInRect:self.bounds];
 }
 
 - (marlin::source_loc)sourceLocationOfPoint:(NSPoint)point {
@@ -140,8 +139,8 @@
 }
 
 - (void)drawBackgroundInRect:(NSRect)rect {
-  [self drawStatementInsertionPointInRect:rect];
   [self drawSelection];
+  [self drawStatementInsertionPointInRect:rect];
 }
 
 - (void)drawStatementInsertionPointInRect:(NSRect)rect {
@@ -193,85 +192,60 @@
 }
 
 - (void)mouseDown:(NSEvent*)event {
-  /*auto location = [self convertPoint:event.locationInWindow fromView:nil];
-  auto index = [self characterIndexForInsertionAtPoint:location];
-  auto selected = [self sourceLocOfIndex:index];
-  if (_selection.has_value() && _selection->get_range().contains(selected)) {
-    _draggingSelection = _selection;
-    self.selectedRange = _selectionRange;
-    [self dragSelectionWithEvent:event offset:NSMakeSize(0, 0) slideBack:true];
-  } else {
-    [super mouseDown:event];
+  [super mouseDown:event];
 
-    _selection = [self.dataSource textView:self selectionAt:selected];
-    _selectionRange = [self rangeOfSourceRange:_selection->get_range()];
-    [self setNeedsDisplayInRect:self.bounds avoidAdditionalLayout:YES];
+  auto location = [self convertPoint:event.locationInWindow fromView:nil];
+  _selection = [self.dataSource textView:self selectionAt:[self sourceLocationOfPoint:location]];
+  _selectionRange = _selection->get_range();
+  [self setNeedsDisplayInRect:self.bounds];
 
-    if (_selection->is_literal()) {
-      NSStoryboard* storyboard = [NSStoryboard storyboardWithName:@"Main" bundle:nil];
-      EditorViewController* vc =
-          [storyboard instantiateControllerWithIdentifier:@"EditorViewController"];
-      vc.delegate = self;
+  if (_selection->is_literal()) {
+    NSStoryboard* storyboard = [NSStoryboard storyboardWithName:@"Main" bundle:nil];
+    EditorViewController* vc =
+        [storyboard instantiateControllerWithIdentifier:@"EditorViewController"];
+    vc.delegate = self;
 
-      self.popover = [NSPopover new];
-      self.popover.behavior = NSPopoverBehaviorTransient;
-      self.popover.contentViewController = vc;
-      auto rect = [self rectOfRange:_selectionRange];
-      [self.popover showRelativeToRect:rect ofView:self preferredEdge:NSMinYEdge];
+    _popover = [NSPopover new];
+    _popover.behavior = NSPopoverBehaviorTransient;
+    _popover.contentViewController = vc;
+    auto rect = [self rectOfSourceRange:_selectionRange];
+    [_popover showRelativeToRect:rect ofView:self preferredEdge:NSMinYEdge];
 
-      auto [type, data] = _selection->get_literal_content();
-      vc.type = type;
-      vc.editorTextField.stringValue = [NSString stringWithStringView:data];
-    }
-  }*/
+    auto [type, data] = _selection->get_literal_content();
+    vc.type = type;
+    vc.editorTextField.stringValue = [NSString stringWithStringView:data];
+  }
 }
 
 - (NSRect)rectOfSourceRange:(marlin::source_range)range {
-  NSAssert(range.end.line == range.begin.line, @"");
+  NSAssert(range.end.line >= range.begin.line, @"Range should be valid");
+  const CGFloat inset = 0.25;
   NSSize oneCharSize = [@"a" sizeWithAttributes:[SourceTheme new].allAttrs];
-  auto x = (range.begin.column - 1) * oneCharSize.width + _insets.left - oneCharSize.width * 0.25;
-  auto y = (range.begin.line - 1) * oneCharSize.height + _insets.top;
-  auto width =
-      (range.end.column - range.begin.column) * oneCharSize.width + oneCharSize.width * 0.5;
-  return NSMakeRect(x, y, width, oneCharSize.height);
-}
-
-/*- (marlin::source_loc)sourceLocOfIndex:(NSUInteger)index {
-  NSUInteger currentLineIndex = 0;
-  NSUInteger previousLineIndex = 0;
-  NSUInteger numberOfLines = 0;
-  while (currentLineIndex <= index) {
-    ++numberOfLines;
-    if (currentLineIndex < self.textStorage.string.length) {
-      NSRange lineRange;
-      [self.layoutManager lineFragmentRectForGlyphAtIndex:currentLineIndex
-                                           effectiveRange:&lineRange];
-      previousLineIndex = currentLineIndex;
-      currentLineIndex = NSMaxRange(lineRange);
-    } else {
-      break;
+  if (range.end.line == range.begin.line) {
+    auto x =
+        (range.begin.column - 1) * oneCharSize.width + _insets.left - oneCharSize.width * inset;
+    auto y = (range.begin.line - 1) * oneCharSize.height + _insets.top;
+    auto width =
+        (range.end.column - range.begin.column) * oneCharSize.width + oneCharSize.width * inset * 2;
+    return NSMakeRect(x, y, width, oneCharSize.height);
+  } else {
+    CGFloat maxWidth = 0;
+    for (auto line = range.begin.line; line <= range.end.line; ++line) {
+      NSAttributedString* string = [_strings objectAtIndex:line - 1];
+      maxWidth = fmax(maxWidth, string.size.width);
     }
+    auto x = fmax(0, (range.begin.column - 1) * oneCharSize.width - oneCharSize.width * inset);
+    auto y = (range.begin.line - 1) * self.lineHeight + _insets.top;
+    auto width = maxWidth + oneCharSize.width * inset * 2 - x;
+    auto height = (range.end.line - range.begin.line + 1) * self.lineHeight;
+    return NSMakeRect(x, y, width, height);
   }
-  return {numberOfLines, index - previousLineIndex + 1};
 }
 
-- (NSUInteger)indexOfSourceLoc:(marlin::source_loc)loc {
-  NSUInteger currentLineIndex = 0;
-  NSUInteger numberOfLines = 1;
-  while (numberOfLines < loc.line) {
-    ++numberOfLines;
-    NSRange lineRange;
-    [self.layoutManager lineFragmentRectForGlyphAtIndex:currentLineIndex effectiveRange:&lineRange];
-    currentLineIndex = NSMaxRange(lineRange);
-  }
-  return currentLineIndex + loc.column - 1;
+- (void)resetSelection {
+  _selection = std::nullopt;
+  _selectionRange = {};
 }
-
-- (NSRange)rangeOfSourceRange:(marlin::source_range)sourceRange {
-  auto begin = [self indexOfSourceLoc:sourceRange.begin];
-  auto end = [self indexOfSourceLoc:sourceRange.end];
-  return NSMakeRange(begin, end - begin);
-}*/
 
 - (NSUInteger)addErrorAtSourceRange:(marlin::source_range)range {
   /*auto charRange = [self rangeOfSourceRange:range];
@@ -307,21 +281,19 @@
 - (void)viewController:(EditorViewController*)vc
     finishEditWithString:(NSString*)string
                   ofType:(EditorType)type {
-  /*[self.popover close];
+  [_popover close];
   if (string.length > 0 && _selection.has_value()) {
     auto inserter = (*std::move(_selection)).as_expression_inserter();
-    _selection = std::nullopt;
-    _selectionRange = NSMakeRange(0, 0);
+    [self resetSelection];
 
     if (auto update = inserter.insert_literal(type, std::string{string.UTF8String})) {
-      [self updateInRange:[self rangeOfSourceRange:update->range]
-               withSource:std::move(update->source)
-               highlights:std::move(update->highlights)];
+      [self updateInSourceRange:update->range
+                     withSource:std::move(update->source)
+                     highlights:std::move(update->highlights)];
     }
   } else {
-    _selection = std::nullopt;
-    _selectionRange = NSMakeRange(0, 0);
-  }*/
+    [self resetSelection];
+  }
 }
 
 #pragma mark - Drag and Drop
@@ -403,13 +375,13 @@
 
 - (void)draggingEnded:(id<NSDraggingInfo>)sender {
   _insertLineNumber = 0;
-  _selectionRange = {};
+  [self resetSelection];
   [self setNeedsDisplayInRect:self.bounds];
 }
 
 - (void)draggingExited:(id<NSDraggingInfo>)sender {
   _insertLineNumber = 0;
-  _selectionRange = {};
+  [self resetSelection];
   [self setNeedsDisplayInRect:self.bounds];
 }
 
