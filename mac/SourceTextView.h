@@ -24,19 +24,24 @@ NS_ASSUME_NONNULL_BEGIN
 
 @end
 
-@interface SourceTextView : NSView<EditorViewControllerDelegate>
+@interface SourceTextView
+    : NSView<EditorViewControllerDelegate, NSPasteboardItemDataProvider, NSDraggingSource>
 
 @property(weak) id<SourceTextViewDataSource> dataSource;
 
 @property(readonly) CGFloat lineHeight;
 
-- (void)insertBeforeLine:(NSUInteger)line
-              withSource:(std::string_view)source
-              highlights:(std::vector<marlin::control::highlight_token>)highlights;
+- (void)insertStatementsBeforeLine:(NSUInteger)line
+                        withSource:(std::string_view)source
+                        highlights:(std::vector<marlin::control::highlight_token>)highlights;
 
-- (void)updateInSourceRange:(marlin::source_range)sourceRange
-                 withSource:(std::string_view)source
-                 highlights:(std::vector<marlin::control::highlight_token>)highlights;
+- (void)updateExpressionInSourceRange:(marlin::source_range)sourceRange
+                           withSource:(std::string_view)source
+                           highlights:(std::vector<marlin::control::highlight_token>)highlights;
+
+- (void)removeStatementFromLine:(NSUInteger)from toLine:(NSUInteger)to;
+
+- (void)removeExpressionInSourceRange:(marlin::source_range)sourceRange;
 
 - (marlin::source_loc)sourceLocationOfPoint:(NSPoint)point;
 

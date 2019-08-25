@@ -30,9 +30,9 @@
   _document = document;
 
   if (auto initialData = [self.document initialize]) {
-    [self.sourceTextView insertBeforeLine:1
-                               withSource:std::move(initialData->source)
-                               highlights:std::move(initialData->highlights)];
+    [self.sourceTextView insertStatementsBeforeLine:1
+                                         withSource:std::move(initialData->source)
+                                         highlights:std::move(initialData->highlights)];
   }
 }
 

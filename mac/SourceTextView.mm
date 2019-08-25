@@ -24,7 +24,7 @@
   std::optional<marlin::source_range> _expressionInsertionRange;
 
   std::optional<marlin::control::source_selection> _selection;
-  // std::optional<marlin::control::source_selection> _draggingSelection;
+  BOOL _isDraggingFromSelection;
 
   std::vector<marlin::source_range> _errors;
 }
@@ -34,19 +34,16 @@
     self.frame = NSZeroRect;
     _strings = [NSMutableArray new];
     _insets = NSEdgeInsetsMake(5, 5, 5, 5);
+    _isDraggingFromSelection = NO;
 
     [self setupDragDrop];
   }
   return self;
 }
 
-- (BOOL)isFlipped {
-  return YES;
-}
-
-- (void)insertBeforeLine:(NSUInteger)line
-              withSource:(std::string_view)source
-              highlights:(std::vector<marlin::control::highlight_token>)highlights {
+- (void)insertStatementsBeforeLine:(NSUInteger)line
+                        withSource:(std::string_view)source
+                        highlights:(std::vector<marlin::control::highlight_token>)highlights {
   auto lineIndex = line - 1;
   if (lineIndex > _strings.count) {
     lineIndex = _strings.count;
@@ -80,9 +77,9 @@
   [self setNeedsDisplayInRect:self.bounds];
 }
 
-- (void)updateInSourceRange:(marlin::source_range)sourceRange
-                 withSource:(std::string_view)source
-                 highlights:(std::vector<marlin::control::highlight_token>)highlights {
+- (void)updateExpressionInSourceRange:(marlin::source_range)sourceRange
+                           withSource:(std::string_view)source
+                           highlights:(std::vector<marlin::control::highlight_token>)highlights {
   NSAssert(sourceRange.begin.line == sourceRange.end.line, @"Only support one line expression");
   NSAssert(sourceRange.begin.line > 0 && sourceRange.begin.line <= _strings.count, @"");
   NSMutableAttributedString* str = [_strings objectAtIndex:sourceRange.begin.line - 1];
@@ -95,6 +92,26 @@
   if (width > self.frame.size.width) {
     [self setFrameSize:NSMakeSize(width, self.frame.size.height)];
   }
+  [self setNeedsDisplayInRect:self.bounds];
+}
+
+- (void)removeStatementFromLine:(NSUInteger)from toLine:(NSUInteger)to {
+  NSAssert(from > 0 && from <= _strings.count, @"%lu out of range", from);
+  NSAssert(to > 0 && to <= _strings.count, @"");
+  NSAssert(from <= to, @"");
+  auto* indexSet = [NSMutableIndexSet new];
+  [indexSet addIndexesInRange:NSMakeRange(from - 1, to - from + 1)];
+  [_strings removeObjectsAtIndexes:indexSet];
+  [self setNeedsDisplayInRect:self.bounds];
+}
+
+- (void)removeExpressionInSourceRange:(marlin::source_range)sourceRange {
+  NSAssert(sourceRange.begin.line == sourceRange.end.line, @"Only support one line expression");
+  NSAssert(sourceRange.begin.line > 0 && sourceRange.begin.line <= _strings.count, @"");
+  NSMutableAttributedString* str = [_strings objectAtIndex:sourceRange.begin.line - 1];
+  auto range =
+      NSMakeRange(sourceRange.begin.column - 1, sourceRange.end.column - sourceRange.begin.column);
+  [str replaceCharactersInRange:range withString:@""];
   [self setNeedsDisplayInRect:self.bounds];
 }
 
@@ -258,6 +275,23 @@
 
 - (void)mouseDragged:(NSEvent*)event {
   [super mouseDragged:event];
+
+  if (!_isDraggingFromSelection && _selection) {
+    _isDraggingFromSelection = YES;
+    auto* pasteboardItem = [NSPasteboardItem new];
+    if (_selection->is_statement()) {
+      [pasteboardItem
+          setDataProvider:self
+                 forTypes:@[ pasteboardOfType(marlin::control::pasteboard_t::statement) ]];
+    } else if (_selection->is_expression()) {
+      [pasteboardItem
+          setDataProvider:self
+                 forTypes:@[ pasteboardOfType(marlin::control::pasteboard_t::expression) ]];
+    }
+    auto* draggingItem = [[NSDraggingItem alloc] initWithPasteboardWriter:pasteboardItem];
+    [draggingItem setDraggingFrame:NSMakeRect(0, 0, 100, 100)];
+    [self beginDraggingSessionWithItems:@[ draggingItem ] event:event source:self];
+  }
 }
 
 - (NSRect)rectOfSourceRange:(marlin::source_range)range {
@@ -296,13 +330,35 @@
     _selection.reset();
 
     if (auto update = inserter.insert_literal(type, std::string{string.UTF8String})) {
-      [self updateInSourceRange:update->range
-                     withSource:std::move(update->source)
-                     highlights:std::move(update->highlights)];
+      [self updateExpressionInSourceRange:update->range
+                               withSource:std::move(update->source)
+                               highlights:std::move(update->highlights)];
     }
   } else {
     _selection.reset();
   }
+}
+
+#pragma mark - NSPasteboardItemDataProvider implementation
+
+- (void)pasteboard:(NSPasteboard*)pasteboard
+                  item:(NSPasteboardItem*)item
+    provideDataForType:(NSPasteboardType)type {
+  NSAssert(_isDraggingFromSelection, @"Should be in dragging");
+  if (_selection->is_statement()) {
+    [pasteboard setData:[NSData dataWithDataView:_selection->get_data()]
+                forType:pasteboardOfType(marlin::control::pasteboard_t::statement)];
+  } else if (_selection->is_expression()) {
+    [pasteboard setData:[NSData dataWithDataView:_selection->get_data()]
+                forType:pasteboardOfType(marlin::control::pasteboard_t::expression)];
+  }
+}
+
+#pragma mark - NSDraggingSource implementation
+
+- (NSDragOperation)draggingSession:(NSDraggingSession*)session
+    sourceOperationMaskForDraggingContext:(NSDraggingContext)context {
+  return NSDragOperationMove;
 }
 
 #pragma mark - Drag and Drop
@@ -332,10 +388,6 @@
       _statementInsertionLine = source_loc.line;
       [self setNeedsDisplayInRect:self.bounds];
       return NSDragOperationMove;
-    } else {
-      _statementInsertionLine.reset();
-      [self setNeedsDisplayInRect:self.bounds];
-      return NSDragOperationNone;
     }
   } else if ([type isEqualToString:pasteboardOfType(marlin::control::pasteboard_t::expression)]) {
     if (!_expressionInserter) {
@@ -346,13 +398,12 @@
       _expressionInsertionRange = _expressionInserter->get_range();
       [self setNeedsDisplayInRect:self.bounds];
       return NSDragOperationMove;
-    } else {
-      _expressionInsertionRange.reset();
-      [self setNeedsDisplayInRect:self.bounds];
-      return NSDragOperationNone;
     }
   }
-  return NSDragOperationNone;
+  _statementInsertionLine.reset();
+  _expressionInsertionRange.reset();
+  [self setNeedsDisplayInRect:self.bounds];
+  return NSDragOperationDelete;
 }
 
 - (BOOL)performDragOperation:(id<NSDraggingInfo>)sender {
@@ -362,9 +413,10 @@
       auto* data = [sender.draggingPasteboard
           dataForType:pasteboardOfType(marlin::control::pasteboard_t::statement)];
       if (auto update = _statementInserter->insert(data.dataView)) {
-        [self insertBeforeLine:update->range.begin.line
-                    withSource:std::move(update->source)
-                    highlights:std::move(update->highlights)];
+        [self insertStatementsBeforeLine:update->range.begin.line
+                              withSource:std::move(update->source)
+                              highlights:std::move(update->highlights)];
+        [self removeDraggingSelection];
         return YES;
       }
     }
@@ -373,60 +425,51 @@
       auto* data = [sender.draggingPasteboard
           dataForType:pasteboardOfType(marlin::control::pasteboard_t::expression)];
       if (auto update = _expressionInserter->insert(data.dataView)) {
-        [self updateInSourceRange:update->range
-                       withSource:std::move(update->source)
-                       highlights:std::move(update->highlights)];
+        [self updateExpressionInSourceRange:update->range
+                                 withSource:std::move(update->source)
+                                 highlights:std::move(update->highlights)];
+        [self removeDraggingSelection];
         return YES;
       }
     }
   }
-  return NO;
+  [self removeDraggingSelection];
+  return YES;
 }
 
 - (void)draggingEnded:(id<NSDraggingInfo>)sender {
   _statementInsertionLine.reset();
   _expressionInsertionRange.reset();
+  _isDraggingFromSelection = NO;
   [self setNeedsDisplayInRect:self.bounds];
 }
 
 - (void)draggingExited:(id<NSDraggingInfo>)sender {
   _statementInsertionLine.reset();
   _expressionInsertionRange.reset();
+  _isDraggingFromSelection = NO;
   [self setNeedsDisplayInRect:self.bounds];
 }
 
-@end
+#pragma mark - Private methods
 
-@implementation SourceTextView (DragAndDrop)
-
-- (BOOL)writeSelectionToPasteboard:(NSPasteboard*)pboard types:(NSArray<NSPasteboardType>*)types {
-  assert(_selection);
-
-  if (_selection->is_statement()) {
-    [pboard setData:[NSData dataWithDataView:_selection->get_data()]
-            forType:pasteboardOfType(marlin::control::pasteboard_t::statement)];
-    return true;
-  } else if (_selection->is_expression()) {
-    [pboard setData:[NSData dataWithDataView:_selection->get_data()]
-            forType:pasteboardOfType(marlin::control::pasteboard_t::expression)];
-    return true;
-  } else {
-    return false;
-  }
+- (BOOL)isFlipped {
+  return YES;
 }
 
-- (void)draggingSession:(NSDraggingSession*)session
-           endedAtPoint:(NSPoint)screenPoint
-              operation:(NSDragOperation)operation {
-  /*if (_draggingSelection && operation == NSDragOperationMove) {
-    if (auto update = _draggingSelection->remove_from_document()) {
-      _draggingSelection = std::nullopt;
-      auto range = [self rangeOfSourceRange:update->range];
-      [self updateInRange:range
-               withSource:std::move(update->source)
-               highlights:std::move(update->highlights)];
+- (void)removeDraggingSelection {
+  if (_isDraggingFromSelection) {
+    auto range = _selection->get_range();
+    if (auto update = _selection->remove_from_document()) {
+      if (_selection->is_statement()) {
+        [self removeStatementFromLine:range.begin.line toLine:range.end.line];
+      } else if (_selection->is_expression()) {
+        [self removeExpressionInSourceRange:update->range];
+      }
+      _selection.reset();
     }
-  }*/
+    _isDraggingFromSelection = NO;
+  }
 }
 
 @end
