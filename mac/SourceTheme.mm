@@ -6,12 +6,14 @@
 
 - (instancetype)init {
   if (self = [super init]) {
-    _NSSelectionAttributeName = @"Selection";
-
-    auto *font = [NSFont fontWithName:@"Courier" size:25];
+    auto *font = [NSFont fontWithName:@"Courier" size:22];
     _allAttrs = @{NSFontAttributeName : font};
     _lineNumberAttrs = @{
       NSFontAttributeName : [NSFont fontWithName:@"Courier" size:18],
+      NSForegroundColorAttributeName : NSColor.blackColor
+    };
+    _consoleAttrs = @{
+      NSFontAttributeName : [NSFont fontWithName:@"Courier" size:13],
       NSForegroundColorAttributeName : NSColor.blackColor
     };
     _keywordAttrs =

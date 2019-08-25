@@ -4,11 +4,10 @@
 
 @interface SourceTheme : NSObject
 
-@property(readonly) NSString* NSSelectionAttributeName;
-
 @property(readonly) NSDictionary* allAttrs;
 
 @property(readonly) NSDictionary* lineNumberAttrs;
+@property(readonly) NSDictionary* consoleAttrs;
 
 @property(readonly) NSDictionary* keywordAttrs;
 @property(readonly) NSDictionary* opAttrs;

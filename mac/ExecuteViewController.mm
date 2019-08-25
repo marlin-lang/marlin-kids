@@ -6,6 +6,7 @@
 
 #import "DrawContext.h"
 #import "NSString+StringView.h"
+#import "SourceTheme.h"
 
 void dispatch_on_main(void (^block)(void)) {
   if (NSThread.isMainThread) {
@@ -20,8 +21,7 @@ constexpr double refreshTimeInMS = 40;
 @interface ExecuteViewController ()
 
 @property(weak) IBOutlet NSImageView *imageView;
-
-@property(weak) IBOutlet NSTextField *outputTextField;
+@property(weak) IBOutlet NSTextView *outputTextView;
 
 @end
 
@@ -81,8 +81,11 @@ constexpr double refreshTimeInMS = 40;
   __weak auto weakSelf = self;
   _environment->register_print_callback([weakSelf](std::string value) {
     dispatch_on_main(^{
-      weakSelf.outputTextField.stringValue = [weakSelf.outputTextField.stringValue
-          stringByAppendingString:[NSString stringWithStringView:value]];
+      [weakSelf.outputTextView.textStorage
+          replaceCharactersInRange:NSMakeRange(weakSelf.outputTextView.string.length, 0)
+              withAttributedString:[[NSAttributedString alloc]
+                                       initWithString:[NSString stringWithStringView:value]
+                                           attributes:[SourceTheme new].consoleAttrs]];
     });
   });
 
