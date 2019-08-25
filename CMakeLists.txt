@@ -14,6 +14,7 @@ list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_LIST_DIR}/cmake")
 
 enable_testing()
 
-add_subdirectory(mac)
 add_subdirectory(core)
+add_subdirectory(ios)
+add_subdirectory(mac)
 add_subdirectory(test)
