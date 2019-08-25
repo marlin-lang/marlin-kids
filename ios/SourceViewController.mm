@@ -1,12 +1,12 @@
-#import "DocumentViewController.h"
+#import "SourceViewController.h"
 
-@interface DocumentViewController ()
+@interface SourceViewController ()
 
 @property IBOutlet UILabel *documentNameLabel;
 
 @end
 
-@implementation DocumentViewController
+@implementation SourceViewController
 
 - (void)viewWillAppear:(BOOL)animated {
   [super viewWillAppear:animated];

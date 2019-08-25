@@ -4,13 +4,13 @@ set(HEADERS
     AppDelegate.h
     Document.h
     DocumentBrowserViewController.h
-    DocumentViewController.h)
+    SourceViewController.h)
 
 set(SOURCES
     AppDelegate.mm
     Document.mm
     DocumentBrowserViewController.mm
-    DocumentViewController.mm
+    SourceViewController.mm
     main.mm)
 
 set(RESOURCES Info.plist Assets.xcassets Base.lproj/Main.storyboard)
@@ -32,7 +32,11 @@ target_link_libraries(${PROJECT_NAME}.ios "-framework UIKit"
 # XCode compile options
 set_target_properties(
   ${PROJECT_NAME}.ios
-  PROPERTIES XCODE_ATTRIBUTE_CLANG_ENABLE_MODULES
+  PROPERTIES XCODE_ATTRIBUTE_IPHONEOS_DEPLOYMENT_TARGET
+             "11.0"
+             XCODE_ATTRIBUTE_TARGETED_DEVICE_FAMILY
+             "1,2"
+             XCODE_ATTRIBUTE_CLANG_ENABLE_MODULES
              YES
              XCODE_ATTRIBUTE_CLANG_ENABLE_OBJC_ARC
              YES

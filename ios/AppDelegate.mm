@@ -1,7 +1,5 @@
 #import "AppDelegate.h"
-#import "Document.h"
 #import "DocumentBrowserViewController.h"
-#import "DocumentViewController.h"
 
 @interface AppDelegate ()
 
