@@ -1,6 +1,6 @@
 #import <Foundation/Foundation.h>
 
-#import "byte_span.hpp"
+#include "byte_span.hpp"
 
 @interface NSData (DataView)
 

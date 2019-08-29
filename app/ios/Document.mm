@@ -1,6 +1,10 @@
 #import "Document.h"
 
-@implementation Document
+#import "DocumentImpl.h"
+
+@implementation Document {
+  DocumentImpl _documentImpl;
+}
 
 - (id)contentsForType:(NSString *)typeName error:(NSError **)errorPtr {
   // Encode your document with an instance of NSData or NSFileWrapper

@@ -1,8 +1,6 @@
 #import <Cocoa/Cocoa.h>
 
-#import <optional>
-
-#import "document.hpp"
+#import "DocumentImpl.h"
 
 @interface Document : NSDocument
 

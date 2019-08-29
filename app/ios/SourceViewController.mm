@@ -1,8 +1,11 @@
 #import "SourceViewController.h"
 
+#import "SourceView.h"
+
 @interface SourceViewController ()
 
-@property IBOutlet UILabel *documentNameLabel;
+@property(weak, nonatomic) IBOutlet UICollectionView *toolboxView;
+@property(weak, nonatomic) IBOutlet SourceView *sourceView;
 
 @end
 
@@ -14,11 +17,7 @@
   // Access the document
   [self.document openWithCompletionHandler:^(BOOL success) {
     if (success) {
-      // Display the content of the document, e.g.:
-      self.documentNameLabel.text = self.document.fileURL.lastPathComponent;
     } else {
-      // Make sure to handle the failed import appropriately, e.g., by presenting an error message
-      // to the user.
     }
   }];
 }

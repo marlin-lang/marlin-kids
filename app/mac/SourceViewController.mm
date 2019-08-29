@@ -1,17 +1,15 @@
 #import "SourceViewController.h"
 
-#import <optional>
+#include <optional>
 
-#import "toolbox_model.hpp"
+#include "toolbox_model.hpp"
 
-#import "Document.h"
 #import "LineNumberView.h"
-#import "NSData+DataView.h"
-#import "NSString+StringView.h"
 #import "Pasteboard.h"
 #import "SourceTheme.h"
 #import "ToolBoxHeaderView.h"
 #import "ToolBoxItem.h"
+#import "NSString+StringView.h"
 
 @interface SourceViewController ()
 

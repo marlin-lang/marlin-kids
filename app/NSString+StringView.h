@@ -1,6 +1,6 @@
 #import <Foundation/Foundation.h>
 
-#import <string_view>
+#include <string_view>
 
 @interface NSString (StringView)
 

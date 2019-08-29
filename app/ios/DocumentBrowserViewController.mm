@@ -51,7 +51,8 @@
   SourceViewController *vc =
       [storyBoard instantiateViewControllerWithIdentifier:@"SourceViewController"];
   vc.document = [[Document alloc] initWithFileURL:documentURL];
-  [self presentViewController:vc animated:YES completion:nil];
+  auto *navigationController = [[UINavigationController alloc] initWithRootViewController:vc];
+  [self presentViewController:navigationController animated:YES completion:nil];
 }
 
 @end
