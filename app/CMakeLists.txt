@@ -1,28 +1,48 @@
 set(HEADERS
-    DocumentImpl.h
+    Document.h
+    DrawContext.h
+    EditorViewController.h
+    ExecuteViewController.h
+    LineNumberView.h
+    MessageViewController.h
     NSData+DataView.h
     NSObject+Casting.h
-    NSString+StringView.h)
+    NSString+StringView.h
+    Pasteboard.h
+    SourceView.h
+    SourceViewController.h
+    Theme.h
+    Types.h)
 
-set(SOURCES NSData+DataView.mm NSObject+Casting.mm NSString+StringView.mm)
+set(SOURCES
+    Document.mm
+    DrawContext.mm
+    EditorViewController.mm
+    ExecuteViewController.mm
+    LineNumberView.mm
+    MessageViewController.mm
+    NSData+DataView.mm
+    NSObject+Casting.mm
+    NSString+StringView.mm
+    SourceView.mm
+    SourceViewController.mm
+    Theme.mm)
 
 if(IOS)
   set(HEADERS
       ${HEADERS}
       ios/AppDelegate.h
-      ios/Document.h
       ios/DocumentBrowserViewController.h
-      ios/SourceView.h
-      ios/SourceViewController.h)
+      ios/ToolboxCell.h
+      ios/ToolboxHeaderView.h)
 
   set(SOURCES
       ${SOURCES}
       ios/AppDelegate.mm
-      ios/Document.mm
       ios/DocumentBrowserViewController.mm
-      ios/SourceView.mm
-      ios/SourceViewController.mm
-      ios/main.mm)
+      ios/main.mm
+      ios/ToolboxCell.mm
+      ios/ToolboxHeaderView.mm)
 
   set(RESOURCES
       ${RESOURCES}
@@ -30,42 +50,24 @@ if(IOS)
       ios/Assets.xcassets
       ios/Base.lproj/Main.storyboard)
 
-  set(TARGET_NAME ${PROJECT_NAME}.ios)
-  set(FRAMEWORKS "-framework UIKit")
+  set(TARGET_NAME ${PROJECT_NAME}.app.ios)
+  set(DEFINITIONS IOS)
+  set(FRAMEWORKS "-framework CoreGraphics -framework UIKit")
   set(INFO_PLIST "ios/Info.plist")
 else(IOS)
   set(HEADERS
       ${HEADERS}
       mac/AppDelegate.h
-      mac/Document.h
-      mac/DrawContext.h
-      mac/EditorViewController.h
-      mac/ExecuteViewController.h
-      mac/LineNumberView.h
-      mac/MessageViewController.h
-      mac/Pasteboard.h
-      mac/SourceTextView.h
-      mac/SourceTheme.h
-      mac/SourceViewController.h
-      mac/ToolBoxHeaderView.h
-      mac/ToolBoxItem.h
+      mac/ToolboxHeaderView.h
+      mac/ToolboxItem.h
       mac/WindowController.h)
 
   set(SOURCES
       ${SOURCES}
       mac/AppDelegate.mm
-      mac/Document.mm
-      mac/DrawContext.mm
-      mac/EditorViewController.mm
-      mac/ExecuteViewController.mm
-      mac/LineNumberView.mm
       mac/main.mm
-      mac/MessageViewController.mm
-      mac/SourceTextView.mm
-      mac/SourceTheme.mm
-      mac/SourceViewController.mm
-      mac/ToolBoxHeaderView.mm
-      mac/ToolBoxItem.mm
+      mac/ToolboxHeaderView.mm
+      mac/ToolboxItem.mm
       mac/WindowController.mm)
 
   set(RESOURCES
@@ -73,16 +75,17 @@ else(IOS)
       mac/marlin.entitlements
       mac/Assets.xcassets
       mac/Base.lproj/Main.storyboard
-      mac/ToolBoxHeaderView.xib
-      mac/ToolBoxItem.xib)
+      mac/ToolboxHeaderView.xib
+      mac/ToolboxItem.xib)
 
-  set(TARGET_NAME ${PROJECT_NAME}.mac)
-  set(FRAMEWORKS "-framework AppKit")
+  set(TARGET_NAME ${PROJECT_NAME}.app.mac)
+  set(FRAMEWORKS "-framework CoreGraphics -framework AppKit")
   set(INFO_PLIST "mac/Info.plist")
 endif(IOS)
 
 add_executable(${TARGET_NAME} MACOSX_BUNDLE ${SOURCES} ${RESOURCES})
 target_sources(${TARGET_NAME} PRIVATE ${HEADERS})
+target_compile_definitions(${TARGET_NAME} PRIVATE ${DEFINITIONS})
 target_include_directories(${TARGET_NAME} PRIVATE .)
 
 set_target_properties(${TARGET_NAME}

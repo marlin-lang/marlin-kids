@@ -1,22 +1,22 @@
 #import "LineNumberView.h"
 
 #import "MessageViewController.h"
-#import "SourceTheme.h"
+#import "Theme.h"
 
 @implementation LineNumberView {
-  NSPopover* _popover;
+  // NSPopover* _popover;
   NSMutableDictionary* _errors;
 
   CGFloat _inset;
 }
 
-- (instancetype)initWithTextView:(SourceTextView*)textView {
-  if (self = [super initWithScrollView:textView.enclosingScrollView orientation:NSVerticalRuler]) {
-    self.clientView = textView;
+- (instancetype)initWithSourceView:(SourceView*)view {
+  /*if (self = [super initWithScrollView:view.enclosingScrollView orientation:NSVerticalRuler]) {
+    self.clientView = view;
     self.ruleThickness = 45;
     _errors = [NSMutableDictionary new];
     _inset = 5;
-  }
+  }*/
   return self;
 }
 
@@ -32,10 +32,10 @@
 
 - (void)clearErrors {
   [_errors removeAllObjects];
-  [self setNeedsDisplay:YES];
+  //[self setNeedsDisplay:YES];
 }
 
-- (void)mouseDown:(NSEvent*)event {
+/*- (void)mouseDown:(NSEvent*)event {
   [super mouseDown:event];
 
   auto location = [self convertPoint:event.locationInWindow fromView:nil];
@@ -47,7 +47,7 @@
     _popover = [NSPopover new];
     _popover.behavior = NSPopoverBehaviorTransient;
     _popover.contentViewController = vc;
-    auto* textView = (SourceTextView*)self.clientView;
+      auto* textView = (SourceView*)self.clientView;
     auto offset = [self convertPoint:NSZeroPoint fromView:textView];
     auto y = [textView lineTopOfNumber:lineNumber] + offset.y;
     auto size = textView.lineHeight - _inset * 2;
@@ -55,10 +55,10 @@
     [_popover showRelativeToRect:errorRect ofView:self preferredEdge:NSMinYEdge];
     vc.messageTextField.stringValue = message;
   }
-}
+}*/
 
-- (void)drawHashMarksAndLabelsInRect:(NSRect)rect {
-  auto* textView = (SourceTextView*)self.clientView;
+/*- (void)drawHashMarksAndLabelsInRect:(NSRect)rect {
+  auto* textView = (SourceView*)self.clientView;
   auto startPoint = [self convertPoint:rect.origin toView:textView];
   auto [startLine, startColumn] = [textView sourceLocationOfPoint:startPoint];
   auto endPoint =
@@ -76,7 +76,7 @@
     auto* string = [NSString stringWithFormat:@"%lu", line];
     auto* attrString =
         [[NSAttributedString alloc] initWithString:string
-                                        attributes:[SourceTheme new].lineNumberAttrs];
+                                        attributes:currentTheme().lineNumberAttrs];
     [attrString
         drawAtPoint:NSMakePoint(self.ruleThickness - _inset - attrString.size.width, y + _inset)];
     y += height;
@@ -91,13 +91,14 @@
     [circle fill];
     [NSGraphicsContext restoreGraphicsState];
   }
-}
+}*/
 
-- (NSUInteger)lineNumberOfLocation:(NSPoint)loc {
-  auto* textView = (SourceTextView*)self.clientView;
-  auto textViewLocation = [self convertPoint:loc toView:textView];
-  auto [line, column] = [textView sourceLocationOfPoint:textViewLocation];
-  return line;
+- (NSUInteger)lineNumberOfLocation:(Point)loc {
+  // auto* textView = (SourceView*)self.clientView;
+  // auto textViewLocation = [self convertPoint:loc toView:textView];
+  // auto [line, column] = [textView sourceLocationOfPoint:textViewLocation];
+  // return line;
+  return 0;
 }
 
 @end

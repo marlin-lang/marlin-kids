@@ -1,12 +1,12 @@
-#import "ToolBoxHeaderView.h"
+#import "ToolboxHeaderView.h"
 
-@implementation ToolBoxHeaderView
+@implementation ToolboxHeaderView
 
 - (void)drawRect:(NSRect)dirtyRect {
   [super drawRect:dirtyRect];
 
-  [[NSColor colorWithCalibratedWhite:0.8 alpha:1] set];
-  NSRectFillUsingOperation(dirtyRect, NSCompositingOperationSourceOver);
+    [[NSColor colorWithCalibratedWhite:0.8 alpha:1] setFill];
+    NSRectFill(dirtyRect);
 }
 
 @end

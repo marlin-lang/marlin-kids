@@ -6,7 +6,7 @@
 
 #import "DrawContext.h"
 #import "NSString+StringView.h"
-#import "SourceTheme.h"
+#import "Theme.h"
 
 void dispatch_on_main(void (^block)(void)) {
   if (NSThread.isMainThread) {
@@ -20,8 +20,8 @@ constexpr double refreshTimeInMS = 40;
 
 @interface ExecuteViewController ()
 
-@property(weak) IBOutlet NSImageView *imageView;
-@property(weak) IBOutlet NSTextView *outputTextView;
+@property(weak) IBOutlet ImageView *imageView;
+@property(weak) IBOutlet TextView *outputTextView;
 
 @end
 
@@ -37,18 +37,18 @@ constexpr double refreshTimeInMS = 40;
 - (void)viewDidLoad {
   [super viewDidLoad];
 
-  self.imageView.image = [NSImage imageWithSize:self.imageView.bounds.size
+  /*self.imageView.image = [Image imageWithSize:self.imageView.bounds.size
                                         flipped:NO
-                                 drawingHandler:^BOOL(NSRect dstRect) {
+                                 drawingHandler:^BOOL(Rect dstRect) {
                                    return YES;
-                                 }];
+                                 }];*/
   _drawContext.initWithImage(self.imageView.image, self);
   _logoSketcher.set_context(_drawContext);
   _needRefreshImage = NO;
 }
 
 - (void)viewDidAppear {
-  [super viewDidAppear];
+  //[super viewDidAppear];
 
   [self startExecute];
 }
@@ -81,11 +81,11 @@ constexpr double refreshTimeInMS = 40;
   __weak auto weakSelf = self;
   _environment->register_print_callback([weakSelf](std::string value) {
     dispatch_on_main(^{
-      [weakSelf.outputTextView.textStorage
-          replaceCharactersInRange:NSMakeRange(weakSelf.outputTextView.string.length, 0)
-              withAttributedString:[[NSAttributedString alloc]
-                                       initWithString:[NSString stringWithStringView:value]
-                                           attributes:[SourceTheme new].consoleAttrs]];
+        /*[weakSelf.outputTextView.textStorage
+            replaceCharactersInRange:NSMakeRange(weakSelf.outputTextView.string.length, 0)
+                withAttributedString:[[NSAttributedString alloc]
+                                         initWithString:[NSString stringWithStringView:value]
+                                             attributes:currentTheme().consoleAttrs]];*/
     });
   });
 
@@ -209,11 +209,11 @@ constexpr double refreshTimeInMS = 40;
 }
 
 - (void)refreshImage {
-  for (NSImageRep *rep in self.imageView.image.representations) {
+  /*for (NSImageRep *rep in self.imageView.image.representations) {
     [self.imageView.image removeRepresentation:rep];
-  }
-  [self.imageView.image addRepresentation:_drawContext.imageRep()];
-  [self.imageView setNeedsDisplay:YES];
+  }*/
+  //[self.imageView.image addRepresentation:_drawContext.imageRep()];
+  //[self.imageView setNeedsDisplay:YES];
   _refresh_time = std::chrono::high_resolution_clock::now();
   _needRefreshImage = NO;
 

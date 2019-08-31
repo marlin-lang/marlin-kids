@@ -1,8 +1,8 @@
 #import "DrawContext.h"
 
-void DrawContext::initWithImage(NSImage* image, id<DrawContextDelegate> delegate) {
+void DrawContext::initWithImage(Image* image, id<DrawContextDelegate> delegate) {
   _size = image.size;
-  _imageRep = [[NSBitmapImageRep alloc] initWithBitmapDataPlanes:NULL
+  /*_imageRep = [[NSBitmapImageRep alloc] initWithBitmapDataPlanes:NULL
                                                       pixelsWide:_size.width
                                                       pixelsHigh:_size.height
                                                    bitsPerSample:8
@@ -19,12 +19,12 @@ void DrawContext::initWithImage(NSImage* image, id<DrawContextDelegate> delegate
   auto* rect = [NSBezierPath bezierPathWithRect:NSMakeRect(0, 0, _size.width, _size.height)];
   [NSColor.blackColor set];
   [rect fill];
-  [NSGraphicsContext restoreGraphicsState];
+  [NSGraphicsContext restoreGraphicsState];*/
   [_delegate setNeedRefreshImage];
 }
 
 void DrawContext::draw_line(double from_x, double from_y, double to_x, double to_y) {
-  auto from = NSMakePoint(static_cast<CGFloat>(from_x), static_cast<CGFloat>(from_y));
+  /*auto from = NSMakePoint(static_cast<CGFloat>(from_x), static_cast<CGFloat>(from_y));
   auto to = NSMakePoint(static_cast<CGFloat>(to_x), static_cast<CGFloat>(to_y));
 
   [NSGraphicsContext saveGraphicsState];
@@ -33,6 +33,6 @@ void DrawContext::draw_line(double from_x, double from_y, double to_x, double to
   [NSColor.whiteColor set];
   NSBezierPath.defaultLineWidth = 2;
   [NSBezierPath strokeLineFromPoint:from toPoint:to];
-  [NSGraphicsContext restoreGraphicsState];
+  [NSGraphicsContext restoreGraphicsState];*/
   [_delegate setNeedRefreshImage];
 }

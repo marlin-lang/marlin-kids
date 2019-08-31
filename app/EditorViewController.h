@@ -1,4 +1,4 @@
-#import <Cocoa/Cocoa.h>
+#import <Types.h>
 
 #import "expression_inserter.hpp"
 
@@ -6,11 +6,11 @@
 
 using EditorType = marlin::control::literal_data_type;
 
-@interface EditorViewController : NSViewController <NSTextFieldDelegate>
+@interface EditorViewController : ViewController <TextFieldDelegate>
 
 @property(nonatomic) EditorType type;
 
-@property(weak) IBOutlet NSTextField *editorTextField;
+@property(weak) IBOutlet TextField *editorTextField;
 
 @property(weak) id<EditorViewControllerDelegate> delegate;
 

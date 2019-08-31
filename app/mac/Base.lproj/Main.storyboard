@@ -842,7 +842,7 @@ DQ
                                     <rect key="frame" x="1" y="1" width="822" height="766"/>
                                     <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                                     <subviews>
-                                        <view fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="CvE-xw-fkq" customClass="SourceTextView">
+                                        <view fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="CvE-xw-fkq" customClass="SourceView">
                                             <rect key="frame" x="0.0" y="0.0" width="822" height="766"/>
                                             <autoresizingMask key="autoresizingMask" flexibleMinX="YES" flexibleMaxX="YES" flexibleMinY="YES" flexibleMaxY="YES"/>
                                         </view>
@@ -869,7 +869,7 @@ DQ
                         </constraints>
                     </view>
                     <connections>
-                        <outlet property="sourceTextView" destination="CvE-xw-fkq" id="bDz-lx-5hj"/>
+                        <outlet property="sourceView" destination="CvE-xw-fkq" id="aLi-gb-FL7"/>
                         <outlet property="toolBoxView" destination="OcT-XB-QHc" id="ugG-DO-5sL"/>
                         <segue destination="GTn-o1-zSJ" kind="show" identifier="ExecuteViewController" id="bSo-lg-MH8"/>
                     </connections>

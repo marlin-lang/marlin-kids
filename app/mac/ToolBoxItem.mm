@@ -1,10 +1,6 @@
-#import "ToolBoxItem.h"
+#import "ToolboxItem.h"
 
-@interface ToolBoxItem ()
-
-@end
-
-@implementation ToolBoxItem
+@implementation ToolboxItem
 
 - (void)viewDidLoad {
   [super viewDidLoad];

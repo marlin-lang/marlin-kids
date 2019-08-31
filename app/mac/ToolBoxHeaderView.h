@@ -2,7 +2,7 @@
 
 NS_ASSUME_NONNULL_BEGIN
 
-@interface ToolBoxHeaderView : NSView
+@interface ToolboxHeaderView : NSView
 
 @property(weak) IBOutlet NSTextField *titleTextField;
 

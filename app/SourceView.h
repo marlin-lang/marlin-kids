@@ -1,33 +1,41 @@
-#import <Cocoa/Cocoa.h>
+#import <Types.h>
 
-#import <string_view>
-#import <vector>
+#include <string_view>
+#include <vector>
 
-#import "expression_inserter.hpp"
-#import "source_selection.hpp"
-#import "statement_inserter.hpp"
+#include "expression_inserter.hpp"
+#include "source_selection.hpp"
+#include "statement_inserter.hpp"
 
 #import "EditorViewController.h"
 
 NS_ASSUME_NONNULL_BEGIN
 
-@class SourceTextView;
+@class SourceView;
 
-@protocol SourceTextViewDataSource
+@protocol SourceViewDataSource
 
-- (marlin::control::source_selection)textView:(SourceTextView *)textView
+- (marlin::control::source_selection)textView:(SourceView *)view
                                   selectionAt:(marlin::source_loc)loc;
 
-- (marlin::control::statement_inserter)statementInserterForTextView:(SourceTextView *)textView;
+- (marlin::control::statement_inserter)statementInserterForTextView:(SourceView *)view;
 
-- (marlin::control::expression_inserter)expressionInserterForTextView:(SourceTextView *)textView;
+- (marlin::control::expression_inserter)expressionInserterForTextView:(SourceView *)view;
 
 @end
 
-@interface SourceTextView
-    : NSView<EditorViewControllerDelegate, NSPasteboardItemDataProvider, NSDraggingSource>
+#ifdef IOS
 
-@property(weak) id<SourceTextViewDataSource> dataSource;
+@interface SourceView : View <EditorViewControllerDelegate>
+
+#else
+
+@interface SourceView
+    : View <EditorViewControllerDelegate, NSPasteboardItemDataProvider, NSDraggingSource>
+
+#endif
+
+@property(weak) id<SourceViewDataSource> dataSource;
 
 @property(readonly) CGFloat lineHeight;
 
@@ -43,7 +51,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 - (void)removeExpressionInSourceRange:(marlin::source_range)sourceRange;
 
-- (marlin::source_loc)sourceLocationOfPoint:(NSPoint)point;
+- (marlin::source_loc)sourceLocationOfPoint:(Point)point;
 
 - (CGFloat)lineHeight;
 
