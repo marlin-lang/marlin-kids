@@ -6,11 +6,14 @@
 
 NS_ASSUME_NONNULL_BEGIN
 
-@interface SourceViewController : ViewController <CollectionViewDataSource,
-                                                  CollectionViewDelegateFlowLayout,
-                                                  SourceViewDataSource>
-
+@interface SourceViewController
+    : ViewController<CollectionViewDataSource, CollectionViewDelegateFlowLayout,
+                     SourceViewDataSource>
+#ifdef IOS
+@property(strong, nonatomic) Document* document;
+#else
 @property(weak, nonatomic) Document* document;
+#endif
 
 - (void)execute;
 

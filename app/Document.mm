@@ -8,7 +8,7 @@
   std::optional<marlin::control::document> _content;
 }
 
-@property(nonatomic, strong) NSData *initialData;
+@property(strong, nonatomic) NSData *initialData;
 
 @end
 
