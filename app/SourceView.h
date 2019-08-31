@@ -24,16 +24,13 @@ NS_ASSUME_NONNULL_BEGIN
 
 @end
 
+@interface SourceView : View<EditorViewControllerDelegate
 #ifdef IOS
-
-@interface SourceView : View <EditorViewControllerDelegate>
-
 #else
-
-@interface SourceView
-    : View <EditorViewControllerDelegate, NSPasteboardItemDataProvider, NSDraggingSource>
-
+                             ,
+                             NSPasteboardItemDataProvider, NSDraggingSource
 #endif
+                             >
 
 @property(weak) id<SourceViewDataSource> dataSource;
 

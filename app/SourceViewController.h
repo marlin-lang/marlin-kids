@@ -8,6 +8,9 @@ NS_ASSUME_NONNULL_BEGIN
 
 @interface SourceViewController
     : ViewController<CollectionViewDataSource, CollectionViewDelegateFlowLayout,
+#ifdef IOS
+                     UICollectionViewDragDelegate,
+#endif
                      SourceViewDataSource>
 #ifdef IOS
 @property(strong, nonatomic) Document* document;

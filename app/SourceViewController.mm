@@ -20,7 +20,7 @@
 
 @interface SourceViewController ()
 
-@property(weak) IBOutlet CollectionView *toolBoxView;
+@property(weak) IBOutlet CollectionView *toolboxView;
 @property(weak) IBOutlet SourceView *sourceView;
 
 @property(strong) LineNumberView *lineNumberView;
@@ -50,6 +50,9 @@
 
   setCurrentTheme([[DefaultTheme alloc] init]);
 
+#ifdef IOS
+  self.toolboxView.dragDelegate = self;
+#endif
   self.sourceView.dataSource = self;
 
   /*self.sourceView.enclosingScrollView.rulersVisible = YES;
@@ -187,32 +190,61 @@
   return MakeSize(collectionView.bounds.size.width - 10, 35);
 }
 
-/*- (BOOL)collectionView:(CollectionView *)collectionView
- canDragItemsAtIndexPaths:(NSSet<NSIndexPath *> *)indexPaths
- withEvent:(NSEvent *)event {
- return YES;
- }
+#ifdef IOS
 
- - (BOOL)collectionView:(NSCollectionView *)collectionView
- writeItemsAtIndexPaths:(NSSet<NSIndexPath *> *)indexPaths
- toPasteboard:(NSPasteboard *)pasteboard {
- auto section = indexPaths.anyObject.section;
- auto item = indexPaths.anyObject.item;
- NSData *data =
- [NSData dataWithDataView:marlin::control::toolbox_model::prototype_at(section, item).data()];
- return [pasteboard
- setData:data
- forType:pasteboardOfType(marlin::control::toolbox_model::items[section][item].type)];
- }*/
+#pragma mark - UICollectionViewDragDelegate
 
-#pragma mark - NSTextViewDelegate implementation
+- (NSArray<UIDragItem *> *)collectionView:(UICollectionView *)collectionView
+             itemsForBeginningDragSession:(id<UIDragSession>)session
+                              atIndexPath:(NSIndexPath *)indexPath {
+  auto section = indexPath.section;
+  auto item = indexPath.item;
+  auto *data =
+      [NSData dataWithDataView:marlin::control::toolbox_model::prototype_at(section, item).data()];
+  auto *itemProvider = [[NSItemProvider alloc] init];
+  [itemProvider
+      registerDataRepresentationForTypeIdentifier:
+          pasteboardOfType(marlin::control::toolbox_model::items[section][item].type)
+                                       visibility:NSItemProviderRepresentationVisibilityAll
+                                      loadHandler:^NSProgress *_Nullable(
+                                          void (^_Nonnull completionHandler)(NSData *_Nullable,
+                                                                             NSError *_Nullable)) {
+                                        completionHandler(data, nil);
+                                        return nil;
+                                      }];
+  return @[ [[UIDragItem alloc] initWithItemProvider:itemProvider] ];
+}
+
+#else
+
+- (BOOL)collectionView:(NSCollectionView *)collectionView
+    canDragItemsAtIndexPaths:(NSSet<NSIndexPath *> *)indexPaths
+                   withEvent:(NSEvent *)event {
+  return YES;
+}
+
+- (BOOL)collectionView:(NSCollectionView *)collectionView
+    writeItemsAtIndexPaths:(NSSet<NSIndexPath *> *)indexPaths
+              toPasteboard:(NSPasteboard *)pasteboard {
+  auto section = indexPaths.anyObject.section;
+  auto item = indexPaths.anyObject.item;
+  NSData *data =
+      [NSData dataWithDataView:marlin::control::toolbox_model::prototype_at(section, item).data()];
+  return [pasteboard
+      setData:data
+      forType:pasteboardOfType(marlin::control::toolbox_model::items[section][item].type)];
+}
+
+#endif
+
+#pragma mark - NSTextViewDelegate
 
 - (void)textDidChange:(NSNotification *)notification {
   [self.sourceView clearErrors];
   [self.lineNumberView clearErrors];
 }
 
-#pragma mark - SourceTextViewDataSource implementation
+#pragma mark - SourceViewDataSource
 
 - (marlin::control::source_selection)textView:(SourceView *)view
                                   selectionAt:(marlin::source_loc)loc {

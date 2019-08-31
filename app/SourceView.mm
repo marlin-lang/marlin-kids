@@ -36,7 +36,9 @@
     _insets = EdgeInsetsMake(5, 5, 5, 5);
     _isDraggingFromSelection = NO;
 
-    // [self setupDragDrop];
+#ifndef IOS
+    [self setupDragDrop];
+#endif
   }
   return self;
 }
@@ -166,9 +168,11 @@
   }
 }
 
-#pragma mark - NSPasteboardItemDataProvider implementation
+#ifndef IOS
 
-/*- (void)pasteboard:(NSPasteboard*)pasteboard
+#pragma mark - NSPasteboardItemDataProvider
+
+- (void)pasteboard:(NSPasteboard*)pasteboard
                   item:(NSPasteboardItem*)item
     provideDataForType:(NSPasteboardType)type {
   NSAssert(_isDraggingFromSelection, @"Should be in dragging");
@@ -179,18 +183,24 @@
     [pasteboard setData:[NSData dataWithDataView:_selection->get_data()]
                 forType:pasteboardOfType(marlin::control::pasteboard_t::expression)];
   }
-}*/
+}
 
 #pragma mark - NSDraggingSource implementation
 
-/*- (NSDragOperation)draggingSession:(NSDraggingSession*)session
+- (NSDragOperation)draggingSession:(NSDraggingSession*)session
     sourceOperationMaskForDraggingContext:(NSDraggingContext)context {
   return NSDragOperationMove;
-}*/
+}
+
+#endif
 
 #pragma mark - Drag and Drop
 
-/*- (NSArray<NSPasteboardType>*)acceptableDragTypes {
+#ifdef IOS
+
+#else
+
+- (NSArray<NSPasteboardType>*)acceptableDragTypes {
   return @[
     pasteboardOfType(marlin::control::pasteboard_t::statement),
     pasteboardOfType(marlin::control::pasteboard_t::expression)
@@ -276,7 +286,9 @@
   _expressionInsertionRange.reset();
   _isDraggingFromSelection = NO;
   [self setNeedsDisplayInRect:self.bounds];
-}*/
+}
+
+#endif
 
 #pragma mark - Private methods
 
@@ -321,21 +333,25 @@
 }
 
 - (void)drawStatementInsertionPointInRect:(Rect)rect {
-  /*if (_statementInsertionLine && _statementInserter && _statementInserter->can_insert()) {
-      auto oneCharSize = characterSizeWithAttributes(currentTheme().allAttrs);
+  if (_statementInsertionLine && _statementInserter && _statementInserter->can_insert()) {
+    auto oneCharSize = characterSizeWithAttributes(currentTheme().allAttrs);
     auto x = oneCharSize.width * (_statementInserter->get_location().column - 1);
     auto y = oneCharSize.height * (*_statementInsertionLine - 1) + _insets.top;
-    if (PointInRect(MakePoint(x, y), rect)) {
-      [NSGraphicsContext saveGraphicsState];
-      NSBezierPath* line = [NSBezierPath bezierPath];
-      [line moveToPoint:NSMakePoint(x, y)];
-      [line lineToPoint:NSMakePoint(x + 200, y)];
+    if (CGRectContainsPoint(rect, MakePoint(x, y))) {
+      BeginDraw();
+      auto* line = [BezierPath bezierPath];
+      [line moveToPoint:MakePoint(x, y)];
+#ifdef IOS
+        [line addLineToPoint:MakePoint(x + 200, y)];
+#else
+      [line lineToPoint:MakePoint(x + 200, y)];
+#endif
       [line setLineWidth:5.0];
-      [[NSColor blueColor] set];
+      [[Color blueColor] set];
       [line stroke];
-      [NSGraphicsContext restoreGraphicsState];
+      EndDraw();
     }
-  }*/
+  }
 }
 
 - (void)drawSelectionInRect:(Rect)rect {

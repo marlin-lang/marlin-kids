@@ -10,12 +10,16 @@
 
 #define Point CGPoint
 #define MakePoint CGPointMake
-#define PointInRect CGPointInRect
 #define Size CGSize
 #define MakeSize CGSizeMake
 #define Rect CGRect
 #define ZeroRect CGRectZero
 #define MakeRect CGRectMake
+
+#define BeginDraw()                                     \
+  CGContextRef context = UIGraphicsGetCurrentContext(); \
+  CGContextSaveGState(context)
+#define EndDraw() CGContextRestoreGState(context)
 
 #define Color UIColor
 #define Font UIFont
@@ -45,12 +49,14 @@
 
 #define Point NSPoint
 #define MakePoint NSMakePoint
-#define PointInRect NSPointInRect
 #define Size NSSize
 #define MakeSize NSMakeSize
 #define Rect NSRect
 #define ZeroRect NSZeroRect
 #define MakeRect NSMakeRect
+
+#define BeginDraw() [NSGraphicsContext saveGraphicsState]
+#define EndDraw() [NSGraphicsContext restoreGraphicsState]
 
 #define Color NSColor
 #define Font NSFont
