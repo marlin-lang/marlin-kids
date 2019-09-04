@@ -35,10 +35,6 @@
     _strings = [NSMutableArray new];
     _insets = EdgeInsetsMake(5, 5, 5, 5);
     _isDraggingFromSelection = NO;
-
-#ifndef IOS
-    [self setupDragDrop];
-#endif
   }
   return self;
 }
@@ -170,124 +166,6 @@
 
 #ifndef IOS
 
-#pragma mark - NSPasteboardItemDataProvider
-
-- (void)pasteboard:(NSPasteboard*)pasteboard
-                  item:(NSPasteboardItem*)item
-    provideDataForType:(NSPasteboardType)type {
-  NSAssert(_isDraggingFromSelection, @"Should be in dragging");
-  if (_selection->is_statement()) {
-    [pasteboard setData:[NSData dataWithDataView:_selection->get_data()]
-                forType:pasteboardOfType(marlin::control::pasteboard_t::statement)];
-  } else if (_selection->is_expression()) {
-    [pasteboard setData:[NSData dataWithDataView:_selection->get_data()]
-                forType:pasteboardOfType(marlin::control::pasteboard_t::expression)];
-  }
-}
-
-#pragma mark - NSDraggingSource implementation
-
-- (NSDragOperation)draggingSession:(NSDraggingSession*)session
-    sourceOperationMaskForDraggingContext:(NSDraggingContext)context {
-  return NSDragOperationMove;
-}
-
-#endif
-
-#pragma mark - Drag and Drop
-
-#ifdef IOS
-
-#else
-
-- (NSArray<NSPasteboardType>*)acceptableDragTypes {
-  return @[
-    pasteboardOfType(marlin::control::pasteboard_t::statement),
-    pasteboardOfType(marlin::control::pasteboard_t::expression)
-  ];
-}
-
-- (void)setupDragDrop {
-  [self registerForDraggedTypes:self.acceptableDragTypes];
-}
-
-- (NSDragOperation)draggingUpdated:(id<NSDraggingInfo>)sender {
-  auto location = [self convertPoint:sender.draggingLocation fromView:nil];
-  auto source_loc = [self sourceLocationOfPoint:location];
-
-  auto* type = [sender.draggingPasteboard availableTypeFromArray:self.acceptableDragTypes];
-  if ([type isEqualToString:pasteboardOfType(marlin::control::pasteboard_t::statement)]) {
-    if (!_statementInserter) {
-      _statementInserter = [self.dataSource statementInserterForTextView:self];
-    }
-    _statementInserter->move_to_line(source_loc.line);
-    if (_statementInserter->can_insert()) {
-      _statementInsertionLine = source_loc.line;
-      [self setNeedsDisplayInRect:self.bounds];
-      return NSDragOperationMove;
-    }
-  } else if ([type isEqualToString:pasteboardOfType(marlin::control::pasteboard_t::expression)]) {
-    if (!_expressionInserter) {
-      _expressionInserter = [self.dataSource expressionInserterForTextView:self];
-    }
-    _expressionInserter->move_to_loc(source_loc);
-    if (_expressionInserter->can_insert()) {
-      _expressionInsertionRange = _expressionInserter->get_range();
-      [self setNeedsDisplayInRect:self.bounds];
-      return NSDragOperationMove;
-    }
-  }
-  _statementInsertionLine.reset();
-  _expressionInsertionRange.reset();
-  [self setNeedsDisplayInRect:self.bounds];
-  return NSDragOperationDelete;
-}
-
-- (BOOL)performDragOperation:(id<NSDraggingInfo>)sender {
-  auto type = [sender.draggingPasteboard availableTypeFromArray:self.acceptableDragTypes];
-  if (type == pasteboardOfType(marlin::control::pasteboard_t::statement)) {
-    if (_statementInsertionLine && _statementInserter && _statementInserter->can_insert()) {
-      auto* data = [sender.draggingPasteboard
-          dataForType:pasteboardOfType(marlin::control::pasteboard_t::statement)];
-      if (auto update = _statementInserter->insert(data.dataView)) {
-        [self insertStatementsBeforeLine:update->range.begin.line
-                              withSource:std::move(update->source)
-                              highlights:std::move(update->highlights)];
-        [self removeDraggingSelection];
-        return YES;
-      }
-    }
-  } else if (type == pasteboardOfType(marlin::control::pasteboard_t::expression)) {
-    if (_expressionInserter && _expressionInserter->can_insert()) {
-      auto* data = [sender.draggingPasteboard
-          dataForType:pasteboardOfType(marlin::control::pasteboard_t::expression)];
-      if (auto update = _expressionInserter->insert(data.dataView)) {
-        [self updateExpressionInSourceRange:update->range
-                                 withSource:std::move(update->source)
-                                 highlights:std::move(update->highlights)];
-        [self removeDraggingSelection];
-        return YES;
-      }
-    }
-  }
-  [self removeDraggingSelection];
-  return YES;
-}
-
-- (void)draggingEnded:(id<NSDraggingInfo>)sender {
-  _statementInsertionLine.reset();
-  _expressionInsertionRange.reset();
-  _isDraggingFromSelection = NO;
-  [self setNeedsDisplayInRect:self.bounds];
-}
-
-- (void)draggingExited:(id<NSDraggingInfo>)sender {
-  _statementInsertionLine.reset();
-  _expressionInsertionRange.reset();
-  _isDraggingFromSelection = NO;
-  [self setNeedsDisplayInRect:self.bounds];
-}
-
 #endif
 
 #pragma mark - Private methods
@@ -342,7 +220,7 @@
       auto* line = [BezierPath bezierPath];
       [line moveToPoint:MakePoint(x, y)];
 #ifdef IOS
-        [line addLineToPoint:MakePoint(x + 200, y)];
+      [line addLineToPoint:MakePoint(x + 200, y)];
 #else
       [line lineToPoint:MakePoint(x + 200, y)];
 #endif
@@ -485,6 +363,75 @@
     auto height = (range.end.line - range.begin.line + 1) * self.lineHeight;
     return MakeRect(x, y, width, height);
   }
+}
+
+#pragma mark - Drag and drop
+
+- (BOOL)draggingStatementAtLocation:(Point)location {
+  auto source_loc = [self sourceLocationOfPoint:location];
+
+  if (!_statementInserter) {
+    _statementInserter = [self.dataSource statementInserterForTextView:self];
+  }
+  _statementInserter->move_to_line(source_loc.line);
+  if (_statementInserter->can_insert()) {
+    _statementInsertionLine = source_loc.line;
+    return YES;
+  }
+  _statementInsertionLine.reset();
+  return NO;
+}
+
+- (BOOL)draggingExpressionAtLocation:(Point)location {
+  auto source_loc = [self sourceLocationOfPoint:location];
+
+  if (!_expressionInserter) {
+    _expressionInserter = [self.dataSource expressionInserterForTextView:self];
+  }
+  _expressionInserter->move_to_loc(source_loc);
+  if (_expressionInserter->can_insert()) {
+    _expressionInsertionRange = _expressionInserter->get_range();
+    return YES;
+  }
+  _expressionInsertionRange.reset();
+  return NO;
+}
+
+- (BOOL)performStatementDropForData:(NSData*)data {
+  if (_statementInsertionLine && _statementInserter && _statementInserter->can_insert()) {
+    if (auto update = _statementInserter->insert(data.dataView)) {
+      [self insertStatementsBeforeLine:update->range.begin.line
+                            withSource:std::move(update->source)
+                            highlights:std::move(update->highlights)];
+      _statementInserter.reset();
+      [self removeDraggingSelection];
+      return YES;
+    }
+  }
+  [self removeDraggingSelection];
+  return NO;
+}
+
+- (BOOL)performExpressionDropForData:(NSData*)data {
+  if (_expressionInserter && _expressionInserter->can_insert()) {
+    if (auto update = _expressionInserter->insert(data.dataView)) {
+      [self updateExpressionInSourceRange:update->range
+                               withSource:std::move(update->source)
+                               highlights:std::move(update->highlights)];
+      _statementInserter.reset();
+      [self removeDraggingSelection];
+      return YES;
+    }
+  }
+  [self removeDraggingSelection];
+  return NO;
+}
+
+- (void)resetAll {
+  _statementInsertionLine.reset();
+  _expressionInsertionRange.reset();
+  _isDraggingFromSelection = NO;
+  [self setNeedsDisplayInRect:self.bounds];
 }
 
 @end

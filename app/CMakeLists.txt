@@ -33,6 +33,8 @@ if(IOS)
       ${HEADERS}
       ios/AppDelegate.h
       ios/DocumentBrowserViewController.h
+      ios/IosSourceView.h
+      ios/IosSourceViewController.h
       ios/ToolboxCell.h
       ios/ToolboxHeaderView.h)
 
@@ -40,6 +42,8 @@ if(IOS)
       ${SOURCES}
       ios/AppDelegate.mm
       ios/DocumentBrowserViewController.mm
+      ios/IosSourceView.mm
+      ios/IosSourceViewController.mm
       ios/main.mm
       ios/ToolboxCell.mm
       ios/ToolboxHeaderView.mm)
@@ -58,6 +62,8 @@ else(IOS)
   set(HEADERS
       ${HEADERS}
       mac/AppDelegate.h
+      mac/MacSourceView.h
+      mac/MacSourceViewController.h
       mac/ToolboxHeaderView.h
       mac/ToolboxItem.h
       mac/WindowController.h)
@@ -65,6 +71,8 @@ else(IOS)
   set(SOURCES
       ${SOURCES}
       mac/AppDelegate.mm
+      mac/MacSourceView.mm
+      mac/MacSourceViewController.mm
       mac/main.mm
       mac/ToolboxHeaderView.mm
       mac/ToolboxItem.mm

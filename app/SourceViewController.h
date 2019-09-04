@@ -7,11 +7,10 @@
 NS_ASSUME_NONNULL_BEGIN
 
 @interface SourceViewController
-    : ViewController<CollectionViewDataSource, CollectionViewDelegateFlowLayout,
-#ifdef IOS
-                     UICollectionViewDragDelegate,
-#endif
-                     SourceViewDataSource>
+    : ViewController<CollectionViewDelegateFlowLayout, SourceViewDataSource>
+
+@property(weak) IBOutlet CollectionView* toolboxView;
+
 #ifdef IOS
 @property(strong, nonatomic) Document* document;
 #else

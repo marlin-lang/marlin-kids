@@ -24,13 +24,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 @end
 
-@interface SourceView : View<EditorViewControllerDelegate
-#ifdef IOS
-#else
-                             ,
-                             NSPasteboardItemDataProvider, NSDraggingSource
-#endif
-                             >
+@interface SourceView : View<EditorViewControllerDelegate>
 
 @property(weak) id<SourceViewDataSource> dataSource;
 
@@ -57,6 +51,18 @@ NS_ASSUME_NONNULL_BEGIN
 - (void)addErrorInSourceRange:(marlin::source_range)range;
 
 - (void)clearErrors;
+
+- (BOOL)draggingStatementAtLocation:(Point)location;
+
+- (BOOL)draggingExpressionAtLocation:(Point)location;
+
+- (BOOL)performStatementDropForData:(NSData *)data;
+
+- (BOOL)performExpressionDropForData:(NSData *)data;
+
+- (void)removeDraggingSelection;
+
+- (void)resetAll;
 
 @end
 

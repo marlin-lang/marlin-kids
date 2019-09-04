@@ -49,7 +49,7 @@
 
 - (void)makeWindowControllers {
   NSWindowController *controller = [[NSStoryboard storyboardWithName:@"Main" bundle:nil]
-      instantiateControllerWithIdentifier:@"Document Window Controller"];
+      instantiateControllerWithIdentifier:@"WindowController"];
   [self addWindowController:controller];
   if (auto *vc = [SourceViewController cast:controller.contentViewController]) {
     vc.document = self;

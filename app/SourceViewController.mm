@@ -11,16 +11,11 @@
 #import "Theme.h"
 
 #ifdef IOS
-#import "ios/ToolboxCell.h"
-#import "ios/ToolboxHeaderView.h"
 #else
-#import "mac/ToolboxHeaderView.h"
-#import "mac/ToolboxItem.h"
 #endif
 
 @interface SourceViewController ()
 
-@property(weak) IBOutlet CollectionView *toolboxView;
 @property(weak) IBOutlet SourceView *sourceView;
 
 @property(strong) LineNumberView *lineNumberView;
@@ -50,9 +45,6 @@
 
   setCurrentTheme([[DefaultTheme alloc] init]);
 
-#ifdef IOS
-  self.toolboxView.dragDelegate = self;
-#endif
   self.sourceView.dataSource = self;
 
   /*self.sourceView.enclosingScrollView.rulersVisible = YES;
@@ -110,72 +102,6 @@
   }
 }
 
-#pragma mark - CollectionViewDataSource
-
-- (NSInteger)numberOfSectionsInCollectionView:(CollectionView *)collectionView {
-  return marlin::control::toolbox_model::sections.size();
-}
-
-- (NSInteger)collectionView:(CollectionView *)collectionView
-     numberOfItemsInSection:(NSInteger)section {
-  return marlin::control::toolbox_model::items[section].size();
-}
-
-#ifdef IOS
-
-- (UICollectionViewCell *)collectionView:(UICollectionView *)collectionView
-                  cellForItemAtIndexPath:(NSIndexPath *)indexPath {
-  ToolboxCell *cell = [collectionView dequeueReusableCellWithReuseIdentifier:@"ToolboxCell"
-                                                                forIndexPath:indexPath];
-  cell.textLabel.text = [NSString stringWithStringView:marlin::control::toolbox_model::prototype_at(
-                                                           indexPath.section, indexPath.item)
-                                                           .name()];
-  return cell;
-}
-
-- (UICollectionReusableView *)collectionView:(UICollectionView *)collectionView
-           viewForSupplementaryElementOfKind:(NSString *)kind
-                                 atIndexPath:(NSIndexPath *)indexPath {
-  if (kind == UICollectionElementKindSectionHeader) {
-    ToolboxHeaderView *view =
-        [collectionView dequeueReusableSupplementaryViewOfKind:kind
-                                           withReuseIdentifier:@"ToolboxHeaderView"
-                                                  forIndexPath:indexPath];
-    view.textLabel.text =
-        [NSString stringWithStringView:marlin::control::toolbox_model::sections[indexPath.section]];
-    return view;
-  } else {
-    NSAssert(NO, @"Unsupport kind");
-    return nil;
-  }
-}
-
-#else
-
-- (CollectionViewItem *)collectionView:(CollectionView *)collectionView
-    itemForRepresentedObjectAtIndexPath:(NSIndexPath *)indexPath {
-  ToolboxItem *item = [collectionView makeItemWithIdentifier:@"ToolboxItem" forIndexPath:indexPath];
-  item.textField.stringValue =
-      [NSString stringWithStringView:marlin::control::toolbox_model::prototype_at(indexPath.section,
-                                                                                  indexPath.item)
-                                         .name()];
-  return item;
-}
-
-- (NSView *)collectionView:(NSCollectionView *)collectionView
-    viewForSupplementaryElementOfKind:(NSCollectionViewSupplementaryElementKind)kind
-                          atIndexPath:(NSIndexPath *)indexPath {
-  ToolboxHeaderView *view =
-      [collectionView makeSupplementaryViewOfKind:NSCollectionElementKindSectionHeader
-                                   withIdentifier:@"ToolboxHeaderView"
-                                     forIndexPath:indexPath];
-  view.titleTextField.stringValue =
-      [NSString stringWithStringView:marlin::control::toolbox_model::sections[indexPath.section]];
-  return view;
-}
-
-#endif
-
 #pragma mark - CollectionViewDelegateFlowLayout
 
 - (Size)collectionView:(CollectionView *)collectionView
@@ -189,53 +115,6 @@
     referenceSizeForHeaderInSection:(NSInteger)section {
   return MakeSize(collectionView.bounds.size.width - 10, 35);
 }
-
-#ifdef IOS
-
-#pragma mark - UICollectionViewDragDelegate
-
-- (NSArray<UIDragItem *> *)collectionView:(UICollectionView *)collectionView
-             itemsForBeginningDragSession:(id<UIDragSession>)session
-                              atIndexPath:(NSIndexPath *)indexPath {
-  auto section = indexPath.section;
-  auto item = indexPath.item;
-  auto *data =
-      [NSData dataWithDataView:marlin::control::toolbox_model::prototype_at(section, item).data()];
-  auto *itemProvider = [[NSItemProvider alloc] init];
-  [itemProvider
-      registerDataRepresentationForTypeIdentifier:
-          pasteboardOfType(marlin::control::toolbox_model::items[section][item].type)
-                                       visibility:NSItemProviderRepresentationVisibilityAll
-                                      loadHandler:^NSProgress *_Nullable(
-                                          void (^_Nonnull completionHandler)(NSData *_Nullable,
-                                                                             NSError *_Nullable)) {
-                                        completionHandler(data, nil);
-                                        return nil;
-                                      }];
-  return @[ [[UIDragItem alloc] initWithItemProvider:itemProvider] ];
-}
-
-#else
-
-- (BOOL)collectionView:(NSCollectionView *)collectionView
-    canDragItemsAtIndexPaths:(NSSet<NSIndexPath *> *)indexPaths
-                   withEvent:(NSEvent *)event {
-  return YES;
-}
-
-- (BOOL)collectionView:(NSCollectionView *)collectionView
-    writeItemsAtIndexPaths:(NSSet<NSIndexPath *> *)indexPaths
-              toPasteboard:(NSPasteboard *)pasteboard {
-  auto section = indexPaths.anyObject.section;
-  auto item = indexPaths.anyObject.item;
-  NSData *data =
-      [NSData dataWithDataView:marlin::control::toolbox_model::prototype_at(section, item).data()];
-  return [pasteboard
-      setData:data
-      forType:pasteboardOfType(marlin::control::toolbox_model::items[section][item].type)];
-}
-
-#endif
 
 #pragma mark - NSTextViewDelegate
 
