@@ -6,6 +6,7 @@
 #include "prototype_definition.hpp"
 #include "toolbox_model.hpp"
 
+#import "DrawHelper.h"
 #import "LineNumberView.h"
 #import "MessageViewController.h"
 #import "NSData+DataView.h"
@@ -16,6 +17,8 @@
 @implementation SourceView {
   // NSPopover* _popover;
   EdgeInsets _insets;
+  CGFloat _gutterWidth;
+
   NSMutableArray* _strings;
 
   std::optional<marlin::control::statement_inserter> _statementInserter;
@@ -34,6 +37,7 @@
     self.frame = ZeroRect;
     _strings = [NSMutableArray new];
     _insets = EdgeInsetsMake(5, 5, 5, 5);
+    _gutterWidth = 40;
     _isDraggingFromSelection = NO;
   }
   return self;
@@ -67,7 +71,8 @@
     lineBegin = lineEnd + 1;
     ++lineIndex;
   }
-  auto width = fmax(maxLineWidth + _insets.left + _insets.right, self.bounds.size.width);
+  auto width =
+      fmax(maxLineWidth + _gutterWidth + _insets.left + _insets.right, self.bounds.size.width);
   auto height = self.lineHeight * _strings.count + _insets.top + _insets.bottom;
   [self setFrame:MakeRect(self.frame.origin.x, self.frame.origin.y, width, height)];
   [self setNeedsDisplayInRect:self.bounds];
@@ -198,36 +203,42 @@
            _strings.count - 1);
   for (auto index = beginIndex; index <= endIndex; ++index) {
     auto y = index * lineHeight + _insets.top;
+
+    auto* lineNumberStr = [NSString stringWithFormat:@"%lu", index + 1];
+    auto* attrString = [[NSAttributedString alloc] initWithString:lineNumberStr
+                                                       attributes:currentTheme().lineNumberAttrs];
+    [attrString drawInRect:MakeRect(5, y + (lineHeight - attrString.size.height) / 2,
+                                    _gutterWidth - 10, attrString.size.height)];
+
     NSAttributedString* string = [_strings objectAtIndex:index];
-    [string drawAtPoint:MakePoint(_insets.left, y)];
+    [string drawAtPoint:MakePoint(_gutterWidth + _insets.left, y)];
   }
 }
 
 - (void)drawBackgroundInRect:(Rect)rect {
+  [self drawGutterInRect:rect];
   [self drawSelectionInRect:rect];
   [self drawExpressionInsertionInRect:rect];
   [self drawStatementInsertionPointInRect:rect];
   [self drawErrorMessage];
 }
 
+- (void)drawGutterInRect:(Rect)rect {
+  if (rect.origin.x < _gutterWidth) {
+    auto gutterRect =
+        MakeRect(rect.origin.x, rect.origin.y, _gutterWidth - rect.origin.x, rect.size.height);
+    drawRectangle(gutterRect, [Color colorWithWhite:0.9 alpha:1.0]);
+  }
+}
+
 - (void)drawStatementInsertionPointInRect:(Rect)rect {
   if (_statementInsertionLine && _statementInserter && _statementInserter->can_insert()) {
     auto oneCharSize = characterSizeWithAttributes(currentTheme().allAttrs);
-    auto x = oneCharSize.width * (_statementInserter->get_location().column - 1);
+    auto x = _gutterWidth + _insets.left +
+             oneCharSize.width * (_statementInserter->get_location().column - 1);
     auto y = oneCharSize.height * (*_statementInsertionLine - 1) + _insets.top;
     if (CGRectContainsPoint(rect, MakePoint(x, y))) {
-      BeginDraw();
-      auto* line = [BezierPath bezierPath];
-      [line moveToPoint:MakePoint(x, y)];
-#ifdef IOS
-      [line addLineToPoint:MakePoint(x + 200, y)];
-#else
-      [line lineToPoint:MakePoint(x + 200, y)];
-#endif
-      [line setLineWidth:5.0];
-      [[Color blueColor] set];
-      [line stroke];
-      EndDraw();
+      drawLine(MakePoint(x, y), MakePoint(x + 200, y), 5, [Color blueColor]);
     }
   }
 }

@@ -6,14 +6,19 @@
   if (self = [super init]) {
     auto* font = [Font fontWithName:@"Courier" size:22];
     _allAttrs = @{NSFontAttributeName : font};
+
+    auto* paragraphStyle = [[NSMutableParagraphStyle alloc] init];
+    paragraphStyle.alignment = NSTextAlignmentRight;
     _lineNumberAttrs = @{
       NSFontAttributeName : [Font fontWithName:@"Courier" size:18],
-      NSForegroundColorAttributeName : Color.blackColor
+      NSForegroundColorAttributeName : Color.blackColor,
+      NSParagraphStyleAttributeName : paragraphStyle
     };
     _consoleAttrs = @{
       NSFontAttributeName : [Font fontWithName:@"Courier" size:13],
       NSForegroundColorAttributeName : Color.blackColor
     };
+
     _keywordAttrs =
         @{NSFontAttributeName : font, NSForegroundColorAttributeName : Color.purpleColor};
     _opAttrs = @{NSFontAttributeName : font, NSForegroundColorAttributeName : Color.brownColor};

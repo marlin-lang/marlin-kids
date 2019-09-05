@@ -1,6 +1,7 @@
 set(HEADERS
     Document.h
     DrawContext.h
+    DrawHelper.h
     EditorViewController.h
     ExecuteViewController.h
     LineNumberView.h

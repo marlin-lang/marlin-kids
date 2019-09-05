@@ -46,12 +46,6 @@
   setCurrentTheme([[DefaultTheme alloc] init]);
 
   self.sourceView.dataSource = self;
-
-  /*self.sourceView.enclosingScrollView.rulersVisible = YES;
-  self.sourceView.enclosingScrollView.hasHorizontalRuler = NO;
-  self.sourceView.enclosingScrollView.hasVerticalRuler = YES;
-  self.lineNumberView = [[LineNumberView alloc] initWithSourceView:self.sourceView];
-  self.sourceView.enclosingScrollView.verticalRulerView = self.lineNumberView;*/
 }
 
 #ifdef IOS
