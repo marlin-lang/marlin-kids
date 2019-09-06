@@ -17,8 +17,9 @@ auto insert_prototype(marlin::control::expression_inserter &inserter) {
 }
 
 TEST_CASE("control::Insert statement in empty document", "[control]") {
-  auto [document, init_data] =
-      marlin::control::document::make_document(nullptr, 0);
+  auto result = marlin::control::document::make_document();
+  REQUIRE(result.has_value());
+  auto [document, init_data] = *std::move(result);
   marlin::control::statement_inserter inserter{document};
 
   CHECK_FALSE(inserter.can_insert());
@@ -38,8 +39,9 @@ TEST_CASE("control::Insert statement in empty document", "[control]") {
 }
 
 TEST_CASE("control::Insert number literal at placeholder", "[control]") {
-  auto [document, init_data] =
-      marlin::control::document::make_document(nullptr, 0);
+  auto result = marlin::control::document::make_document();
+  REQUIRE(result.has_value());
+  auto [document, init_data] = *std::move(result);
   marlin::control::statement_inserter inserter{document};
   inserter.move_to_line(2);
   REQUIRE(inserter.can_insert());
@@ -64,8 +66,9 @@ TEST_CASE("control::Insert number literal at placeholder", "[control]") {
 }
 
 TEST_CASE("control::Insert string literal at placeholder", "[control]") {
-  auto [document, init_data] =
-      marlin::control::document::make_document(nullptr, 0);
+  auto result = marlin::control::document::make_document();
+  REQUIRE(result.has_value());
+  auto [document, init_data] = *std::move(result);
   marlin::control::statement_inserter inserter{document};
   inserter.move_to_line(2);
   REQUIRE(inserter.can_insert());
@@ -90,8 +93,9 @@ TEST_CASE("control::Insert string literal at placeholder", "[control]") {
 }
 
 TEST_CASE("control::Insert binary expressions at placeholder", "[control]") {
-  auto [document, init_data] =
-      marlin::control::document::make_document(nullptr, 0);
+  auto result = marlin::control::document::make_document();
+  REQUIRE(result.has_value());
+  auto [document, init_data] = *std::move(result);
   marlin::control::statement_inserter inserter{document};
   inserter.move_to_line(2);
   REQUIRE(inserter.can_insert());
@@ -129,8 +133,9 @@ TEST_CASE("control::Insert binary expressions at placeholder", "[control]") {
 }
 
 TEST_CASE("control::Insert unary expressions at placeholder", "[control]") {
-  auto [document, init_data] =
-      marlin::control::document::make_document(nullptr, 0);
+  auto result = marlin::control::document::make_document();
+  REQUIRE(result.has_value());
+  auto [document, init_data] = *std::move(result);
   marlin::control::statement_inserter inserter{document};
   inserter.move_to_line(2);
   REQUIRE(inserter.can_insert());
@@ -168,8 +173,9 @@ TEST_CASE("control::Insert unary expressions at placeholder", "[control]") {
 }
 
 TEST_CASE("control::Remove expressions", "[control]") {
-  auto [document, init_data] =
-      marlin::control::document::make_document(nullptr, 0);
+  auto result = marlin::control::document::make_document();
+  REQUIRE(result.has_value());
+  auto [document, init_data] = *std::move(result);
   marlin::control::statement_inserter inserter{document};
   inserter.move_to_line(2);
   REQUIRE(inserter.can_insert());
@@ -181,9 +187,11 @@ TEST_CASE("control::Remove expressions", "[control]") {
   expr_inserter.insert_literal(marlin::control::literal_data_type::number,
                                "12");
 
-  auto &literal = document.locate({2, 7});
-  REQUIRE(literal.is<marlin::ast::number_literal>());
-  auto [node, remove_update] = document.remove_expression(literal);
+  marlin::control::source_selection literal_selection{document, {2, 7}};
+  REQUIRE(literal_selection.is_literal());
+  auto removal = literal_selection.remove_from_document();
+  REQUIRE(removal.has_value());
+  auto remove_update = *std::move(removal);
   REQUIRE(remove_update.source == "@condition");
   REQUIRE(remove_update.range.begin.line == 2);
   REQUIRE(remove_update.range.begin.column == 7);
