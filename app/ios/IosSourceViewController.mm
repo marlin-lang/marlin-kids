@@ -6,10 +6,15 @@
 #import "NSString+StringView.h"
 #import "Pasteboard.h"
 
-#import "ios/ToolboxCell.h"
-#import "ios/ToolboxHeaderView.h"
+#import "IosSourceView.h"
+#import "ToolboxCell.h"
+#import "ToolboxHeaderView.h"
 
 @interface IosSourceViewController () <UICollectionViewDataSource, UICollectionViewDragDelegate>
+
+@property(strong, nonatomic) IosSourceView *sourceView;
+
+@property(weak, nonatomic) IBOutlet UIScrollView *scrollView;
 
 @end
 
@@ -19,6 +24,8 @@
   [super viewDidLoad];
 
   self.toolboxView.dragDelegate = self;
+    self.sourceView = [[IosSourceView alloc] initWithEnclosingScrollView:self.scrollView];
+  [self.scrollView addSubview:self.sourceView];
 }
 
 #pragma mark - UICollectionViewDataSource

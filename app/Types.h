@@ -16,11 +16,6 @@
 #define ZeroRect CGRectZero
 #define MakeRect CGRectMake
 
-#define BeginDraw()                                     \
-  CGContextRef context = UIGraphicsGetCurrentContext(); \
-  CGContextSaveGState(context)
-#define EndDraw() CGContextRestoreGState(context)
-
 #define Color UIColor
 #define Font UIFont
 #define Image UIImage
@@ -54,9 +49,6 @@
 #define Rect NSRect
 #define ZeroRect NSZeroRect
 #define MakeRect NSMakeRect
-
-#define BeginDraw() [NSGraphicsContext saveGraphicsState]
-#define EndDraw() [NSGraphicsContext restoreGraphicsState]
 
 #define Color NSColor
 #define Font NSFont

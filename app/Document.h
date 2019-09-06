@@ -8,9 +8,11 @@ NS_ASSUME_NONNULL_BEGIN
 
 @interface Document : AppleDocument
 
+@property(strong, nonatomic, nullable) NSData *initialData;
+
 - (std::optional<marlin::control::source_update>)initialize;
 
-- (marlin::control::document&)content;
+- (marlin::control::document &)content;
 
 @end
 

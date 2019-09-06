@@ -6,14 +6,26 @@
 #import "NSString+StringView.h"
 #import "Pasteboard.h"
 
-#import "mac/ToolboxHeaderView.h"
-#import "mac/ToolboxItem.h"
+#import "ToolboxHeaderView.h"
+#import "ToolboxItem.h"
 
 @interface MacSourceViewController () <NSCollectionViewDataSource>
+
+@property(weak) IBOutlet SourceView *sourceView;
 
 @end
 
 @implementation MacSourceViewController
+
+- (void)setDocument:(MacDocument *)document {
+  _document = document;
+
+  if (auto initialData = [self.document initialize]) {
+    [self.sourceView insertStatementsBeforeLine:1
+                                     withSource:std::move(initialData->source)
+                                     highlights:std::move(initialData->highlights)];
+  }
+}
 
 #pragma mark - NSCollectionViewDataSource
 

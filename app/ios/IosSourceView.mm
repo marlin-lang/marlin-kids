@@ -7,16 +7,25 @@
 
 @interface IosSourceView () <UIDropInteractionDelegate>
 
+@property(weak, nonatomic) UIScrollView* enclosingScrollView;
+
 @end
 
 @implementation IosSourceView
 
-- (instancetype)initWithCoder:(NSCoder*)aDecoder {
-  if (self = [super initWithCoder:aDecoder]) {
+- (instancetype)initWithEnclosingScrollView:(UIScrollView*)enclosingScrollView {
+  if (self = [super init]) {
+    self.backgroundColor = UIColor.whiteColor;
+    _enclosingScrollView = enclosingScrollView;
     auto* dropInteraction = [[UIDropInteraction alloc] initWithDelegate:self];
     [self addInteraction:dropInteraction];
   }
   return self;
+}
+
+- (void)setFrame:(CGRect)frame {
+  [super setFrame:frame];
+  self.enclosingScrollView.contentSize = frame.size;
 }
 
 - (BOOL)dropInteraction:(UIDropInteraction*)interaction

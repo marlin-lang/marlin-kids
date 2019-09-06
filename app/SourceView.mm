@@ -32,15 +32,26 @@
   std::vector<marlin::source_range> _errors;
 }
 
-- (instancetype)initWithCoder:(NSCoder*)coder {
-  if (self = [super initWithCoder:coder]) {
-    self.frame = ZeroRect;
-    _strings = [NSMutableArray new];
-    _insets = EdgeInsetsMake(5, 5, 5, 5);
-    _gutterWidth = 40;
-    _isDraggingFromSelection = NO;
+- (instancetype)init {
+  if (self = [super init]) {
+    [self initialize];
   }
   return self;
+}
+
+- (instancetype)initWithCoder:(NSCoder*)coder {
+  if (self = [super initWithCoder:coder]) {
+    [self initialize];
+  }
+  return self;
+}
+
+- (void)initialize {
+  self.frame = ZeroRect;
+  _strings = [NSMutableArray new];
+  _insets = EdgeInsetsMake(5, 5, 5, 5);
+  _gutterWidth = 40;
+  _isDraggingFromSelection = NO;
 }
 
 - (void)insertStatementsBeforeLine:(NSUInteger)line
@@ -169,10 +180,6 @@
   }
 }
 
-#ifndef IOS
-
-#endif
-
 #pragma mark - Private methods
 
 - (BOOL)isFlipped {
@@ -195,6 +202,7 @@
 }
 
 - (void)drawRect:(Rect)dirtyRect {
+  [super drawRect:dirtyRect];
   [self drawBackgroundInRect:dirtyRect];
   auto lineHeight = self.lineHeight;
   NSUInteger beginIndex = fmax(0, dirtyRect.origin.y - _insets.top) / lineHeight;

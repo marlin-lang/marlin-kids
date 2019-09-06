@@ -1,6 +1,7 @@
 #import "DocumentBrowserViewController.h"
-#import "Document.h"
-#import "SourceViewController.h"
+
+#import "IosDocument.h"
+#import "IosSourceViewController.h"
 
 @interface DocumentBrowserViewController () <UIDocumentBrowserViewControllerDelegate>
 
@@ -48,9 +49,9 @@
 
 - (void)presentDocumentAtURL:(NSURL *)documentURL {
   auto *storyBoard = [UIStoryboard storyboardWithName:@"Main" bundle:nil];
-  SourceViewController *vc =
+  IosSourceViewController *vc =
       [storyBoard instantiateViewControllerWithIdentifier:@"SourceViewController"];
-  vc.document = [[Document alloc] initWithFileURL:documentURL];
+  vc.document = [[IosDocument alloc] initWithFileURL:documentURL];
   auto *navigationController = [[UINavigationController alloc] initWithRootViewController:vc];
   [self presentViewController:navigationController animated:YES completion:nil];
 }

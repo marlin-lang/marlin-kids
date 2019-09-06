@@ -4,19 +4,17 @@
 
 #include "toolbox_model.hpp"
 
+#import "Document.h"
 #import "LineNumberView.h"
 #import "NSData+DataView.h"
 #import "NSString+StringView.h"
 #import "Pasteboard.h"
 #import "Theme.h"
 
-#ifdef IOS
-#else
-#endif
-
 @interface SourceViewController ()
 
-@property(weak) IBOutlet SourceView *sourceView;
+@property(readonly) Document *document;
+@property(readonly) SourceView *sourceView;
 
 @property(strong) LineNumberView *lineNumberView;
 
@@ -25,20 +23,6 @@
 @implementation SourceViewController {
   std::optional<marlin::control::exec_environment> _exec_env;
 }
-
-#ifndef IOS
-
-- (void)setDocument:(Document *)document {
-  _document = document;
-
-  if (auto initialData = [self.document initialize]) {
-    [self.sourceView insertStatementsBeforeLine:1
-                                     withSource:std::move(initialData->source)
-                                     highlights:std::move(initialData->highlights)];
-  }
-}
-
-#endif
 
 - (void)viewDidLoad {
   [super viewDidLoad];
