@@ -23,6 +23,7 @@
 - (instancetype)initWithSourceView:(SourceView*)view {
 #ifdef IOS
   if (self = [super init]) {
+    self.backgroundColor = [Color colorWithWhite:0.85 alpha:1.0];
 #else
   if (self = [super initWithScrollView:view.enclosingScrollView orientation:NSVerticalRuler]) {
 #endif
@@ -72,12 +73,15 @@
 }*/
 
 #ifdef IOS
-- (void)drawRect:(Rect)dirtyRect {
-  [self drawHashMarksAndLabelsInRect:dirtyRect];
+- (void)drawRect:(Rect)rect {
+  [super drawRect:rect];
+  [self drawHashMarksAndLabelsInRect:rect];
 }
 #endif
 
 - (void)drawHashMarksAndLabelsInRect:(Rect)rect {
+  // CGContextRef context = UIGraphicsGetCurrentContext();
+  // CGContextSaveGState(context);
   auto* sourceView = (SourceView*)self.clientView;
   auto startPoint = [self convertPoint:rect.origin toView:sourceView];
   auto [startLine, startColumn] = [sourceView sourceLocationOfPoint:startPoint];
@@ -88,17 +92,20 @@
   auto height = sourceView.lineHeight;
   auto errorSize = height - _inset * 2;
   auto y = [sourceView lineTopOfNumber:startLine] + offset.y;
-  for (auto line = startLine; line <= endLine; ++line) {
-    auto errorRect = MakeRect(_inset, y + _inset, errorSize, errorSize);
-    [self drawErrorIndicatorOfLine:line atRect:errorRect];
+  if (startLine > 0) {
+    for (auto line = startLine; line <= endLine; ++line) {
+      auto errorRect = MakeRect(_inset, y + _inset, errorSize, errorSize);
+      [self drawErrorIndicatorOfLine:line atRect:errorRect];
 
-    auto* string = [NSString stringWithFormat:@"%lu", line];
-    auto* attrString = [[NSAttributedString alloc] initWithString:string
-                                                       attributes:currentTheme().lineNumberAttrs];
-    [attrString
-        drawAtPoint:MakePoint(self.ruleThickness - _inset - attrString.size.width, y + _inset)];
-    y += height;
+      auto* string = [NSString stringWithFormat:@"%lu", line];
+      auto* attrString = [[NSAttributedString alloc] initWithString:string
+                                                         attributes:currentTheme().lineNumberAttrs];
+      [attrString
+          drawAtPoint:MakePoint(self.ruleThickness - _inset - attrString.size.width, y + _inset)];
+      y += height;
+    }
   }
+  // CGContextRestoreGState(context);
 }
 
 - (void)drawErrorIndicatorOfLine:(NSUInteger)number atRect:(Rect)rect {

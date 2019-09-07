@@ -28,6 +28,7 @@
 - (void)setFrame:(CGRect)frame {
   [super setFrame:frame];
   self.enclosingScrollView.contentSize = frame.size;
+  [self.lineNumberView setNeedsDisplay];
 }
 
 - (BOOL)dropInteraction:(UIDropInteraction*)interaction
