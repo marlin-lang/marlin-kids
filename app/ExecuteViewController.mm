@@ -3,38 +3,11 @@
 #include <chrono>
 
 #include "logo_sketcher.hpp"
-#include "native_func_utils.hpp"
 
 #import "DrawContext.h"
 #import "NSString+StringView.h"
+#import "NativeFuncUtils.h"
 #import "Theme.h"
-
-struct SystemEnvironmentContainer {
-  __weak ExecuteViewController* environment;
-
-  SystemEnvironmentContainer(ExecuteViewController* _env) : environment{_env} {}
-};
-
-void dispatch_on_main(void (^block)(void)) {
-  if (NSThread.isMainThread) {
-    block();
-  } else {
-    dispatch_sync(dispatch_get_main_queue(), block);
-  }
-}
-
-template <typename... Args, typename SystemContainer, typename Callable>
-void register_native_instruction(SystemContainer& system, const char* name, Callable&& callable) {
-  system.set_native_function(name, SystemContainer::template callback<void(Args...)>::wrapped(
-                                       [callable{std::forward<Callable>(callable)}](
-                                           SystemEnvironmentContainer* container, Args... args) {
-                                         dispatch_on_main(^{
-                                           if (auto self = container->environment) {
-                                             callable(self, args...);
-                                           }
-                                         });
-                                       }));
-}
 
 constexpr double refreshTimeInMS = 40;
 
@@ -100,10 +73,9 @@ constexpr double refreshTimeInMS = 40;
 - (void)startExecute {
   assert(_environment.has_value());
 
-  marlin::control::native_container<SystemEnvironmentContainer> system{*_environment, "system",
-                                                                       self};
+  NativeEnvironment<ExecuteViewController> system{*_environment, "system", self};
 
-  register_native_instruction<std::string>(system, "print", [](auto self, std::string message) {
+  system.register_native_instruction<std::string>("print", [](auto self, std::string message) {
 #ifndef IOS
     [self.outputTextView.textStorage
         replaceCharactersInRange:NSMakeRange(self.outputTextView.string.length, 0)
@@ -113,24 +85,13 @@ constexpr double refreshTimeInMS = 40;
 #endif
   });
 
-  register_native_instruction<double, double, double, double>(
-      system, "draw_line",
-      [](auto self, double start_x, double start_y, double end_x, double end_y) {
+  system.register_native_instruction<double, double, double, double>(
+      "draw_line", [](auto self, double start_x, double start_y, double end_x, double end_y) {
         self->_drawContext.draw_line(start_x, start_y, end_x, end_y);
       });
 
-  register_native_instruction<double>(system, "logo_forward", [](auto self, double length) {
-    self->_logoSketcher.forward(length);
-  });
-  register_native_instruction<double>(system, "logo_backward", [](auto self, double length) {
-    self->_logoSketcher.backward(length);
-  });
-  register_native_instruction<double>(system, "logo_turn_left", [](auto self, double degree) {
-    self->_logoSketcher.turn_left(degree);
-  });
-  register_native_instruction<double>(system, "logo_turn_right", [](auto self, double degree) {
-    self->_logoSketcher.turn_right(degree);
-  });
+  auto logo = system.makeSubEnvironment([](auto self) { return &self->_logoSketcher; });
+  decltype(self->_logoSketcher)::register_instructions(logo);
 
   _environment->execute();
 }

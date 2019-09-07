@@ -32,6 +32,22 @@ struct logo_sketcher {
   }
   void turn_right(double degree) { turn_left(-degree); }
 
+  template <typename native_environment>
+  static void register_instructions(native_environment& env) {
+    env.template register_native_instruction<double>(
+        "logo_forward",
+        [](auto self, double length) { self->forward(length); });
+    env.template register_native_instruction<double>(
+        "logo_backward",
+        [](auto self, double length) { self->backward(length); });
+    env.template register_native_instruction<double>(
+        "logo_turn_left",
+        [](auto self, double degree) { self->turn_left(degree); });
+    env.template register_native_instruction<double>(
+        "logo_turn_right",
+        [](auto self, double degree) { self->turn_right(degree); });
+  }
+
  private:
   draw_context_type* _ctx;
 
