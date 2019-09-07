@@ -5,6 +5,7 @@
 #import "NSData+DataView.h"
 #import "NSString+StringView.h"
 #import "Pasteboard.h"
+#import "LineNumberView.h"
 
 #import "IosSourceView.h"
 #import "ToolboxCell.h"
@@ -26,6 +27,13 @@
   self.toolboxView.dragDelegate = self;
   self.sourceView = [[IosSourceView alloc] initWithEnclosingScrollView:self.scrollView
                                                             dataSource:self];
+    auto* lineNumberView = [[LineNumberView alloc] initWithSourceView:self.sourceView];
+    self.scrollView.contentInset = UIEdgeInsetsMake(0, lineNumberView.ruleThickness, 0, 0);
+    [self.scrollView addSubview:lineNumberView];
+    [lineNumberView.topAnchor constraintEqualToAnchor:self.scrollView.topAnchor].active = YES;
+    [lineNumberView.leftAnchor constraintEqualToAnchor:self.scrollView.leftAnchor].active = YES;
+    [lineNumberView.bottomAnchor constraintEqualToAnchor:self.scrollView.bottomAnchor].active = YES;
+    [lineNumberView.widthAnchor constraintEqualToConstant:lineNumberView.ruleThickness];
   [self.scrollView addSubview:self.sourceView];
 }
 

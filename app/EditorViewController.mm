@@ -64,7 +64,8 @@
 
 - (void)setType:(EditorType)type {
   _type = type;
-  /*switch (_type) {
+#ifndef IOS
+  switch (_type) {
     case EditorType::variable_name:
       self.formatter = [VariableFormatter new];
       self.typeSegmentControl.segmentCount = 1;
@@ -90,24 +91,26 @@
       [self setupSegmentControlForRightValue];
       [self.typeSegmentControl setSelected:YES forSegment:2];
       break;
-  }*/
+  }
+#endif
 }
 
 - (IBAction)typeSegmentControlChanged:(id)sender {
+#ifndef IOS
   switch (self.type) {
     case EditorType::number:
-      // self.numberStr = self.editorTextField.stringValue;
+      self.numberStr = self.editorTextField.stringValue;
       break;
     case EditorType::string:
-      // self.stringStr = self.editorTextField.stringValue;
+      self.stringStr = self.editorTextField.stringValue;
       break;
     case EditorType::identifier:
-      // self.identifierStr = self.editorTextField.stringValue;
+      self.identifierStr = self.editorTextField.stringValue;
       break;
     default:
       break;
   }
-  /*switch (self.typeSegmentControl.selectedSegment) {
+  switch (self.typeSegmentControl.selectedSegment) {
     case 0:
       self.type = EditorType::number;
       self.editorTextField.stringValue = self.numberStr;
@@ -122,14 +125,17 @@
       break;
     default:
       break;
-  }*/
+  }
   [self validate];
+#endif
 }
 
 - (IBAction)okButtonPressed:(id)sender {
-  //[self.delegate viewController:self
-  //         finishEditWithString:self.editorTextField.stringValue
-  //                       ofType:self.type];
+#ifndef IOS
+  [self.delegate viewController:self
+           finishEditWithString:self.editorTextField.stringValue
+                         ofType:self.type];
+#endif
 }
 
 - (void)controlTextDidChange:(NSNotification *)obj {
@@ -137,20 +143,24 @@
 }
 
 - (void)setupSegmentControlForRightValue {
-  // self.typeSegmentControl.segmentCount = 3;
-  //[self.typeSegmentControl setLabel:@"Number" forSegment:0];
-  //[self.typeSegmentControl setLabel:@"String" forSegment:1];
-  //[self.typeSegmentControl setLabel:@"Variable" forSegment:2];
+#ifndef IOS
+  self.typeSegmentControl.segmentCount = 3;
+  [self.typeSegmentControl setLabel:@"Number" forSegment:0];
+  [self.typeSegmentControl setLabel:@"String" forSegment:1];
+  [self.typeSegmentControl setLabel:@"Variable" forSegment:2];
+#endif
 }
 
 - (void)validate {
-  // if ([self.formatter getObjectValue:nil
-  //                         forString:self.editorTextField.stringValue
-  // errorDescription:nil]) {
-  // self.okButton.enabled = YES;
-  //} else {
-  // self.okButton.enabled = NO;
-  //}
+#ifndef IOS
+  if ([self.formatter getObjectValue:nil
+                           forString:self.editorTextField.stringValue
+                    errorDescription:nil]) {
+    self.okButton.enabled = YES;
+  } else {
+    self.okButton.enabled = NO;
+  }
+#endif
 }
 
 @end

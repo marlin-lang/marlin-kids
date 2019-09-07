@@ -5,13 +5,15 @@
 #import "NSData+DataView.h"
 #import "NSString+StringView.h"
 #import "Pasteboard.h"
+#import "LineNumberView.h"
 
 #import "ToolboxHeaderView.h"
 #import "ToolboxItem.h"
+#import "MacSourceView.h"
 
 @interface MacSourceViewController () <NSCollectionViewDataSource>
 
-@property(weak) IBOutlet SourceView *sourceView;
+@property(weak) IBOutlet MacSourceView *sourceView;
 
 @end
 
@@ -30,6 +32,10 @@
 - (void)viewDidLoad {
   [super viewDidLoad];
   self.sourceView.dataSource = self;
+    self.sourceView.enclosingScrollView.rulersVisible = YES;
+     self.sourceView.enclosingScrollView.hasHorizontalRuler = NO;
+     self.sourceView.enclosingScrollView.hasVerticalRuler = YES;
+     self.sourceView.enclosingScrollView.verticalRulerView =  [[LineNumberView alloc] initWithSourceView:self.sourceView];
 }
 
 #pragma mark - NSCollectionViewDataSource

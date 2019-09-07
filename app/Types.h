@@ -9,6 +9,7 @@
 #define AppleDocument UIDocument
 
 #define Point CGPoint
+#define ZeroPoint CGPointZero
 #define MakePoint CGPointMake
 #define Size CGSize
 #define MakeSize CGSizeMake
@@ -29,6 +30,7 @@
 #define SegmentedControl UISegmentedControl
 #define StoryboardSegue UIStoryboardSegue
 #define View UIView
+#define RulerView UIView
 #define ImageView UIImageView
 #define TextView UITextView
 #define CollectionView UICollectionView
@@ -43,6 +45,7 @@
 #define AppleDocument NSDocument
 
 #define Point NSPoint
+#define ZeroPoint NSZeroPoint
 #define MakePoint NSMakePoint
 #define Size NSSize
 #define MakeSize NSMakeSize
@@ -63,6 +66,7 @@
 #define SegmentedControl NSSegmentedControl
 #define StoryboardSegue NSStoryboardSegue
 #define View NSView
+#define RulerView NSRulerView
 #define ImageView NSImageView
 #define TextView NSTextView
 #define CollectionView NSCollectionView

@@ -37,18 +37,20 @@ constexpr double refreshTimeInMS = 40;
 - (void)viewDidLoad {
   [super viewDidLoad];
 
-  /*self.imageView.image = [Image imageWithSize:self.imageView.bounds.size
-                                        flipped:NO
-                                 drawingHandler:^BOOL(Rect dstRect) {
-                                   return YES;
-                                 }];*/
+#ifndef IOS
+  self.imageView.image = [Image imageWithSize:self.imageView.bounds.size
+                                      flipped:NO
+                               drawingHandler:^BOOL(Rect dstRect) {
+                                 return YES;
+                               }];
+#endif
   _drawContext.initWithImage(self.imageView.image, self);
   _logoSketcher.set_context(_drawContext);
   _needRefreshImage = NO;
 }
 
 - (void)viewDidAppear {
-  //[super viewDidAppear];
+  [super viewDidAppear];
 
   [self startExecute];
 }
@@ -81,11 +83,13 @@ constexpr double refreshTimeInMS = 40;
   __weak auto weakSelf = self;
   _environment->register_print_callback([weakSelf](std::string value) {
     dispatch_on_main(^{
-        /*[weakSelf.outputTextView.textStorage
-            replaceCharactersInRange:NSMakeRange(weakSelf.outputTextView.string.length, 0)
-                withAttributedString:[[NSAttributedString alloc]
-                                         initWithString:[NSString stringWithStringView:value]
-                                             attributes:currentTheme().consoleAttrs]];*/
+#ifndef IOS
+      [weakSelf.outputTextView.textStorage
+          replaceCharactersInRange:NSMakeRange(weakSelf.outputTextView.string.length, 0)
+              withAttributedString:[[NSAttributedString alloc]
+                                       initWithString:[NSString stringWithStringView:value]
+                                           attributes:currentTheme().consoleAttrs]];
+#endif
     });
   });
 
@@ -209,11 +213,13 @@ constexpr double refreshTimeInMS = 40;
 }
 
 - (void)refreshImage {
-  /*for (NSImageRep *rep in self.imageView.image.representations) {
+#ifndef IOS
+  for (NSImageRep *rep in self.imageView.image.representations) {
     [self.imageView.image removeRepresentation:rep];
-  }*/
-  //[self.imageView.image addRepresentation:_drawContext.imageRep()];
-  //[self.imageView setNeedsDisplay:YES];
+  }
+  [self.imageView.image addRepresentation:_drawContext.imageRep()];
+  [self.imageView setNeedsDisplay:YES];
+#endif
   _refresh_time = std::chrono::high_resolution_clock::now();
   _needRefreshImage = NO;
 

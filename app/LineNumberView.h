@@ -4,7 +4,11 @@
 
 NS_ASSUME_NONNULL_BEGIN
 
-@interface LineNumberView : View  // NSRulerView
+@interface LineNumberView : RulerView
+
+#ifdef IOS
+@property CGFloat ruleThickness;
+#endif
 
 - (instancetype)initWithSourceView:(SourceView*)view;
 

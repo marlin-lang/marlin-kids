@@ -15,9 +15,10 @@
 #import "Theme.h"
 
 @implementation SourceView {
-  // NSPopover* _popover;
+#ifndef IOS
+  NSPopover* _popover;
+#endif
   EdgeInsets _insets;
-  CGFloat _gutterWidth;
 
   NSMutableArray* _strings;
 
@@ -50,7 +51,6 @@
   self.frame = ZeroRect;
   _strings = [NSMutableArray new];
   _insets = EdgeInsetsMake(5, 5, 5, 5);
-  _gutterWidth = 40;
   _isDraggingFromSelection = NO;
 }
 
@@ -82,8 +82,7 @@
     lineBegin = lineEnd + 1;
     ++lineIndex;
   }
-  auto width =
-      fmax(maxLineWidth + _gutterWidth + _insets.left + _insets.right, self.bounds.size.width);
+  auto width = fmax(maxLineWidth + _insets.left + _insets.right, self.bounds.size.width);
   auto height = self.lineHeight * _strings.count + _insets.top + _insets.bottom;
   [self setFrame:MakeRect(self.frame.origin.x, self.frame.origin.y, width, height)];
   [self setNeedsDisplayInRect:self.bounds];
@@ -165,7 +164,9 @@
 - (void)viewController:(EditorViewController*)vc
     finishEditWithString:(NSString*)string
                   ofType:(EditorType)type {
-  // [_popover close];
+#ifndef IOS
+  [_popover close];
+#endif
   if (string.length > 0 && _selection) {
     auto inserter = (*std::move(_selection)).as_expression_inserter();
     _selection.reset();
@@ -211,39 +212,22 @@
            _strings.count - 1);
   for (auto index = beginIndex; index <= endIndex; ++index) {
     auto y = index * lineHeight + _insets.top;
-
-    auto* lineNumberStr = [NSString stringWithFormat:@"%lu", index + 1];
-    auto* attrString = [[NSAttributedString alloc] initWithString:lineNumberStr
-                                                       attributes:currentTheme().lineNumberAttrs];
-    [attrString drawInRect:MakeRect(5, y + (lineHeight - attrString.size.height) / 2,
-                                    _gutterWidth - 10, attrString.size.height)];
-
     NSAttributedString* string = [_strings objectAtIndex:index];
-    [string drawAtPoint:MakePoint(_gutterWidth + _insets.left, y)];
+    [string drawAtPoint:MakePoint(_insets.left, y)];
   }
 }
 
 - (void)drawBackgroundInRect:(Rect)rect {
-  [self drawGutterInRect:rect];
   [self drawSelectionInRect:rect];
   [self drawExpressionInsertionInRect:rect];
   [self drawStatementInsertionPointInRect:rect];
   [self drawErrorMessage];
 }
 
-- (void)drawGutterInRect:(Rect)rect {
-  if (rect.origin.x < _gutterWidth) {
-    auto gutterRect =
-        MakeRect(rect.origin.x, rect.origin.y, _gutterWidth - rect.origin.x, rect.size.height);
-    drawRectangle(gutterRect, [Color colorWithWhite:0.9 alpha:1.0]);
-  }
-}
-
 - (void)drawStatementInsertionPointInRect:(Rect)rect {
   if (_statementInsertionLine && _statementInserter && _statementInserter->can_insert()) {
     auto oneCharSize = characterSizeWithAttributes(currentTheme().allAttrs);
-    auto x = _gutterWidth + _insets.left +
-             oneCharSize.width * (_statementInserter->get_location().column - 1);
+    auto x = _insets.left + oneCharSize.width * (_statementInserter->get_location().column - 1);
     auto y = oneCharSize.height * (*_statementInsertionLine - 1) + _insets.top;
     if (CGRectContainsPoint(rect, MakePoint(x, y))) {
       drawLine(MakePoint(x, y), MakePoint(x + 200, y), 5, [Color blueColor]);
@@ -266,7 +250,8 @@
 - (void)drawSourceRange:(marlin::source_range)range
                  inRect:(Rect)rect
            forSelection:(BOOL)isSelection {
-  /*auto sourceRect = [self rectOfSourceRange:range];
+#ifndef IOS
+  auto sourceRect = [self rectOfSourceRange:range];
   if (NSIntersectsRect(rect, sourceRect)) {
     [NSGraphicsContext saveGraphicsState];
     NSBezierPath* path = [NSBezierPath bezierPathWithRoundedRect:sourceRect
@@ -293,11 +278,13 @@
     [path transformUsingAffineTransform:transform];
     [path stroke];
     [NSGraphicsContext restoreGraphicsState];
-  }*/
+  }
+#endif
 }
 
 - (void)drawErrorMessage {
-  /*for (auto errorRange : _errors) {
+#ifndef IOS
+  for (auto errorRange : _errors) {
     auto rect = [self rectOfSourceRange:errorRange];
     [NSGraphicsContext saveGraphicsState];
     NSBezierPath* line = [NSBezierPath bezierPath];
@@ -310,10 +297,12 @@
     [[NSColor redColor] set];
     [line stroke];
     [NSGraphicsContext restoreGraphicsState];
-  }*/
+  }
+#endif
 }
 
-/*- (void)mouseDown:(NSEvent*)event {
+#ifndef IOS
+- (void)mouseDown:(NSEvent*)event {
   [super mouseDown:event];
 
   auto location = [self convertPoint:event.locationInWindow fromView:nil];
@@ -341,7 +330,7 @@
 - (void)mouseDragged:(NSEvent*)event {
   [super mouseDragged:event];
 
-  if (!_isDraggingFromSelection && _selection) {
+  /*if (!_isDraggingFromSelection && _selection) {
     _isDraggingFromSelection = YES;
     auto* pasteboardItem = [NSPasteboardItem new];
     if (_selection->is_statement()) {
@@ -356,8 +345,9 @@
     auto* draggingItem = [[NSDraggingItem alloc] initWithPasteboardWriter:pasteboardItem];
     [draggingItem setDraggingFrame:NSMakeRect(0, 0, 100, 100)];
     [self beginDraggingSessionWithItems:@[ draggingItem ] event:event source:self];
-  }
-}*/
+  }*/
+}
+#endif
 
 - (Rect)rectOfSourceRange:(marlin::source_range)range {
   NSAssert(range.end.line >= range.begin.line, @"Range should be valid");

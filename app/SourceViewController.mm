@@ -5,6 +5,7 @@
 #include "toolbox_model.hpp"
 
 #import "Document.h"
+#import "ExecuteViewController.h"
 #import "LineNumberView.h"
 #import "NSData+DataView.h"
 #import "NSString+StringView.h"
@@ -42,13 +43,15 @@
 }
 
 - (void)prepareForSegue:(StoryboardSegue *)segue sender:(id)sender {
-  /*if ([segue.destinationController isKindOfClass:[ExecuteViewController class]]) {
+#ifndef IOS
+  if ([segue.destinationController isKindOfClass:[ExecuteViewController class]]) {
     assert(_exec_env.has_value());
 
     auto *vc = (ExecuteViewController *)segue.destinationController;
     vc.environment = *std::move(_exec_env);
     _exec_env = std::nullopt;
-  }*/
+  }
+#endif
 }
 
 - (void)execute {

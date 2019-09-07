@@ -26,6 +26,14 @@ inline void drawRectangle(Rect rect, Color* fillColor) {
   });
 }
 
+inline void drawOval(Rect rect, Color* fillColor) {
+  drawWithBlock([rect, fillColor]() {
+    auto* path = [BezierPath bezierPathWithOvalInRect:rect];
+    [fillColor set];
+    [path fill];
+  });
+}
+
 inline void drawLine(Point start, Point end, CGFloat width, Color* color) {
   drawWithBlock([start, end, width, color]() {
     auto* line = [BezierPath bezierPath];
