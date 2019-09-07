@@ -13,10 +13,12 @@
 
 @implementation IosSourceView
 
-- (instancetype)initWithEnclosingScrollView:(UIScrollView*)enclosingScrollView {
+- (instancetype)initWithEnclosingScrollView:(UIScrollView*)enclosingScrollView
+                                 dataSource:(id<SourceViewDataSource>)dataSource {
   if (self = [super init]) {
     self.backgroundColor = UIColor.whiteColor;
     _enclosingScrollView = enclosingScrollView;
+    self.dataSource = dataSource;
     auto* dropInteraction = [[UIDropInteraction alloc] initWithDelegate:self];
     [self addInteraction:dropInteraction];
   }

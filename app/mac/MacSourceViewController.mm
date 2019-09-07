@@ -27,6 +27,11 @@
   }
 }
 
+- (void)viewDidLoad {
+  [super viewDidLoad];
+  self.sourceView.dataSource = self;
+}
+
 #pragma mark - NSCollectionViewDataSource
 
 - (NSInteger)numberOfSectionsInCollectionView:(CollectionView *)collectionView {

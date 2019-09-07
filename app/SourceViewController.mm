@@ -13,10 +13,11 @@
 
 @interface SourceViewController ()
 
-@property(readonly) Document *document;
-@property(readonly) SourceView *sourceView;
-
 @property(strong) LineNumberView *lineNumberView;
+
+- (Document *)document;
+
+- (SourceView *)sourceView;
 
 @end
 
@@ -28,28 +29,17 @@
   [super viewDidLoad];
 
   setCurrentTheme([[DefaultTheme alloc] init]);
-
-  self.sourceView.dataSource = self;
 }
 
-#ifdef IOS
-
-- (void)viewWillAppear:(BOOL)animated {
-  [super viewWillAppear:animated];
-
-  [self.document openWithCompletionHandler:^(BOOL success) {
-    if (success) {
-      if (auto initialData = [self.document initialize]) {
-        [self.sourceView insertStatementsBeforeLine:1
-                                         withSource:std::move(initialData->source)
-                                         highlights:std::move(initialData->highlights)];
-      }
-    } else {
-    }
-  }];
+- (Document *)document {
+  NSAssert(NO, @"Implement by subclass");
+  return nil;
 }
 
-#endif
+- (SourceView *)sourceView {
+  NSAssert(NO, @"Implement by subclass");
+  return nil;
+}
 
 - (void)prepareForSegue:(StoryboardSegue *)segue sender:(id)sender {
   /*if ([segue.destinationController isKindOfClass:[ExecuteViewController class]]) {
@@ -105,15 +95,15 @@
 
 - (marlin::control::source_selection)textView:(SourceView *)view
                                   selectionAt:(marlin::source_loc)loc {
-  return {_document.content, loc};
+  return {self.document.content, loc};
 }
 
 - (marlin::control::statement_inserter)statementInserterForTextView:(SourceView *)view {
-  return {_document.content};
+  return {self.document.content};
 }
 
 - (marlin::control::expression_inserter)expressionInserterForTextView:(SourceView *)view {
-  return {_document.content};
+  return {self.document.content};
 }
 
 @end

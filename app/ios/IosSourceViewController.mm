@@ -24,8 +24,24 @@
   [super viewDidLoad];
 
   self.toolboxView.dragDelegate = self;
-    self.sourceView = [[IosSourceView alloc] initWithEnclosingScrollView:self.scrollView];
+  self.sourceView = [[IosSourceView alloc] initWithEnclosingScrollView:self.scrollView
+                                                            dataSource:self];
   [self.scrollView addSubview:self.sourceView];
+}
+
+- (void)viewWillAppear:(BOOL)animated {
+  [super viewWillAppear:animated];
+
+  [self.document openWithCompletionHandler:^(BOOL success) {
+    if (success) {
+      if (auto initialData = [self.document initialize]) {
+        [self.sourceView insertStatementsBeforeLine:1
+                                         withSource:std::move(initialData->source)
+                                         highlights:std::move(initialData->highlights)];
+      }
+    } else {
+    }
+  }];
 }
 
 #pragma mark - UICollectionViewDataSource
