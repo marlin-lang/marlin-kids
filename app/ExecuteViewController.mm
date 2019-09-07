@@ -1,12 +1,19 @@
 #import "ExecuteViewController.h"
 
-#import <chrono>
+#include <chrono>
 
-#import "logo_sketcher.hpp"
+#include "logo_sketcher.hpp"
+#include "native_func_utils.hpp"
 
 #import "DrawContext.h"
 #import "NSString+StringView.h"
 #import "Theme.h"
+
+struct SystemEnvironmentContainer {
+  __weak ExecuteViewController* environment;
+
+  SystemEnvironmentContainer(ExecuteViewController* _env) : environment{_env} {}
+};
 
 void dispatch_on_main(void (^block)(void)) {
   if (NSThread.isMainThread) {
@@ -16,12 +23,25 @@ void dispatch_on_main(void (^block)(void)) {
   }
 }
 
+template <typename... Args, typename SystemContainer, typename Callable>
+void register_native_instruction(SystemContainer& system, const char* name, Callable&& callable) {
+  system.set_native_function(name, SystemContainer::template callback<void(Args...)>::wrapped(
+                                       [callable{std::forward<Callable>(callable)}](
+                                           SystemEnvironmentContainer* container, Args... args) {
+                                         dispatch_on_main(^{
+                                           if (auto self = container->environment) {
+                                             callable(self, args...);
+                                           }
+                                         });
+                                       }));
+}
+
 constexpr double refreshTimeInMS = 40;
 
 @interface ExecuteViewController ()
 
-@property(weak) IBOutlet ImageView *imageView;
-@property(weak) IBOutlet TextView *outputTextView;
+@property(weak) IBOutlet ImageView* imageView;
+@property(weak) IBOutlet TextView* outputTextView;
 
 @end
 
@@ -85,128 +105,37 @@ constexpr double refreshTimeInMS = 40;
 - (void)startExecute {
   assert(_environment.has_value());
 
-  __weak auto weakSelf = self;
-  _environment->register_print_callback([weakSelf](std::string value) {
-    dispatch_on_main(^{
+  marlin::control::native_container<SystemEnvironmentContainer> system{*_environment, "system",
+                                                                       self};
+
+  register_native_instruction<std::string>(system, "print", [](auto self, std::string message) {
 #ifndef IOS
-      [weakSelf.outputTextView.textStorage
-          replaceCharactersInRange:NSMakeRange(weakSelf.outputTextView.string.length, 0)
-              withAttributedString:[[NSAttributedString alloc]
-                                       initWithString:[NSString stringWithStringView:value]
-                                           attributes:currentTheme().consoleAttrs]];
+    [self.outputTextView.textStorage
+        replaceCharactersInRange:NSMakeRange(self.outputTextView.string.length, 0)
+            withAttributedString:[[NSAttributedString alloc]
+                                     initWithString:[NSString stringWithStringView:message]
+                                         attributes:currentTheme().consoleAttrs]];
 #endif
-    });
   });
 
-  _environment->add_custom_callback(
-      "draw_line", [weakSelf](auto ctx, auto, auto args, auto exception) {
-        if (args.size() != 4) {
-          *exception = ctx.error("Incorrect number of arguments!");
-        } else {
-          double start_x = args[0].to_number();
-          if (!ctx.ok()) {
-            *exception = ctx.get_exception();
-            return;
-          }
-
-          double start_y = args[1].to_number();
-          if (!ctx.ok()) {
-            *exception = ctx.get_exception();
-            return;
-          }
-
-          double end_x = args[2].to_number();
-          if (!ctx.ok()) {
-            *exception = ctx.get_exception();
-            return;
-          }
-
-          double end_y = args[3].to_number();
-          if (!ctx.ok()) {
-            *exception = ctx.get_exception();
-            return;
-          }
-
-          dispatch_on_main(^{
-            if (auto strongSelf = weakSelf) {
-              strongSelf->_drawContext.draw_line(start_x, start_y, end_x, end_y);
-            }
-          });
-        }
+  register_native_instruction<double, double, double, double>(
+      system, "draw_line",
+      [](auto self, double start_x, double start_y, double end_x, double end_y) {
+        self->_drawContext.draw_line(start_x, start_y, end_x, end_y);
       });
 
-  _environment->add_custom_callback("logo_forward",
-                                    [weakSelf](auto ctx, auto, auto args, auto exception) {
-                                      if (args.size() != 1) {
-                                        *exception = ctx.error("Incorrect number of arguments!");
-                                      } else {
-                                        double length = args[0].to_number();
-                                        if (!ctx.ok()) {
-                                          *exception = ctx.get_exception();
-                                          return;
-                                        }
-
-                                        dispatch_on_main(^{
-                                          if (auto strongSelf = weakSelf) {
-                                            strongSelf->_logoSketcher.forward(length);
-                                          }
-                                        });
-                                      }
-                                    });
-  _environment->add_custom_callback("logo_backward",
-                                    [weakSelf](auto ctx, auto, auto args, auto exception) {
-                                      if (args.size() != 1) {
-                                        *exception = ctx.error("Incorrect number of arguments!");
-                                      } else {
-                                        double length = args[0].to_number();
-                                        if (!ctx.ok()) {
-                                          *exception = ctx.get_exception();
-                                          return;
-                                        }
-
-                                        dispatch_on_main(^{
-                                          if (auto strongSelf = weakSelf) {
-                                            strongSelf->_logoSketcher.backward(length);
-                                          }
-                                        });
-                                      }
-                                    });
-  _environment->add_custom_callback("logo_turn_left",
-                                    [weakSelf](auto ctx, auto, auto args, auto exception) {
-                                      if (args.size() != 1) {
-                                        *exception = ctx.error("Incorrect number of arguments!");
-                                      } else {
-                                        double degree = args[0].to_number();
-                                        if (!ctx.ok()) {
-                                          *exception = ctx.get_exception();
-                                          return;
-                                        }
-
-                                        dispatch_on_main(^{
-                                          if (auto strongSelf = weakSelf) {
-                                            strongSelf->_logoSketcher.turn_left(degree);
-                                          }
-                                        });
-                                      }
-                                    });
-  _environment->add_custom_callback("logo_turn_right",
-                                    [weakSelf](auto ctx, auto, auto args, auto exception) {
-                                      if (args.size() != 1) {
-                                        *exception = ctx.error("Incorrect number of arguments!");
-                                      } else {
-                                        double degree = args[0].to_number();
-                                        if (!ctx.ok()) {
-                                          *exception = ctx.get_exception();
-                                          return;
-                                        }
-
-                                        dispatch_on_main(^{
-                                          if (auto strongSelf = weakSelf) {
-                                            strongSelf->_logoSketcher.turn_right(degree);
-                                          }
-                                        });
-                                      }
-                                    });
+  register_native_instruction<double>(system, "logo_forward", [](auto self, double length) {
+    self->_logoSketcher.forward(length);
+  });
+  register_native_instruction<double>(system, "logo_backward", [](auto self, double length) {
+    self->_logoSketcher.backward(length);
+  });
+  register_native_instruction<double>(system, "logo_turn_left", [](auto self, double degree) {
+    self->_logoSketcher.turn_left(degree);
+  });
+  register_native_instruction<double>(system, "logo_turn_right", [](auto self, double degree) {
+    self->_logoSketcher.turn_right(degree);
+  });
 
   _environment->execute();
 }
@@ -219,7 +148,7 @@ constexpr double refreshTimeInMS = 40;
 
 - (void)refreshImage {
 #ifndef IOS
-  for (NSImageRep *rep in self.imageView.image.representations) {
+  for (NSImageRep* rep in self.imageView.image.representations) {
     [self.imageView.image removeRepresentation:rep];
   }
   [self.imageView.image addRepresentation:_drawContext.imageRep()];

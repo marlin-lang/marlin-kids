@@ -42,6 +42,12 @@ struct generator {
         jsast::ast::member_identifier{"__thefunc__"}};
   }
 
+  static jsast::ast::node system_callee(std::string name) {
+    return jsast::ast::member_expression{
+        jsast::ast::identifier{"system"},
+        jsast::ast::member_identifier{std::move(name)}};
+  }
+
   static jsast::ast::node check_termination() {
     return jsast::ast::expression_statement{jsast::ast::call_expression{
         jsast::ast::member_expression{
@@ -105,26 +111,16 @@ struct generator {
 
   auto get_jsast(ast::print_statement& statement) {
     return jsast::ast::expression_statement{jsast::ast::call_expression{
-        jsast::ast::identifier{"print"}, {get_node(*statement.value())}}};
+        system_callee("print"), {get_node(*statement.value())}}};
   }
 
   auto get_jsast(ast::system_procedure_call& call) {
     static constexpr std::array<jsast::ast::node (*)(), 5> callee_map{
-        []() {
-          return jsast::ast::node{jsast::ast::identifier{"draw_line"}};
-        } /* draw_line */,
-        []() {
-          return jsast::ast::node{jsast::ast::identifier{"logo_forward"}};
-        } /* logo_forward */,
-        []() {
-          return jsast::ast::node{jsast::ast::identifier{"logo_backward"}};
-        } /* logo_backward */,
-        []() {
-          return jsast::ast::node{jsast::ast::identifier{"logo_turn_left"}};
-        } /* logo_turn_left */,
-        []() {
-          return jsast::ast::node{jsast::ast::identifier{"logo_turn_right"}};
-        } /* logo_turn_right */
+        []() { return system_callee("draw_line"); } /* draw_line */,
+        []() { return system_callee("logo_forward"); } /* logo_forward */,
+        []() { return system_callee("logo_backward"); } /* logo_backward */,
+        []() { return system_callee("logo_turn_left"); } /* logo_turn_left */,
+        []() { return system_callee("logo_turn_right"); } /* logo_turn_right */
     };
     jsast::utils::move_vector<jsast::ast::node> args;
     for (auto& arg : call.arguments()) {
@@ -203,11 +199,13 @@ struct generator {
   }
 
   auto get_jsast(ast::identifier& identifier) {
-    return jsast::ast::identifier{identifier.name};
+    auto name{"__var_" + identifier.name};
+    return jsast::ast::identifier{std::move(name)};
   }
 
   auto get_jsast(ast::variable_name& variable) {
-    return jsast::ast::identifier{variable.name};
+    auto name{"__var_" + variable.name};
+    return jsast::ast::identifier{std::move(name)};
   }
 
   auto get_jsast(ast::number_literal& literal) {

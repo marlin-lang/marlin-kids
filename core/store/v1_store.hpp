@@ -318,22 +318,13 @@ struct store : base_store::impl<store> {
       }
       return map;
     }()};
-
-    static constexpr std::array<std::string_view, 5>
-        system_procedure_display_map{
-            "draw_line" /* draw_line */, "logo_forward" /* logo_forward */,
-            "logo_backward" /* logo_backward */,
-            "logo_turn_left" /* logo_turn_left */,
-            "logo_turn_right" /* logo_turn_right */
-        };
-
     auto name{read_zero_terminated(iter, end)};
     auto it{system_procedure_inverse_name_map.find(name)};
     if (it == system_procedure_inverse_name_map.end()) {
       throw read_error{"Unknown system function encountered!"};
     } else {
       const auto proc{it->second};
-      emit_to_buffer(system_procedure_display_map[static_cast<size_t>(proc)]);
+      emit_to_buffer(display_for(proc));
 
       // custom read_vector to emit deliminators
       emit_to_buffer("(");
@@ -545,19 +536,13 @@ struct store : base_store::impl<store> {
       return map;
     }()};
 
-    static constexpr std::array<std::string_view, 4>
-        system_function_display_map{
-            "range" /* range1 */, "range" /* range2 */, "range" /* range3 */,
-            "time" /* time */
-        };
-
     auto name{read_zero_terminated(iter, end)};
     auto it{system_function_inverse_name_map.find(name)};
     if (it == system_function_inverse_name_map.end()) {
       throw read_error{"Unknown system function encountered!"};
     } else {
       const auto func{it->second};
-      emit_to_buffer(system_function_display_map[static_cast<size_t>(func)]);
+      emit_to_buffer(display_for(func));
 
       // custom read_vector to emit deliminators
       emit_to_buffer("(");

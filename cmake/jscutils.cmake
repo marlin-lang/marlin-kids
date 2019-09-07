@@ -2,7 +2,7 @@ include(FetchContent)
 
 FetchContent_Declare(jscutils
                      GIT_REPOSITORY https://github.com/beanandbean/jscutils.git
-                     GIT_TAG f406e62ccd108e861e14a44bf94de32e438a675b)
+                     GIT_TAG 09f388ef58504a800231c16065a542204ffd31f0)
 
 FetchContent_GetProperties(jscutils)
 if(NOT jscutils_POPULATED)
