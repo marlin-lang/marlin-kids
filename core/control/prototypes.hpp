@@ -52,15 +52,6 @@ struct system_procedure_prototype
   }()};
 };
 
-template struct system_procedure_prototype<ast::system_procedure::draw_line>;
-template struct system_procedure_prototype<ast::system_procedure::logo_forward>;
-template struct system_procedure_prototype<
-    ast::system_procedure::logo_backward>;
-template struct system_procedure_prototype<
-    ast::system_procedure::logo_turn_left>;
-template struct system_procedure_prototype<
-    ast::system_procedure::logo_turn_right>;
-
 struct if_prototype : statement_prototype::impl<if_prototype> {
   [[nodiscard]] std::string_view name() const override { return "if"; }
 
@@ -125,8 +116,6 @@ struct unary_prototype : expression_prototype::impl<unary_prototype<_op>> {
   }()};
 };
 
-template struct unary_prototype<ast::unary_op::negative>;
-
 template <ast::binary_op _op>
 struct binary_prototype : expression_prototype::impl<binary_prototype<_op>> {
   [[nodiscard]] std::string_view name() const override {
@@ -143,11 +132,6 @@ struct binary_prototype : expression_prototype::impl<binary_prototype<_op>> {
     return store::write({node.get()});
   }()};
 };
-
-template struct binary_prototype<ast::binary_op::add>;
-template struct binary_prototype<ast::binary_op::subtract>;
-template struct binary_prototype<ast::binary_op::multiply>;
-template struct binary_prototype<ast::binary_op::divide>;
 
 template <ast::system_function _func>
 struct system_function_prototype
@@ -169,13 +153,6 @@ struct system_function_prototype
     return store::write({node.get()});
   }()};
 };
-
-template struct system_function_prototype<ast::system_function::range1>;
-template struct system_function_prototype<ast::system_function::range2>;
-template struct system_function_prototype<ast::system_function::range3>;
-template struct system_function_prototype<ast::system_function::time>;
-
-// Construct literal prototypes manually for now
 
 struct number_prototype {
   static store::data_vector data(std::string_view value) {

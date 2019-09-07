@@ -9,6 +9,12 @@
 #import "NSString+StringView.h"
 #import "Theme.h"
 
+struct SystemEnvironmentContainer {
+  __weak ExecuteViewController* environment;
+
+  SystemEnvironmentContainer(ExecuteViewController* _env) : environment{_env} {}
+};
+
 void dispatch_on_main(void (^block)(void)) {
   if (NSThread.isMainThread) {
     block();
@@ -17,11 +23,18 @@ void dispatch_on_main(void (^block)(void)) {
   }
 }
 
-struct SystemEnvironmentContainer {
-  __weak ExecuteViewController* environment;
-
-  SystemEnvironmentContainer(ExecuteViewController* _env) : environment{_env} {}
-};
+template <typename... Args, typename SystemContainer, typename Callable>
+void register_native_instruction(SystemContainer& system, const char* name, Callable&& callable) {
+  system.set_native_function(name, SystemContainer::template callback<void(Args...)>::wrapped(
+                                       [callable{std::forward<Callable>(callable)}](
+                                           SystemEnvironmentContainer* container, Args... args) {
+                                         dispatch_on_main(^{
+                                           if (auto self = container->environment) {
+                                             callable(self, args...);
+                                           }
+                                         });
+                                       }));
+}
 
 constexpr double refreshTimeInMS = 40;
 
@@ -90,138 +103,34 @@ constexpr double refreshTimeInMS = 40;
   marlin::control::native_container<SystemEnvironmentContainer> system{*_environment, "system",
                                                                        self};
 
-  system.set_native_function("print", [](auto& ctx, auto this_obj, auto args, auto exception) {
-    if (args.size() != 1) {
-      *exception = ctx.error("Incorrect number of arguments!");
-    } else {
-      std::string output = args[0].to_string();
-      if (!ctx.ok()) {
-        *exception = ctx.get_exception();
-        return;
-      }
-
-      dispatch_on_main(^{
-        if (auto self = this_obj->environment) {
+  register_native_instruction<std::string>(system, "print", [](auto self, std::string message) {
 #ifndef IOS
-          [self.outputTextView.textStorage
-              replaceCharactersInRange:NSMakeRange(self.outputTextView.string.length, 0)
-                  withAttributedString:[[NSAttributedString alloc]
-                                           initWithString:[NSString stringWithStringView:output]
-                                               attributes:currentTheme().consoleAttrs]];
+    [self.outputTextView.textStorage
+        replaceCharactersInRange:NSMakeRange(self.outputTextView.string.length, 0)
+            withAttributedString:[[NSAttributedString alloc]
+                                     initWithString:[NSString stringWithStringView:message]
+                                         attributes:currentTheme().consoleAttrs]];
 #endif
-        }
-      });
-    }
   });
 
-  system.set_native_function("draw_line", [](auto& ctx, auto this_obj, auto args, auto exception) {
-    if (args.size() != 4) {
-      *exception = ctx.error("Incorrect number of arguments!");
-    } else {
-      double start_x = args[0].to_number();
-      if (!ctx.ok()) {
-        *exception = ctx.get_exception();
-        return;
-      }
-
-      double start_y = args[1].to_number();
-      if (!ctx.ok()) {
-        *exception = ctx.get_exception();
-        return;
-      }
-
-      double end_x = args[2].to_number();
-      if (!ctx.ok()) {
-        *exception = ctx.get_exception();
-        return;
-      }
-
-      double end_y = args[3].to_number();
-      if (!ctx.ok()) {
-        *exception = ctx.get_exception();
-        return;
-      }
-
-      dispatch_on_main(^{
-        if (auto self = this_obj->environment) {
-          self->_drawContext.draw_line(start_x, start_y, end_x, end_y);
-        }
+  register_native_instruction<double, double, double, double>(
+      system, "draw_line",
+      [](auto self, double start_x, double start_y, double end_x, double end_y) {
+        self->_drawContext.draw_line(start_x, start_y, end_x, end_y);
       });
-    }
+
+  register_native_instruction<double>(system, "logo_forward", [](auto self, double length) {
+    self->_logoSketcher.forward(length);
   });
-
-  system.set_native_function("logo_forward",
-                             [](auto& ctx, auto this_obj, auto args, auto exception) {
-                               if (args.size() != 1) {
-                                 *exception = ctx.error("Incorrect number of arguments!");
-                               } else {
-                                 double length = args[0].to_number();
-                                 if (!ctx.ok()) {
-                                   *exception = ctx.get_exception();
-                                   return;
-                                 }
-
-                                 dispatch_on_main(^{
-                                   if (auto self = this_obj->environment) {
-                                     self->_logoSketcher.forward(length);
-                                   }
-                                 });
-                               }
-                             });
-  system.set_native_function("logo_backward",
-                             [](auto& ctx, auto this_obj, auto args, auto exception) {
-                               if (args.size() != 1) {
-                                 *exception = ctx.error("Incorrect number of arguments!");
-                               } else {
-                                 double length = args[0].to_number();
-                                 if (!ctx.ok()) {
-                                   *exception = ctx.get_exception();
-                                   return;
-                                 }
-
-                                 dispatch_on_main(^{
-                                   if (auto self = this_obj->environment) {
-                                     self->_logoSketcher.backward(length);
-                                   }
-                                 });
-                               }
-                             });
-  system.set_native_function("logo_turn_left",
-                             [](auto& ctx, auto this_obj, auto args, auto exception) {
-                               if (args.size() != 1) {
-                                 *exception = ctx.error("Incorrect number of arguments!");
-                               } else {
-                                 double degree = args[0].to_number();
-                                 if (!ctx.ok()) {
-                                   *exception = ctx.get_exception();
-                                   return;
-                                 }
-
-                                 dispatch_on_main(^{
-                                   if (auto self = this_obj->environment) {
-                                     self->_logoSketcher.turn_left(degree);
-                                   }
-                                 });
-                               }
-                             });
-  system.set_native_function("logo_turn_right",
-                             [](auto ctx, auto this_obj, auto args, auto exception) {
-                               if (args.size() != 1) {
-                                 *exception = ctx.error("Incorrect number of arguments!");
-                               } else {
-                                 double degree = args[0].to_number();
-                                 if (!ctx.ok()) {
-                                   *exception = ctx.get_exception();
-                                   return;
-                                 }
-
-                                 dispatch_on_main(^{
-                                   if (auto self = this_obj->environment) {
-                                     self->_logoSketcher.turn_right(degree);
-                                   }
-                                 });
-                               }
-                             });
+  register_native_instruction<double>(system, "logo_backward", [](auto self, double length) {
+    self->_logoSketcher.backward(length);
+  });
+  register_native_instruction<double>(system, "logo_turn_left", [](auto self, double degree) {
+    self->_logoSketcher.turn_left(degree);
+  });
+  register_native_instruction<double>(system, "logo_turn_right", [](auto self, double degree) {
+    self->_logoSketcher.turn_right(degree);
+  });
 
   _environment->execute();
 }

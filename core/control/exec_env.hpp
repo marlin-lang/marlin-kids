@@ -44,7 +44,7 @@ struct exec_environment {
                                ast::base* program, const std::string& script) {
                               try {
                                 env.execute(*program, script, true);
-                              } catch (const exec::runtime_error& e) {
+                              } catch (const exec::runtime_error& err) {
                                 // TODO: unimplemented
                                 assert(false);
                               } catch (const exec::external_interrupt&) {

@@ -55,6 +55,15 @@ static constexpr std::array<std::string_view, 5> system_procedure_name_map{
   return system_procedure_name_map[static_cast<size_t>(proc)];
 }
 
+static constexpr std::array<std::string_view, 5> system_procedure_display_map{
+    "draw_line" /* draw_line */, "logo_forward" /* logo_forward */,
+    "logo_backward" /* logo_backward */, "logo_turn_left" /* logo_turn_left */,
+    "logo_turn_right" /* logo_turn_right */};
+[[nodiscard]] inline constexpr std::string_view display_for(
+    system_procedure proc) noexcept {
+  return system_procedure_display_map[static_cast<size_t>(proc)];
+}
+
 enum class system_function : size_t { range1, range2, range3, time };
 
 static constexpr std::array<std::string_view, 4> system_function_name_map{
@@ -64,6 +73,15 @@ static constexpr std::array<std::string_view, 4> system_function_name_map{
 [[nodiscard]] inline constexpr std::string_view name_for(
     system_function func) noexcept {
   return system_function_name_map[static_cast<size_t>(func)];
+}
+
+static constexpr std::array<std::string_view, 4> system_function_display_map{
+    "range1" /* range1 */, "range2" /* range2 */, "range3" /* range3 */,
+    "time" /* time */
+};
+[[nodiscard]] inline constexpr std::string_view display_for(
+    system_function func) noexcept {
+  return system_function_display_map[static_cast<size_t>(func)];
 }
 
 }  // namespace marlin::ast

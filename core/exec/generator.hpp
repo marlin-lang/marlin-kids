@@ -199,11 +199,13 @@ struct generator {
   }
 
   auto get_jsast(ast::identifier& identifier) {
-    return jsast::ast::identifier{identifier.name};
+    auto name{"__var_" + identifier.name};
+    return jsast::ast::identifier{std::move(name)};
   }
 
   auto get_jsast(ast::variable_name& variable) {
-    return jsast::ast::identifier{variable.name};
+    auto name{"__var_" + variable.name};
+    return jsast::ast::identifier{std::move(name)};
   }
 
   auto get_jsast(ast::number_literal& literal) {
