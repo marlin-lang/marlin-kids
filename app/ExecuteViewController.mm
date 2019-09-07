@@ -49,8 +49,13 @@ constexpr double refreshTimeInMS = 40;
   _needRefreshImage = NO;
 }
 
+#ifdef IOS
+- (void)viewDidAppear:(BOOL)animated {
+  [super viewDidAppear:animated];
+#else
 - (void)viewDidAppear {
   [super viewDidAppear];
+#endif
 
   [self startExecute];
 }

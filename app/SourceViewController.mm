@@ -6,15 +6,12 @@
 
 #import "Document.h"
 #import "ExecuteViewController.h"
-#import "LineNumberView.h"
 #import "NSData+DataView.h"
 #import "NSString+StringView.h"
 #import "Pasteboard.h"
 #import "Theme.h"
 
 @interface SourceViewController ()
-
-@property(strong) LineNumberView *lineNumberView;
 
 - (Document *)document;
 
