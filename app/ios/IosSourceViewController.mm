@@ -2,16 +2,18 @@
 
 #include "toolbox_model.hpp"
 
+#import "LineNumberView.h"
 #import "NSData+DataView.h"
 #import "NSString+StringView.h"
 #import "Pasteboard.h"
-#import "LineNumberView.h"
 
 #import "IosSourceView.h"
 #import "ToolboxCell.h"
 #import "ToolboxHeaderView.h"
 
-@interface IosSourceViewController () <UICollectionViewDataSource, UICollectionViewDragDelegate>
+@interface IosSourceViewController () <UICollectionViewDataSource,
+                                       UICollectionViewDragDelegate,
+                                       UIScrollViewDelegate>
 
 @property(strong, nonatomic) IosSourceView *sourceView;
 
@@ -25,17 +27,21 @@
   [super viewDidLoad];
 
   self.toolboxView.dragDelegate = self;
+  self.scrollView.delegate = self;
   self.sourceView = [[IosSourceView alloc] initWithEnclosingScrollView:self.scrollView
                                                             dataSource:self];
-    self.lineNumberView = [[LineNumberView alloc] initWithSourceView:self.sourceView];
-    self.lineNumberView.translatesAutoresizingMaskIntoConstraints = NO;
-    self.scrollView.contentInset = UIEdgeInsetsMake(0, self.lineNumberView.ruleThickness, 0, 0);
   [self.scrollView addSubview:self.sourceView];
-    [self.view addSubview:self.lineNumberView];
-    [self.lineNumberView.topAnchor constraintEqualToAnchor:self.scrollView.topAnchor].active = YES;
-    [self.lineNumberView.leftAnchor constraintEqualToAnchor:self.scrollView.leftAnchor].active = YES;
-    [self.lineNumberView.heightAnchor constraintEqualToAnchor:self.view.heightAnchor].active = YES;
-    [self.lineNumberView.widthAnchor constraintEqualToConstant:self.lineNumberView.ruleThickness].active = YES;
+
+  auto *lineNumberView = [[LineNumberView alloc] initWithSourceView:self.sourceView];
+  self.lineNumberView = lineNumberView;
+  self.sourceView.lineNumberView = lineNumberView;
+  lineNumberView.translatesAutoresizingMaskIntoConstraints = NO;
+  self.scrollView.contentInset = UIEdgeInsetsMake(0, lineNumberView.ruleThickness, 0, 0);
+  [self.view addSubview:lineNumberView];
+  [lineNumberView.topAnchor constraintEqualToAnchor:self.scrollView.topAnchor].active = YES;
+  [lineNumberView.leftAnchor constraintEqualToAnchor:self.scrollView.leftAnchor].active = YES;
+  [lineNumberView.heightAnchor constraintEqualToAnchor:self.view.heightAnchor].active = YES;
+  [lineNumberView.widthAnchor constraintEqualToConstant:lineNumberView.ruleThickness].active = YES;
 }
 
 - (void)viewWillAppear:(BOOL)animated {
@@ -47,7 +53,7 @@
         [self.sourceView insertStatementsBeforeLine:1
                                          withSource:std::move(initialData->source)
                                          highlights:std::move(initialData->highlights)];
-          [self.lineNumberView setNeedsDisplay];
+        [self.lineNumberView setNeedsDisplay];
       }
     } else {
     }
@@ -116,6 +122,12 @@
 
   auto *dragItem = [[UIDragItem alloc] initWithItemProvider:itemProvider];
   return @[ dragItem ];
+}
+
+#pragma mark - UIScrollViewDelegate
+
+- (void)scrollViewDidScroll:(UIScrollView *)scrollView {
+  [self.lineNumberView setNeedsDisplay];
 }
 
 @end
