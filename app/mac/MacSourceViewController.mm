@@ -2,22 +2,24 @@
 
 #include "toolbox_model.hpp"
 
+#import "LineNumberView.h"
 #import "NSData+DataView.h"
 #import "NSString+StringView.h"
 #import "Pasteboard.h"
-#import "LineNumberView.h"
 
+#import "MacSourceView.h"
 #import "ToolboxHeaderView.h"
 #import "ToolboxItem.h"
-#import "MacSourceView.h"
 
-@interface MacSourceViewController () <NSCollectionViewDataSource>
+@interface MacSourceViewController () <NSCollectionViewDataSource, SourceViewDelegate>
 
 @property(weak) IBOutlet MacSourceView *sourceView;
 
 @end
 
-@implementation MacSourceViewController
+@implementation MacSourceViewController {
+  NSPopover *_popover;
+}
 
 - (void)setDocument:(MacDocument *)document {
   _document = document;
@@ -32,10 +34,12 @@
 - (void)viewDidLoad {
   [super viewDidLoad];
   self.sourceView.dataSource = self;
-    self.sourceView.enclosingScrollView.rulersVisible = YES;
-     self.sourceView.enclosingScrollView.hasHorizontalRuler = NO;
-     self.sourceView.enclosingScrollView.hasVerticalRuler = YES;
-     self.sourceView.enclosingScrollView.verticalRulerView =  [[LineNumberView alloc] initWithSourceView:self.sourceView];
+  self.sourceView.delegate = self;
+  self.sourceView.enclosingScrollView.rulersVisible = YES;
+  self.sourceView.enclosingScrollView.hasHorizontalRuler = NO;
+  self.sourceView.enclosingScrollView.hasVerticalRuler = YES;
+  self.sourceView.enclosingScrollView.verticalRulerView =
+      [[LineNumberView alloc] initWithSourceView:self.sourceView];
 }
 
 #pragma mark - NSCollectionViewDataSource
@@ -89,6 +93,30 @@
   return [pasteboard
       setData:data
       forType:pasteboardOfType(marlin::control::toolbox_model::items[section][item].type)];
+}
+
+#pragma mark - SourceViewDelegate
+
+- (void)showEditorViewControllerForSourceView:(SourceView *)view
+                                     fromRect:(NSRect)rect
+                                     withType:(marlin::control::literal_data_type)type
+                                         data:(std::string_view)data {
+  auto *storyboard = [NSStoryboard storyboardWithName:@"Main" bundle:nil];
+  EditorViewController *vc =
+      [storyboard instantiateControllerWithIdentifier:@"EditorViewController"];
+  vc.delegate = view;
+
+  _popover = [NSPopover new];
+  _popover.behavior = NSPopoverBehaviorTransient;
+  _popover.contentViewController = vc;
+  [_popover showRelativeToRect:rect ofView:view preferredEdge:NSMinYEdge];
+
+  vc.type = type;
+  vc.editorTextField.stringValue = [NSString stringWithStringView:data];
+}
+
+- (void)dismissEditorViewControllerForSourceView:(SourceView *)view {
+  [_popover close];
 }
 
 @end

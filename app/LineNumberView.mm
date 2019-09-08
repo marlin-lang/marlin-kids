@@ -80,8 +80,6 @@
 #endif
 
 - (void)drawHashMarksAndLabelsInRect:(Rect)rect {
-  // CGContextRef context = UIGraphicsGetCurrentContext();
-  // CGContextSaveGState(context);
   auto* sourceView = (SourceView*)self.clientView;
   auto startPoint = [self convertPoint:rect.origin toView:sourceView];
   auto [startLine, startColumn] = [sourceView sourceLocationOfPoint:startPoint];
@@ -105,7 +103,6 @@
       y += height;
     }
   }
-  // CGContextRestoreGState(context);
 }
 
 - (void)drawErrorIndicatorOfLine:(NSUInteger)number atRect:(Rect)rect {

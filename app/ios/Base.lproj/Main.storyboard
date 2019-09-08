@@ -125,5 +125,62 @@
             </objects>
             <point key="canvasLocation" x="968.79999999999995" y="653.52323838080963"/>
         </scene>
+        <!--Ios Editor View Controller-->
+        <scene sceneID="vAL-of-f0p">
+            <objects>
+                <viewController storyboardIdentifier="EditorViewController" id="4P1-cj-fdz" customClass="IosEditorViewController" sceneMemberID="viewController">
+                    <view key="view" contentMode="scaleToFill" id="xaJ-im-Cdi">
+                        <rect key="frame" x="0.0" y="0.0" width="375" height="667"/>
+                        <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
+                        <subviews>
+                            <segmentedControl opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="left" contentVerticalAlignment="top" segmentControlStyle="plain" selectedSegmentIndex="0" translatesAutoresizingMaskIntoConstraints="NO" id="XlF-66-fQR">
+                                <rect key="frame" x="127" y="36" width="121" height="29"/>
+                                <segments>
+                                    <segment title="First"/>
+                                    <segment title="Second"/>
+                                </segments>
+                                <connections>
+                                    <action selector="typeSegmentControlChanged:" destination="4P1-cj-fdz" eventType="valueChanged" id="Uju-8X-hh7"/>
+                                </connections>
+                            </segmentedControl>
+                            <textField opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="left" contentVerticalAlignment="center" borderStyle="roundedRect" textAlignment="natural" minimumFontSize="17" translatesAutoresizingMaskIntoConstraints="NO" id="mE1-dF-pfc">
+                                <rect key="frame" x="16" y="72" width="305" height="30"/>
+                                <nil key="textColor"/>
+                                <fontDescription key="fontDescription" type="system" pointSize="14"/>
+                                <textInputTraits key="textInputTraits"/>
+                                <connections>
+                                    <action selector="editorTextFieldDidChange:" destination="4P1-cj-fdz" eventType="editingChanged" id="Fjo-lu-I88"/>
+                                </connections>
+                            </textField>
+                            <button opaque="NO" contentMode="scaleToFill" horizontalHuggingPriority="251" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="roundedRect" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="Ntv-hS-FbD">
+                                <rect key="frame" x="329" y="72" width="30" height="30"/>
+                                <state key="normal" title="OK"/>
+                                <connections>
+                                    <action selector="okButtonPressed:" destination="4P1-cj-fdz" eventType="touchUpInside" id="cOj-xv-b84"/>
+                                </connections>
+                            </button>
+                        </subviews>
+                        <color key="backgroundColor" white="1" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
+                        <constraints>
+                            <constraint firstItem="mE1-dF-pfc" firstAttribute="leading" secondItem="jfX-Fc-pVy" secondAttribute="leading" constant="16" id="8Sn-GV-ahj"/>
+                            <constraint firstItem="jfX-Fc-pVy" firstAttribute="trailing" secondItem="Ntv-hS-FbD" secondAttribute="trailing" constant="16" id="Exi-Kh-22M"/>
+                            <constraint firstItem="mE1-dF-pfc" firstAttribute="top" secondItem="XlF-66-fQR" secondAttribute="bottom" constant="8" symbolic="YES" id="K1W-Wg-VR7"/>
+                            <constraint firstItem="Ntv-hS-FbD" firstAttribute="centerY" secondItem="mE1-dF-pfc" secondAttribute="centerY" id="YBL-Br-ThV"/>
+                            <constraint firstItem="XlF-66-fQR" firstAttribute="top" secondItem="jfX-Fc-pVy" secondAttribute="top" constant="16" id="nTy-qb-GNo"/>
+                            <constraint firstItem="XlF-66-fQR" firstAttribute="centerX" secondItem="xaJ-im-Cdi" secondAttribute="centerX" id="ooG-XR-1fH"/>
+                            <constraint firstItem="Ntv-hS-FbD" firstAttribute="leading" secondItem="mE1-dF-pfc" secondAttribute="trailing" constant="8" symbolic="YES" id="tDr-l1-dEG"/>
+                        </constraints>
+                        <viewLayoutGuide key="safeArea" id="jfX-Fc-pVy"/>
+                    </view>
+                    <connections>
+                        <outlet property="editorTextField" destination="mE1-dF-pfc" id="xQV-er-JCG"/>
+                        <outlet property="okButton" destination="Ntv-hS-FbD" id="ZWn-0k-wWF"/>
+                        <outlet property="typeSegmentControl" destination="XlF-66-fQR" id="OwU-TZ-vPq"/>
+                    </connections>
+                </viewController>
+                <placeholder placeholderIdentifier="IBFirstResponder" id="Zzf-g7-Ujq" userLabel="First Responder" sceneMemberID="firstResponder"/>
+            </objects>
+            <point key="canvasLocation" x="968.79999999999995" y="1383.9580209895053"/>
+        </scene>
     </scenes>
 </document>

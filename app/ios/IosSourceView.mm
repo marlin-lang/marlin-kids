@@ -3,6 +3,7 @@
 #include "prototype_definition.hpp"
 #include "toolbox_model.hpp"
 
+#import "NSString+StringView.h"
 #import "Pasteboard.h"
 
 @interface IosSourceView () <UIDropInteractionDelegate>
@@ -29,6 +30,16 @@
   [super setFrame:frame];
   self.enclosingScrollView.contentSize = frame.size;
   [self.lineNumberView setNeedsDisplay];
+}
+
+- (void)touchesBegan:(NSSet<UITouch*>*)touches withEvent:(UIEvent*)event {
+  auto location = [[touches anyObject] locationInView:self];
+  [self touchAtLocation:location];
+}
+
+- (void)showEditorViewControllerFromRect:(CGRect)rect
+                                withType:(marlin::control::literal_data_type)type
+                                    data:(std::string_view)data {
 }
 
 - (BOOL)dropInteraction:(UIDropInteraction*)interaction

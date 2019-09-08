@@ -93,16 +93,16 @@
 
 #pragma mark - SourceViewDataSource
 
-- (marlin::control::source_selection)textView:(SourceView *)view
-                                  selectionAt:(marlin::source_loc)loc {
+- (marlin::control::source_selection)sourceView:(SourceView *)view
+                                    selectionAt:(marlin::source_loc)loc {
   return {self.document.content, loc};
 }
 
-- (marlin::control::statement_inserter)statementInserterForTextView:(SourceView *)view {
+- (marlin::control::statement_inserter)statementInserterForSourceView:(SourceView *)view {
   return {self.document.content};
 }
 
-- (marlin::control::expression_inserter)expressionInserterForTextView:(SourceView *)view {
+- (marlin::control::expression_inserter)expressionInserterForSourceView:(SourceView *)view {
   return {self.document.content};
 }
 

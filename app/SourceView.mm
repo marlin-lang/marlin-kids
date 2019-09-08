@@ -15,9 +15,6 @@
 #import "Theme.h"
 
 @implementation SourceView {
-#ifndef IOS
-  NSPopover* _popover;
-#endif
   EdgeInsets _insets;
 
   NSMutableArray* _strings;
@@ -164,9 +161,7 @@
 - (void)viewController:(EditorViewController*)vc
     finishEditWithString:(NSString*)string
                   ofType:(EditorType)type {
-#ifndef IOS
-  [_popover close];
-#endif
+  [self.delegate dismissEditorViewControllerForSourceView:self];
   if (string.length > 0 && _selection) {
     auto inserter = (*std::move(_selection)).as_expression_inserter();
     _selection.reset();
@@ -301,32 +296,21 @@
 #endif
 }
 
-#ifndef IOS
-- (void)mouseDown:(NSEvent*)event {
-  [super mouseDown:event];
-
-  auto location = [self convertPoint:event.locationInWindow fromView:nil];
-  _selection = [self.dataSource textView:self selectionAt:[self sourceLocationOfPoint:location]];
+- (void)touchAtLocation:(Point)location {
+  _selection = [self.dataSource sourceView:self selectionAt:[self sourceLocationOfPoint:location]];
   [self setNeedsDisplayInRect:self.bounds];
 
   if (_selection->is_literal()) {
-    NSStoryboard* storyboard = [NSStoryboard storyboardWithName:@"Main" bundle:nil];
-    EditorViewController* vc =
-        [storyboard instantiateControllerWithIdentifier:@"EditorViewController"];
-    vc.delegate = self;
-
-    _popover = [NSPopover new];
-    _popover.behavior = NSPopoverBehaviorTransient;
-    _popover.contentViewController = vc;
     auto rect = [self rectOfSourceRange:_selection->get_range()];
-    [_popover showRelativeToRect:rect ofView:self preferredEdge:NSMinYEdge];
-
     auto [type, data] = _selection->get_literal_content();
-    vc.type = type;
-    vc.editorTextField.stringValue = [NSString stringWithStringView:data];
+    [self.delegate showEditorViewControllerForSourceView:self
+                                                fromRect:rect
+                                                withType:type
+                                                    data:data];
   }
 }
 
+#ifndef IOS
 - (void)mouseDragged:(NSEvent*)event {
   [super mouseDragged:event];
 
@@ -380,7 +364,7 @@
   auto source_loc = [self sourceLocationOfPoint:location];
 
   if (!_statementInserter) {
-    _statementInserter = [self.dataSource statementInserterForTextView:self];
+    _statementInserter = [self.dataSource statementInserterForSourceView:self];
   }
   _statementInserter->move_to_line(source_loc.line);
   if (_statementInserter->can_insert()) {
@@ -395,7 +379,7 @@
   auto source_loc = [self sourceLocationOfPoint:location];
 
   if (!_expressionInserter) {
-    _expressionInserter = [self.dataSource expressionInserterForTextView:self];
+    _expressionInserter = [self.dataSource expressionInserterForSourceView:self];
   }
   _expressionInserter->move_to_loc(source_loc);
   if (_expressionInserter->can_insert()) {

@@ -35,6 +35,7 @@ if(IOS)
       ios/AppDelegate.h
       ios/DocumentBrowserViewController.h
       ios/IosDocument.h
+      ios/IosEditorViewController.h
       ios/IosSourceView.h
       ios/IosSourceViewController.h
       ios/ToolboxCell.h
@@ -45,6 +46,7 @@ if(IOS)
       ios/AppDelegate.mm
       ios/DocumentBrowserViewController.mm
       ios/IosDocument.mm
+      ios/IosEditorViewController.mm
       ios/IosSourceView.mm
       ios/IosSourceViewController.mm
       ios/main.mm
@@ -66,6 +68,7 @@ else(IOS)
       ${HEADERS}
       mac/AppDelegate.h
       mac/MacDocument.h
+      mac/MacEditorViewController.h
       mac/MacSourceView.h
       mac/MacSourceViewController.h
       mac/ToolboxHeaderView.h
@@ -76,6 +79,7 @@ else(IOS)
       ${SOURCES}
       mac/AppDelegate.mm
       mac/MacDocument.mm
+      mac/MacEditorViewController.mm
       mac/MacSourceView.mm
       mac/MacSourceViewController.mm
       mac/main.mm

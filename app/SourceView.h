@@ -15,18 +15,30 @@ NS_ASSUME_NONNULL_BEGIN
 
 @protocol SourceViewDataSource
 
-- (marlin::control::source_selection)textView:(SourceView *)view
-                                  selectionAt:(marlin::source_loc)loc;
+- (marlin::control::source_selection)sourceView:(SourceView *)view
+                                    selectionAt:(marlin::source_loc)loc;
 
-- (marlin::control::statement_inserter)statementInserterForTextView:(SourceView *)view;
+- (marlin::control::statement_inserter)statementInserterForSourceView:(SourceView *)view;
 
-- (marlin::control::expression_inserter)expressionInserterForTextView:(SourceView *)view;
+- (marlin::control::expression_inserter)expressionInserterForSourceView:(SourceView *)view;
+
+@end
+
+@protocol SourceViewDelegate
+
+- (void)showEditorViewControllerForSourceView:(SourceView *)view
+                                     fromRect:(Rect)rect
+                                     withType:(marlin::control::literal_data_type)type
+                                         data:(std::string_view)data;
+
+- (void)dismissEditorViewControllerForSourceView:(SourceView *)view;
 
 @end
 
 @interface SourceView : View<EditorViewControllerDelegate>
 
 @property(weak) id<SourceViewDataSource> dataSource;
+@property(weak) id<SourceViewDelegate> delegate;
 
 @property(readonly) CGFloat lineHeight;
 
@@ -63,6 +75,8 @@ NS_ASSUME_NONNULL_BEGIN
 - (void)removeDraggingSelection;
 
 - (void)resetAll;
+
+- (void)touchAtLocation:(Point)location;
 
 @end
 

@@ -733,14 +733,26 @@
             </objects>
             <point key="canvasLocation" x="605" y="25"/>
         </scene>
-        <!--Editor View Controller-->
+        <!--Mac Editor View Controller-->
         <scene sceneID="lhX-jc-yF0">
             <objects>
-                <viewController storyboardIdentifier="EditorViewController" id="4i3-Bv-Vby" customClass="EditorViewController" sceneMemberID="viewController">
+                <viewController storyboardIdentifier="EditorViewController" id="4i3-Bv-Vby" customClass="MacEditorViewController" sceneMemberID="viewController">
                     <view key="view" id="VRC-G5-jHx">
                         <rect key="frame" x="0.0" y="0.0" width="354" height="101"/>
                         <autoresizingMask key="autoresizingMask"/>
                         <subviews>
+                            <segmentedControl verticalHuggingPriority="750" translatesAutoresizingMaskIntoConstraints="NO" id="SYm-sg-hJ1">
+                                <rect key="frame" x="166" y="58" width="22" height="24"/>
+                                <segmentedCell key="cell" borderStyle="border" alignment="left" segmentDistribution="fillEqually" style="rounded" trackingMode="selectOne" id="vOc-rD-gO6">
+                                    <font key="font" metaFont="system"/>
+                                    <segments>
+                                        <segment/>
+                                    </segments>
+                                </segmentedCell>
+                                <connections>
+                                    <action selector="typeSegmentControlChanged:" target="4i3-Bv-Vby" id="RZc-8z-nTa"/>
+                                </connections>
+                            </segmentedControl>
                             <textField verticalHuggingPriority="750" translatesAutoresizingMaskIntoConstraints="NO" id="qmm-Wt-gtk">
                                 <rect key="frame" x="20" y="20" width="259" height="32"/>
                                 <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" selectable="YES" editable="YES" sendsActionOnEndEditing="YES" borderStyle="bezel" drawsBackground="YES" id="OQN-pQ-L4F">
@@ -762,18 +774,6 @@ DQ
                                     <action selector="okButtonPressed:" target="4i3-Bv-Vby" id="HR9-cs-ZHt"/>
                                 </connections>
                             </button>
-                            <segmentedControl verticalHuggingPriority="750" translatesAutoresizingMaskIntoConstraints="NO" id="SYm-sg-hJ1">
-                                <rect key="frame" x="166" y="58" width="22" height="24"/>
-                                <segmentedCell key="cell" borderStyle="border" alignment="left" segmentDistribution="fillEqually" style="rounded" trackingMode="selectOne" id="vOc-rD-gO6">
-                                    <font key="font" metaFont="system"/>
-                                    <segments>
-                                        <segment/>
-                                    </segments>
-                                </segmentedCell>
-                                <connections>
-                                    <action selector="typeSegmentControlChanged:" target="4i3-Bv-Vby" id="RZc-8z-nTa"/>
-                                </connections>
-                            </segmentedControl>
                         </subviews>
                         <constraints>
                             <constraint firstItem="qmm-Wt-gtk" firstAttribute="centerY" secondItem="xyi-eb-Mef" secondAttribute="centerY" id="2jh-gT-v3V"/>

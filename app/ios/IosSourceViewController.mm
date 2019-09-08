@@ -13,7 +13,8 @@
 
 @interface IosSourceViewController () <UICollectionViewDataSource,
                                        UICollectionViewDragDelegate,
-                                       UIScrollViewDelegate>
+                                       UIScrollViewDelegate,
+                                       SourceViewDelegate>
 
 @property(strong, nonatomic) IosSourceView *sourceView;
 
@@ -30,6 +31,7 @@
   self.scrollView.delegate = self;
   self.sourceView = [[IosSourceView alloc] initWithEnclosingScrollView:self.scrollView
                                                             dataSource:self];
+  self.sourceView.delegate = self;
   [self.scrollView addSubview:self.sourceView];
 
   auto *lineNumberView = [[LineNumberView alloc] initWithSourceView:self.sourceView];
@@ -128,6 +130,28 @@
 
 - (void)scrollViewDidScroll:(UIScrollView *)scrollView {
   [self.lineNumberView setNeedsDisplay];
+}
+
+#pragma mark - SourceViewDelegate
+
+- (void)showEditorViewControllerForSourceView:(SourceView *)view
+                                     fromRect:(CGRect)rect
+                                     withType:(marlin::control::literal_data_type)type
+                                         data:(std::string_view)data {
+  EditorViewController *vc =
+      [self.storyboard instantiateViewControllerWithIdentifier:@"EditorViewController"];
+  vc.delegate = view;
+  vc.modalPresentationStyle = UIModalPresentationPopover;
+  vc.popoverPresentationController.permittedArrowDirections = UIMenuControllerArrowUp;
+  vc.popoverPresentationController.sourceView = view;
+  vc.popoverPresentationController.sourceRect = rect;
+  [self presentViewController:vc animated:YES completion:nil];
+  vc.type = type;
+  vc.editorTextField.text = [NSString stringWithStringView:data];
+}
+
+- (void)dismissEditorViewControllerForSourceView:(SourceView *)view {
+  [self dismissViewControllerAnimated:YES completion:nil];
 }
 
 @end

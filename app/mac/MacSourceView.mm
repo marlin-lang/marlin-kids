@@ -2,6 +2,7 @@
 
 #include "toolbox_model.hpp"
 
+#import "NSString+StringView.h"
 #import "Pasteboard.h"
 
 @interface MacSourceView () <NSPasteboardItemDataProvider, NSDraggingSource>
@@ -15,6 +16,13 @@
     [self registerForDraggedTypes:self.acceptableDragTypes];
   }
   return self;
+}
+
+- (void)mouseDown:(NSEvent*)event {
+  [super mouseDown:event];
+
+  auto location = [self convertPoint:event.locationInWindow fromView:nil];
+  [self touchAtLocation:location];
 }
 
 - (NSArray<NSPasteboardType>*)acceptableDragTypes {
