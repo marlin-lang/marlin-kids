@@ -70,6 +70,9 @@
 - (void)viewDidLoad {
   [super viewDidLoad];
   self.okButton.enabled = NO;
+  _numberStr = @"";
+  _stringStr = @"";
+  _identifierStr = @"";
 }
 
 - (void)setType:(EditorType)type {
@@ -97,7 +100,9 @@
 }
 
 - (void)validate {
-  if ([_formatter getObjectValue:nil forString:self.textOfEditor errorDescription:nil]) {
+  if ([_formatter getObjectValue:nil
+                       forString:self.editorTextField.stringValue
+                errorDescription:nil]) {
     self.okButton.enabled = YES;
   } else {
     self.okButton.enabled = NO;
@@ -107,32 +112,32 @@
 - (IBAction)typeSegmentControlChanged:(id)sender {
   switch (self.type) {
     case EditorType::number:
-      _numberStr = self.textOfEditor;
+      _numberStr = self.editorTextField.stringValue;
       break;
     case EditorType::string:
-      _stringStr = self.textOfEditor;
+      _stringStr = self.editorTextField.stringValue;
       break;
     case EditorType::identifier:
-      _identifierStr = self.textOfEditor;
+      _identifierStr = self.editorTextField.stringValue;
       break;
     default:
       break;
   }
-  switch (self.selectionOfSegment) {
+  switch (self.typeSegmentControl.selectedSegment) {
     case 0:
       _type = EditorType::number;
       _formatter = [[NumberFormatter alloc] init];
-      self.textOfEditor = _numberStr;
+      self.editorTextField.stringValue = _numberStr;
       break;
     case 1:
       _type = EditorType::string;
       _formatter = [[StringFormatter alloc] init];
-      self.textOfEditor = _stringStr;
+      self.editorTextField.stringValue = _stringStr;
       break;
     case 2:
       _type = EditorType::identifier;
       _formatter = [[VariableFormatter alloc] init];
-      self.textOfEditor = _identifierStr;
+      self.editorTextField.stringValue = _identifierStr;
       break;
     default:
       break;
@@ -141,25 +146,13 @@
 }
 
 - (IBAction)okButtonPressed:(id)sender {
-  [self.delegate viewController:self finishEditWithString:self.textOfEditor ofType:self.type];
+  [self.delegate viewController:self
+           finishEditWithString:self.editorTextField.stringValue
+                         ofType:self.type];
 }
 
 - (void)setupSegmentControlWithTitles:(NSArray<NSString *> *)titles
                             selection:(NSUInteger)selection {
-  NSAssert(NO, @"Implemented by subclass");
-}
-
-- (NSUInteger)selectionOfSegment {
-  NSAssert(NO, @"Implemented by subclass");
-  return 0;
-}
-
-- (NSString *)textOfEditor {
-  NSAssert(NO, @"Implemented by subclass");
-  return 0;
-}
-
-- (void)setTextOfEditor:(NSString *)string {
   NSAssert(NO, @"Implemented by subclass");
 }
 

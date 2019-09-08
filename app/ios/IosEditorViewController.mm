@@ -12,18 +12,6 @@
   self.typeSegmentControl.selectedSegmentIndex = selection;
 }
 
-- (NSUInteger)selectionOfSegment {
-  return self.typeSegmentControl.selectedSegmentIndex;
-}
-
-- (NSString*)textOfEditor {
-  return self.editorTextField.text;
-}
-
-- (void)setTextOfEditor:(NSString*)string {
-  self.editorTextField.text = string;
-}
-
 - (IBAction)editorTextFieldDidChange:(id)sender {
   [self validate];
 }

@@ -25,16 +25,4 @@
   [self.typeSegmentControl setSelected:YES forSegment:selection];
 }
 
-- (NSUInteger)selectionOfSegment {
-  return self.typeSegmentControl.selectedSegment;
-}
-
-- (NSString*)textOfEditor {
-  return self.editorTextField.stringValue;
-}
-
-- (void)setTextOfEditor:(NSString*)string {
-  self.editorTextField.stringValue = string;
-}
-
 @end

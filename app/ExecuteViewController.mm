@@ -24,7 +24,9 @@ constexpr double refreshTimeInMS = 40;
   marlin::control::logo_sketcher<DrawContext> _logoSketcher;
 
   bool _needRefreshImage;
-  std::chrono::high_resolution_clock::time_point _refresh_time;
+  std::chrono::high_resolution_clock::time_point _image_refresh_time;
+  std::string _outputText;
+  std::chrono::high_resolution_clock::time_point _output_refresh_time;
 }
 
 - (void)viewDidLoad {
@@ -37,6 +39,8 @@ constexpr double refreshTimeInMS = 40;
                                  return YES;
                                }];
 #endif
+  self.outputTextView.layer.borderWidth = 1;
+  self.outputTextView.layer.borderColor = [Color blackColor].CGColor;
   _drawContext.initWithImage(self.imageView.image, self);
   _logoSketcher.set_context(_drawContext);
   _needRefreshImage = NO;
@@ -65,7 +69,7 @@ constexpr double refreshTimeInMS = 40;
 
 - (void)setNeedRefreshImage {
   auto time = std::chrono::high_resolution_clock::now();
-  auto diff = std::chrono::duration_cast<std::chrono::milliseconds>(time - _refresh_time);
+  auto diff = std::chrono::duration_cast<std::chrono::milliseconds>(time - _image_refresh_time);
   if (diff.count() < refreshTimeInMS) {
     _needRefreshImage = YES;
   } else {
@@ -81,11 +85,12 @@ constexpr double refreshTimeInMS = 40;
   NativeEnvironment<ExecuteViewController> system{*_environment, "system", self};
 
   system.register_native_instruction<std::string>("print", [](auto self, std::string message) {
-    [self.outputTextView.textStorage
-        replaceCharactersInRange:NSMakeRange(self.outputTextView.string.length, 0)
-            withAttributedString:[[NSAttributedString alloc]
-                                     initWithString:[NSString stringWithStringView:message]
-                                         attributes:currentTheme().consoleAttrs]];
+    _outputText += message;
+    auto time = std::chrono::high_resolution_clock::now();
+    auto diff = std::chrono::duration_cast<std::chrono::milliseconds>(time - _output_refresh_time);
+    if (diff.count() >= refreshTimeInMS) {
+      [self refreshOutput];
+    }
   });
 
   system.register_native_instruction<double, double, double, double>(
@@ -113,7 +118,7 @@ constexpr double refreshTimeInMS = 40;
   [self.imageView.image addRepresentation:_drawContext.imageRep()];
   [self.imageView setNeedsDisplay:YES];
 #endif
-  _refresh_time = std::chrono::high_resolution_clock::now();
+  _image_refresh_time = std::chrono::high_resolution_clock::now();
   _needRefreshImage = NO;
 
   __weak auto weakSelf = self;
@@ -127,4 +132,25 @@ constexpr double refreshTimeInMS = 40;
                  });
 }
 
+- (void)refreshOutput {
+  if (!_outputText.empty()) {
+    [self.outputTextView.textStorage
+        replaceCharactersInRange:NSMakeRange(self.outputTextView.string.length, 0)
+            withAttributedString:[[NSAttributedString alloc]
+                                     initWithString:[NSString stringWithStringView:_outputText]
+                                         attributes:currentTheme().consoleAttrs]];
+
+    _output_refresh_time = std::chrono::high_resolution_clock::now();
+    _outputText.clear();
+
+    __weak auto weakSelf = self;
+    dispatch_after(
+        dispatch_time(DISPATCH_TIME_NOW, (int64_t)(refreshTimeInMS / 1000 * NSEC_PER_SEC)),
+        dispatch_get_main_queue(), ^{
+          if (auto strongSelf = weakSelf) {
+            [strongSelf refreshOutput];
+          }
+        });
+  }
+}
 @end

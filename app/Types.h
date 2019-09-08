@@ -62,6 +62,20 @@
 
 #ifdef IOS
 
+@interface UISegmentedControl (MacInterface)
+
+- (NSUInteger)selectedSegment;
+
+@end
+
+@interface UITextField (MacInterface)
+
+- (NSString*)stringValue;
+
+- (void)setStringValue:(NSString*)stringValue;
+
+@end
+
 @interface UITextView (MacInterface)
 
 - (NSString*)string;
