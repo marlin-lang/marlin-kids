@@ -73,45 +73,46 @@
 }*/
 
 #ifdef IOS
-- (void)drawRect:(Rect)rect {
+- (void)drawRect:(CGRect)rect {
   [super drawRect:rect];
   [self drawHashMarksAndLabelsInRect:rect];
 }
 #endif
 
-- (void)drawHashMarksAndLabelsInRect:(Rect)rect {
+- (void)drawHashMarksAndLabelsInRect:(CGRect)rect {
   auto* sourceView = (SourceView*)self.clientView;
   auto startPoint = [self convertPoint:rect.origin toView:sourceView];
   auto [startLine, startColumn] = [sourceView sourceLocationOfPoint:startPoint];
-  auto endPoint = [self convertPoint:MakePoint(rect.origin.x, rect.origin.y + rect.size.height - 1)
-                              toView:sourceView];
+  auto endPoint =
+      [self convertPoint:CGPointMake(rect.origin.x, rect.origin.y + rect.size.height - 1)
+                  toView:sourceView];
   auto [endLine, endColumn] = [sourceView sourceLocationOfPoint:endPoint];
-  auto offset = [self convertPoint:ZeroPoint fromView:sourceView];
+  auto offset = [self convertPoint:CGPointZero fromView:sourceView];
   auto height = sourceView.lineHeight;
   auto errorSize = height - _inset * 2;
   auto y = [sourceView lineTopOfNumber:startLine] + offset.y;
   if (startLine > 0) {
     for (auto line = startLine; line <= endLine; ++line) {
-      auto errorRect = MakeRect(_inset, y + _inset, errorSize, errorSize);
+      auto errorRect = CGRectMake(_inset, y + _inset, errorSize, errorSize);
       [self drawErrorIndicatorOfLine:line atRect:errorRect];
 
       auto* string = [NSString stringWithFormat:@"%lu", line];
       auto* attrString = [[NSAttributedString alloc] initWithString:string
                                                          attributes:currentTheme().lineNumberAttrs];
       [attrString
-          drawAtPoint:MakePoint(self.ruleThickness - _inset - attrString.size.width, y + _inset)];
+          drawAtPoint:CGPointMake(self.ruleThickness - _inset - attrString.size.width, y + _inset)];
       y += height;
     }
   }
 }
 
-- (void)drawErrorIndicatorOfLine:(NSUInteger)number atRect:(Rect)rect {
+- (void)drawErrorIndicatorOfLine:(NSUInteger)number atRect:(CGRect)rect {
   if ([_errors objectForKey:[NSNumber numberWithInteger:number]]) {
     drawOval(rect, Color.redColor);
   }
 }
 
-- (NSUInteger)lineNumberOfLocation:(Point)loc {
+- (NSUInteger)lineNumberOfLocation:(CGPoint)loc {
   auto* sourceView = (SourceView*)self.clientView;
   auto sourceViewLocation = [self convertPoint:loc toView:sourceView];
   auto [line, column] = [sourceView sourceLocationOfPoint:sourceViewLocation];

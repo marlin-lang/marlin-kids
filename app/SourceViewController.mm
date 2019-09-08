@@ -72,16 +72,16 @@
 
 #pragma mark - CollectionViewDelegateFlowLayout
 
-- (Size)collectionView:(CollectionView *)collectionView
+- (CGSize)collectionView:(CollectionView *)collectionView
                     layout:(CollectionViewLayout *)collectionViewLayout
     sizeForItemAtIndexPath:(NSIndexPath *)indexPath {
-  return MakeSize(collectionView.bounds.size.width - 10, 25);
+  return CGSizeMake(collectionView.bounds.size.width - 10, 25);
 }
 
-- (Size)collectionView:(CollectionView *)collectionView
+- (CGSize)collectionView:(CollectionView *)collectionView
                              layout:(CollectionViewLayout *)collectionViewLayout
     referenceSizeForHeaderInSection:(NSInteger)section {
-  return MakeSize(collectionView.bounds.size.width - 10, 35);
+  return CGSizeMake(collectionView.bounds.size.width - 10, 35);
 }
 
 #pragma mark - NSTextViewDelegate

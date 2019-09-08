@@ -8,15 +8,6 @@
 
 #define AppleDocument UIDocument
 
-#define Point CGPoint
-#define ZeroPoint CGPointZero
-#define MakePoint CGPointMake
-#define Size CGSize
-#define MakeSize CGSizeMake
-#define Rect CGRect
-#define ZeroRect CGRectZero
-#define MakeRect CGRectMake
-
 #define Color UIColor
 #define Font UIFont
 #define Image UIImage
@@ -43,15 +34,6 @@
 #else
 
 #define AppleDocument NSDocument
-
-#define Point NSPoint
-#define ZeroPoint NSZeroPoint
-#define MakePoint NSMakePoint
-#define Size NSSize
-#define MakeSize NSMakeSize
-#define Rect NSRect
-#define ZeroRect NSZeroRect
-#define MakeRect NSMakeRect
 
 #define Color NSColor
 #define Font NSFont

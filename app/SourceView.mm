@@ -45,7 +45,7 @@
 }
 
 - (void)initialize {
-  self.frame = ZeroRect;
+  self.frame = CGRectZero;
   _strings = [NSMutableArray new];
   _insets = EdgeInsetsMake(5, 5, 5, 5);
   _isDraggingFromSelection = NO;
@@ -81,7 +81,7 @@
   }
   auto width = fmax(maxLineWidth + _insets.left + _insets.right, self.bounds.size.width);
   auto height = self.lineHeight * _strings.count + _insets.top + _insets.bottom;
-  [self setFrame:MakeRect(self.frame.origin.x, self.frame.origin.y, width, height)];
+  [self setFrame:CGRectMake(self.frame.origin.x, self.frame.origin.y, width, height)];
   [self setNeedsDisplayInRect:self.bounds];
 }
 
@@ -98,8 +98,8 @@
   applyTheme(currentTheme(), str, range, highlights);
   auto width = str.size.width + _insets.left + _insets.right;
   if (width > self.frame.size.width) {
-    [self
-        setFrame:MakeRect(self.frame.origin.x, self.frame.origin.y, width, self.frame.size.height)];
+    [self setFrame:CGRectMake(self.frame.origin.x, self.frame.origin.y, width,
+                              self.frame.size.height)];
   }
   [self setNeedsDisplayInRect:self.bounds];
 }
@@ -124,7 +124,7 @@
   [self setNeedsDisplayInRect:self.bounds];
 }
 
-- (marlin::source_loc)sourceLocationOfPoint:(Point)point {
+- (marlin::source_loc)sourceLocationOfPoint:(CGPoint)point {
   if (_strings.count > 0) {
     auto oneCharSize = characterSizeWithAttributes(currentTheme().allAttrs);
     size_t line = fmin(_strings.count - 1, fmax(0, point.y - _insets.top) / oneCharSize.height) + 1;
@@ -197,7 +197,7 @@
   }
 }
 
-- (void)drawRect:(Rect)dirtyRect {
+- (void)drawRect:(CGRect)dirtyRect {
   [super drawRect:dirtyRect];
   [self drawBackgroundInRect:dirtyRect];
   auto lineHeight = self.lineHeight;
@@ -208,73 +208,56 @@
   for (auto index = beginIndex; index <= endIndex; ++index) {
     auto y = index * lineHeight + _insets.top;
     NSAttributedString* string = [_strings objectAtIndex:index];
-    [string drawAtPoint:MakePoint(_insets.left, y)];
+    [string drawAtPoint:CGPointMake(_insets.left, y)];
   }
 }
 
-- (void)drawBackgroundInRect:(Rect)rect {
+- (void)drawBackgroundInRect:(CGRect)rect {
   [self drawSelectionInRect:rect];
   [self drawExpressionInsertionInRect:rect];
   [self drawStatementInsertionPointInRect:rect];
   [self drawErrorMessage];
 }
 
-- (void)drawStatementInsertionPointInRect:(Rect)rect {
+- (void)drawStatementInsertionPointInRect:(CGRect)rect {
   if (_statementInsertionLine && _statementInserter && _statementInserter->can_insert()) {
     auto oneCharSize = characterSizeWithAttributes(currentTheme().allAttrs);
     auto x = _insets.left + oneCharSize.width * (_statementInserter->get_location().column - 1);
     auto y = oneCharSize.height * (*_statementInsertionLine - 1) + _insets.top;
-    if (CGRectContainsPoint(rect, MakePoint(x, y))) {
-      drawLine(MakePoint(x, y), MakePoint(x + 200, y), 5, [Color blueColor]);
+    if (CGRectContainsPoint(rect, CGPointMake(x, y))) {
+      drawLine(CGPointMake(x, y), CGPointMake(x + 200, y), 5, [Color blueColor]);
     }
   }
 }
 
-- (void)drawSelectionInRect:(Rect)rect {
+- (void)drawSelectionInRect:(CGRect)rect {
   if (_selection) {
     [self drawSourceRange:_selection->get_range() inRect:rect forSelection:YES];
   }
 }
 
-- (void)drawExpressionInsertionInRect:(Rect)rect {
+- (void)drawExpressionInsertionInRect:(CGRect)rect {
   if (_expressionInsertionRange && _expressionInserter && _expressionInserter->can_insert()) {
     [self drawSourceRange:*_expressionInsertionRange inRect:rect forSelection:NO];
   }
 }
 
 - (void)drawSourceRange:(marlin::source_range)range
-                 inRect:(Rect)rect
+                 inRect:(CGRect)rect
            forSelection:(BOOL)isSelection {
-#ifndef IOS
   auto sourceRect = [self rectOfSourceRange:range];
-  if (NSIntersectsRect(rect, sourceRect)) {
-    [NSGraphicsContext saveGraphicsState];
-    NSBezierPath* path = [NSBezierPath bezierPathWithRoundedRect:sourceRect
-                                                         xRadius:5.0f
-                                                         yRadius:5.0f];
-    NSColor* fillColor = [NSColor colorWithCalibratedRed:237.0 / 255.0
-                                                   green:243.0 / 255.0
-                                                    blue:252.0 / 255.0
-                                                   alpha:1];
-    NSColor* strokeColor = isSelection ? [NSColor colorWithCalibratedRed:163.0 / 255.0
-                                                                   green:188.0 / 255.0
-                                                                    blue:234.0 / 255.0
-                                                                   alpha:1]
-                                       : NSColor.redColor;
-    [path addClip];
-    [fillColor setFill];
-    [strokeColor setStroke];
-    NSRectFillUsingOperation(sourceRect, NSCompositingOperationSourceOver);
-    NSAffineTransform* transform = [NSAffineTransform transform];
-    [transform translateXBy:0.5 yBy:0.5];
-    [path transformUsingAffineTransform:transform];
-    [path stroke];
-    [transform translateXBy:-1.5 yBy:-1.5];
-    [path transformUsingAffineTransform:transform];
-    [path stroke];
-    [NSGraphicsContext restoreGraphicsState];
+  if (CGRectIntersectsRect(rect, sourceRect)) {
+    Color* fillColor = [Color colorWithRed:237.0 / 255.0
+                                     green:243.0 / 255.0
+                                      blue:252.0 / 255.0
+                                     alpha:1];
+    Color* strokeColor = isSelection ? [Color colorWithRed:163.0 / 255.0
+                                                     green:188.0 / 255.0
+                                                      blue:234.0 / 255.0
+                                                     alpha:1]
+                                     : Color.redColor;
+    drawRoundRectangle(sourceRect, 5, fillColor, strokeColor);
   }
-#endif
 }
 
 - (void)drawErrorMessage {
@@ -296,7 +279,7 @@
 #endif
 }
 
-- (void)touchAtLocation:(Point)location {
+- (void)touchAtLocation:(CGPoint)location {
   _selection = [self.dataSource sourceView:self selectionAt:[self sourceLocationOfPoint:location]];
   [self setNeedsDisplayInRect:self.bounds];
 
@@ -333,7 +316,7 @@
 }
 #endif
 
-- (Rect)rectOfSourceRange:(marlin::source_range)range {
+- (CGRect)rectOfSourceRange:(marlin::source_range)range {
   NSAssert(range.end.line >= range.begin.line, @"Range should be valid");
   const CGFloat inset = 0.25;
   auto oneCharSize = characterSizeWithAttributes(currentTheme().allAttrs);
@@ -343,7 +326,7 @@
     auto y = (range.begin.line - 1) * oneCharSize.height + _insets.top;
     auto width =
         (range.end.column - range.begin.column) * oneCharSize.width + oneCharSize.width * inset * 2;
-    return MakeRect(x, y, width, oneCharSize.height);
+    return CGRectMake(x, y, width, oneCharSize.height);
   } else {
     CGFloat maxWidth = 0;
     for (auto line = range.begin.line; line <= range.end.line; ++line) {
@@ -354,13 +337,13 @@
     auto y = (range.begin.line - 1) * self.lineHeight + _insets.top;
     auto width = maxWidth + oneCharSize.width * inset * 2 - x;
     auto height = (range.end.line - range.begin.line + 1) * self.lineHeight;
-    return MakeRect(x, y, width, height);
+    return CGRectMake(x, y, width, height);
   }
 }
 
 #pragma mark - Drag and drop
 
-- (BOOL)draggingStatementAtLocation:(Point)location {
+- (BOOL)draggingStatementAtLocation:(CGPoint)location {
   auto source_loc = [self sourceLocationOfPoint:location];
 
   if (!_statementInserter) {
@@ -375,7 +358,7 @@
   return NO;
 }
 
-- (BOOL)draggingExpressionAtLocation:(Point)location {
+- (BOOL)draggingExpressionAtLocation:(CGPoint)location {
   auto source_loc = [self sourceLocationOfPoint:location];
 
   if (!_expressionInserter) {

@@ -38,7 +38,7 @@ id<Theme> currentTheme();
 
 void setCurrentTheme(id<Theme> theme);
 
-Size characterSizeWithAttributes(NSDictionary<NSAttributedStringKey, id>* attrs);
+CGSize characterSizeWithAttributes(NSDictionary<NSAttributedStringKey, id>* attrs);
 
 void applyTheme(id<Theme> theme, NSMutableAttributedString* attributedString, NSRange range,
                 const std::vector<marlin::control::highlight_token>& highlights);

@@ -18,7 +18,7 @@ inline void drawWithBlock(Block block) {
 #endif
 }
 
-inline void drawRectangle(Rect rect, Color* fillColor) {
+inline void drawRectangle(CGRect rect, Color* fillColor) {
   drawWithBlock([rect, fillColor]() {
     auto* path = [BezierPath bezierPathWithRect:rect];
     [fillColor set];
@@ -26,7 +26,28 @@ inline void drawRectangle(Rect rect, Color* fillColor) {
   });
 }
 
-inline void drawOval(Rect rect, Color* fillColor) {
+inline void drawRoundRectangle(CGRect rect, CGFloat cornerRadius, Color* fillColor,
+                               Color* strokeColor) {
+  drawWithBlock([rect, cornerRadius, fillColor, strokeColor]() {
+#ifdef IOS
+    auto* path = [BezierPath bezierPathWithRoundedRect:rect cornerRadius:cornerRadius];
+#else
+    auto* path = [BezierPath bezierPathWithRoundedRect:rect
+                                               xRadius:cornerRadius
+                                               yRadius:cornerRadius];
+#endif
+    if (fillColor) {
+      [fillColor setFill];
+      [path fill];
+    }
+    if (strokeColor) {
+      [strokeColor setStroke];
+      [path stroke];
+    }
+  });
+}
+
+inline void drawOval(CGRect rect, Color* fillColor) {
   drawWithBlock([rect, fillColor]() {
     auto* path = [BezierPath bezierPathWithOvalInRect:rect];
     [fillColor set];
@@ -34,7 +55,7 @@ inline void drawOval(Rect rect, Color* fillColor) {
   });
 }
 
-inline void drawLine(Point start, Point end, CGFloat width, Color* color) {
+inline void drawLine(CGPoint start, CGPoint end, CGFloat width, Color* color) {
   drawWithBlock([start, end, width, color]() {
     auto* line = [BezierPath bezierPath];
     [line moveToPoint:start];

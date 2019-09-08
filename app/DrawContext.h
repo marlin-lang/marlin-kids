@@ -23,6 +23,6 @@ struct DrawContext {
 #ifndef IOS
   NSBitmapImageRep* _imageRep;
 #endif
-  Size _size;
+  CGSize _size;
   __weak id<DrawContextDelegate> _delegate;
 };

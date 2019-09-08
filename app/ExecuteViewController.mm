@@ -33,7 +33,7 @@ constexpr double refreshTimeInMS = 40;
 #ifndef IOS
   self.imageView.image = [Image imageWithSize:self.imageView.bounds.size
                                       flipped:NO
-                               drawingHandler:^BOOL(Rect dstRect) {
+                               drawingHandler:^BOOL(CGRect dstRect) {
                                  return YES;
                                }];
 #endif

@@ -39,7 +39,7 @@ id<Theme> currentTheme() { return _currentTheme; }
 
 void setCurrentTheme(id<Theme> theme) { _currentTheme = theme; }
 
-Size characterSizeWithAttributes(NSDictionary<NSAttributedStringKey, id>* attrs) {
+CGSize characterSizeWithAttributes(NSDictionary<NSAttributedStringKey, id>* attrs) {
   return [@"a" sizeWithAttributes:attrs];
 }
 

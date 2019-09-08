@@ -27,7 +27,7 @@ NS_ASSUME_NONNULL_BEGIN
 @protocol SourceViewDelegate
 
 - (void)showEditorViewControllerForSourceView:(SourceView *)view
-                                     fromRect:(Rect)rect
+                                     fromRect:(CGRect)rect
                                      withType:(marlin::control::literal_data_type)type
                                          data:(std::string_view)data;
 
@@ -35,7 +35,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 @end
 
-@interface SourceView : View<EditorViewControllerDelegate>
+@interface SourceView : View <EditorViewControllerDelegate>
 
 @property(weak) id<SourceViewDataSource> dataSource;
 @property(weak) id<SourceViewDelegate> delegate;
@@ -54,7 +54,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 - (void)removeExpressionInSourceRange:(marlin::source_range)sourceRange;
 
-- (marlin::source_loc)sourceLocationOfPoint:(Point)point;
+- (marlin::source_loc)sourceLocationOfPoint:(CGPoint)point;
 
 - (CGFloat)lineHeight;
 
@@ -64,9 +64,9 @@ NS_ASSUME_NONNULL_BEGIN
 
 - (void)clearErrors;
 
-- (BOOL)draggingStatementAtLocation:(Point)location;
+- (BOOL)draggingStatementAtLocation:(CGPoint)location;
 
-- (BOOL)draggingExpressionAtLocation:(Point)location;
+- (BOOL)draggingExpressionAtLocation:(CGPoint)location;
 
 - (BOOL)performStatementDropForData:(NSData *)data;
 
@@ -76,7 +76,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 - (void)resetAll;
 
-- (void)touchAtLocation:(Point)location;
+- (void)touchAtLocation:(CGPoint)location;
 
 @end
 
