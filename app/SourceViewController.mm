@@ -30,25 +30,24 @@
 }
 
 - (Document *)document {
-  NSAssert(NO, @"Implement by subclass");
+  NSAssert(NO, @"Implemented by subclass");
   return nil;
 }
 
 - (SourceView *)sourceView {
-  NSAssert(NO, @"Implement by subclass");
+  NSAssert(NO, @"Implemented by subclass");
   return nil;
 }
 
 - (void)prepareForSegue:(StoryboardSegue *)segue sender:(id)sender {
-#ifndef IOS
-  if ([segue.destinationController isKindOfClass:[ExecuteViewController class]]) {
+    auto* destinationViewController = [self destinationViewControllerOfSegue:segue];
+  if ([destinationViewController isKindOfClass:[ExecuteViewController class]]) {
     assert(_exec_env.has_value());
 
-    auto *vc = (ExecuteViewController *)segue.destinationController;
+    auto *vc = (ExecuteViewController *)destinationViewController;
     vc.environment = *std::move(_exec_env);
     _exec_env = std::nullopt;
   }
-#endif
 }
 
 - (void)execute {
@@ -68,6 +67,11 @@
   if (_exec_env.has_value()) {
     [self performSegueWithIdentifier:@"ExecuteViewController" sender:self];
   }
+}
+
+- (ViewController*)destinationViewControllerOfSegue:(StoryboardSegue*)segue {
+    NSAssert(NO, @"Implemented by subclass");
+    return nil;
 }
 
 #pragma mark - CollectionViewDelegateFlowLayout

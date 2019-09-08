@@ -59,3 +59,13 @@
 #define ViewController NSViewController
 
 #endif
+
+#ifdef IOS
+
+@interface UITextView (MacInterface)
+
+- (NSString*)string;
+
+@end
+
+#endif

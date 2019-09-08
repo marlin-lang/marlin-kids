@@ -44,22 +44,26 @@
   [lineNumberView.leftAnchor constraintEqualToAnchor:self.scrollView.leftAnchor].active = YES;
   [lineNumberView.heightAnchor constraintEqualToAnchor:self.view.heightAnchor].active = YES;
   [lineNumberView.widthAnchor constraintEqualToConstant:lineNumberView.ruleThickness].active = YES;
+
+    [self.document openWithCompletionHandler:^(BOOL success) {
+        if (success) {
+            if (auto initialData = [self.document initialize]) {
+                [self.sourceView insertStatementsBeforeLine:1
+                                                 withSource:std::move(initialData->source)
+                                                 highlights:std::move(initialData->highlights)];
+                [self.lineNumberView setNeedsDisplay];
+            }
+        } else {
+        }
+    }];
 }
 
-- (void)viewWillAppear:(BOOL)animated {
-  [super viewWillAppear:animated];
+- (IBAction)run:(id)sender {
+    [self execute];
+}
 
-  [self.document openWithCompletionHandler:^(BOOL success) {
-    if (success) {
-      if (auto initialData = [self.document initialize]) {
-        [self.sourceView insertStatementsBeforeLine:1
-                                         withSource:std::move(initialData->source)
-                                         highlights:std::move(initialData->highlights)];
-        [self.lineNumberView setNeedsDisplay];
-      }
-    } else {
-    }
-  }];
+- (UIViewController*)destinationViewControllerOfSegue:(UIStoryboardSegue*)segue {
+    return segue.destinationViewController;
 }
 
 #pragma mark - UICollectionViewDataSource

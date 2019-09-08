@@ -81,13 +81,11 @@ constexpr double refreshTimeInMS = 40;
   NativeEnvironment<ExecuteViewController> system{*_environment, "system", self};
 
   system.register_native_instruction<std::string>("print", [](auto self, std::string message) {
-#ifndef IOS
     [self.outputTextView.textStorage
         replaceCharactersInRange:NSMakeRange(self.outputTextView.string.length, 0)
             withAttributedString:[[NSAttributedString alloc]
                                      initWithString:[NSString stringWithStringView:message]
                                          attributes:currentTheme().consoleAttrs]];
-#endif
   });
 
   system.register_native_instruction<double, double, double, double>(

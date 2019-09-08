@@ -27,7 +27,8 @@ set(SOURCES
     NSString+StringView.mm
     SourceView.mm
     SourceViewController.mm
-    Theme.mm)
+    Theme.mm
+    Types.mm)
 
 if(IOS)
   set(HEADERS

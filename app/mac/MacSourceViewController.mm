@@ -42,6 +42,10 @@
       [[LineNumberView alloc] initWithSourceView:self.sourceView];
 }
 
+- (NSViewController*)destinationViewControllerOfSegue:(NSStoryboardSegue*)segue {
+    return segue.destinationController;
+}
+
 #pragma mark - NSCollectionViewDataSource
 
 - (NSInteger)numberOfSectionsInCollectionView:(CollectionView *)collectionView {
