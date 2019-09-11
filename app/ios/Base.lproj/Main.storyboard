@@ -140,9 +140,14 @@
                         <rect key="frame" x="0.0" y="0.0" width="375" height="667"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                         <subviews>
-                            <imageView clipsSubviews="YES" userInteractionEnabled="NO" contentMode="scaleAspectFit" horizontalHuggingPriority="251" verticalHuggingPriority="251" translatesAutoresizingMaskIntoConstraints="NO" id="vf9-Xl-QDQ">
+                            <wkWebView contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="uJI-LI-A0F">
                                 <rect key="frame" x="0.0" y="64" width="375" height="503"/>
-                            </imageView>
+                                <color key="backgroundColor" red="0.36078431370000003" green="0.38823529410000002" blue="0.4039215686" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
+                                <wkWebViewConfiguration key="configuration">
+                                    <audiovisualMediaTypes key="mediaTypesRequiringUserActionForPlayback" none="YES"/>
+                                    <wkPreferences key="preferences"/>
+                                </wkWebViewConfiguration>
+                            </wkWebView>
                             <textView clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="scaleToFill" textAlignment="natural" translatesAutoresizingMaskIntoConstraints="NO" id="ba9-Tu-LSm">
                                 <rect key="frame" x="0.0" y="567" width="375" height="100"/>
                                 <color key="backgroundColor" white="1" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
@@ -156,18 +161,19 @@
                         </subviews>
                         <color key="backgroundColor" white="1" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
                         <constraints>
+                            <constraint firstItem="ba9-Tu-LSm" firstAttribute="top" secondItem="uJI-LI-A0F" secondAttribute="bottom" id="6fl-it-wjr"/>
                             <constraint firstItem="ba9-Tu-LSm" firstAttribute="leading" secondItem="PzW-ii-hdS" secondAttribute="leading" id="B42-Mt-ykk"/>
-                            <constraint firstItem="ba9-Tu-LSm" firstAttribute="top" secondItem="vf9-Xl-QDQ" secondAttribute="bottom" id="Kip-Ty-XwR"/>
+                            <constraint firstItem="PzW-ii-hdS" firstAttribute="trailing" secondItem="uJI-LI-A0F" secondAttribute="trailing" id="GgT-ni-k9h"/>
                             <constraint firstItem="PzW-ii-hdS" firstAttribute="trailing" secondItem="ba9-Tu-LSm" secondAttribute="trailing" id="MoR-1j-401"/>
-                            <constraint firstItem="PzW-ii-hdS" firstAttribute="trailing" secondItem="vf9-Xl-QDQ" secondAttribute="trailing" id="RiG-or-k4A"/>
                             <constraint firstItem="PzW-ii-hdS" firstAttribute="bottom" secondItem="ba9-Tu-LSm" secondAttribute="bottom" id="dwN-vJ-FYj"/>
-                            <constraint firstItem="vf9-Xl-QDQ" firstAttribute="leading" secondItem="PzW-ii-hdS" secondAttribute="leading" id="t29-Sf-Sct"/>
-                            <constraint firstItem="vf9-Xl-QDQ" firstAttribute="top" secondItem="PzW-ii-hdS" secondAttribute="top" id="tcW-ef-5dR"/>
+                            <constraint firstItem="uJI-LI-A0F" firstAttribute="top" secondItem="PzW-ii-hdS" secondAttribute="top" id="uhf-ON-fNQ"/>
+                            <constraint firstItem="uJI-LI-A0F" firstAttribute="leading" secondItem="PzW-ii-hdS" secondAttribute="leading" id="xhN-XC-lMQ"/>
                         </constraints>
                         <viewLayoutGuide key="safeArea" id="PzW-ii-hdS"/>
                     </view>
                     <connections>
                         <outlet property="outputTextView" destination="ba9-Tu-LSm" id="h6g-OQ-07R"/>
+                        <outlet property="wkWebView" destination="uJI-LI-A0F" id="DnX-Gv-NJd"/>
                     </connections>
                 </viewController>
                 <placeholder placeholderIdentifier="IBFirstResponder" id="1pl-s4-nAz" userLabel="First Responder" sceneMemberID="firstResponder"/>

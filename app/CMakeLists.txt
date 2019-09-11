@@ -30,6 +30,8 @@ set(SOURCES
     Theme.mm
     Types.mm)
 
+set(RESOURCES exec_env.html)
+
 if(IOS)
   set(HEADERS
       ${HEADERS}
@@ -62,7 +64,7 @@ if(IOS)
 
   set(TARGET_NAME ${PROJECT_NAME}.app.ios)
   set(DEFINITIONS IOS)
-  set(FRAMEWORKS "-framework CoreGraphics -framework UIKit")
+  set(FRAMEWORKS "-framework CoreGraphics -framework UIKit -framework WebKit")
   set(INFO_PLIST "ios/Info.plist")
 else(IOS)
   set(HEADERS
@@ -90,7 +92,6 @@ else(IOS)
 
   set(RESOURCES
       ${RESOURCES}
-      exec_env.html
       mac/marlin.entitlements
       mac/Assets.xcassets
       mac/Base.lproj/Main.storyboard
