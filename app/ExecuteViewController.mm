@@ -1,3 +1,5 @@
+#import <WebKit/WebKit.h>
+
 #import "ExecuteViewController.h"
 
 #include <chrono>
@@ -13,7 +15,8 @@ constexpr double refreshTimeInMS = 40;
 
 @interface ExecuteViewController ()
 
-@property(weak) IBOutlet ImageView* imageView;
+@property(weak) IBOutlet WKWebView* wkWebView;
+
 @property(weak) IBOutlet TextView* outputTextView;
 
 @end
@@ -32,16 +35,12 @@ constexpr double refreshTimeInMS = 40;
 - (void)viewDidLoad {
   [super viewDidLoad];
 
-#ifndef IOS
-  self.imageView.image = [Image imageWithSize:self.imageView.bounds.size
-                                      flipped:NO
-                               drawingHandler:^BOOL(CGRect dstRect) {
-                                 return YES;
-                               }];
-#endif
+  auto url = [[NSBundle mainBundle] URLForResource:@"exec_env" withExtension:@"html"];
+  auto request = [NSURLRequest requestWithURL:url];
+  [self.wkWebView loadRequest:request];
+
   self.outputTextView.layer.borderWidth = 1;
   self.outputTextView.layer.borderColor = [Color blackColor].CGColor;
-  _drawContext.initWithImage(self.imageView.image, self);
   _logoSketcher.set_context(_drawContext);
   _needRefreshImage = NO;
 }
@@ -73,7 +72,6 @@ constexpr double refreshTimeInMS = 40;
   if (diff.count() < refreshTimeInMS) {
     _needRefreshImage = YES;
   } else {
-    [self refreshImage];
   }
 }
 
@@ -108,28 +106,6 @@ constexpr double refreshTimeInMS = 40;
   assert(_environment.has_value());
 
   _environment->terminate();
-}
-
-- (void)refreshImage {
-#ifndef IOS
-  for (NSImageRep* rep in self.imageView.image.representations) {
-    [self.imageView.image removeRepresentation:rep];
-  }
-  [self.imageView.image addRepresentation:_drawContext.imageRep()];
-  [self.imageView setNeedsDisplay:YES];
-#endif
-  _image_refresh_time = std::chrono::high_resolution_clock::now();
-  _needRefreshImage = NO;
-
-  __weak auto weakSelf = self;
-  dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(refreshTimeInMS / 1000 * NSEC_PER_SEC)),
-                 dispatch_get_main_queue(), ^{
-                   if (auto strongSelf = weakSelf) {
-                     if (strongSelf->_needRefreshImage) {
-                       [strongSelf refreshImage];
-                     }
-                   }
-                 });
 }
 
 - (void)refreshOutput {

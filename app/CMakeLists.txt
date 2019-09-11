@@ -90,6 +90,7 @@ else(IOS)
 
   set(RESOURCES
       ${RESOURCES}
+      exec_env.html
       mac/marlin.entitlements
       mac/Assets.xcassets
       mac/Base.lproj/Main.storyboard
@@ -97,7 +98,7 @@ else(IOS)
       mac/ToolboxItem.xib)
 
   set(TARGET_NAME ${PROJECT_NAME}.app.mac)
-  set(FRAMEWORKS "-framework CoreGraphics -framework AppKit")
+  set(FRAMEWORKS "-framework CoreGraphics -framework AppKit -framework WebKit")
   set(INFO_PLIST "mac/Info.plist")
 endif(IOS)
 
