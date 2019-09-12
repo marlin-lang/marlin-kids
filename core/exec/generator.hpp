@@ -44,9 +44,9 @@ struct generator {
         jsast::ast::member_identifier{"__thefunc__"}};
   }
 
-  static jsast::ast::node system_callee(std::string name) {
+  static jsast::ast::node system_callee(std::string module, std::string name) {
     return jsast::ast::member_expression{
-        jsast::ast::identifier{"system"},
+        jsast::ast::identifier{std::move(module)},
         jsast::ast::member_identifier{std::move(name)}};
   }
 
@@ -104,7 +104,8 @@ struct generator {
     return jsast::ast::function_declaration{
         main_name,
         {},
-        jsast::ast::block_statement{get_block(start.statements())}};
+        jsast::ast::block_statement{get_block(start.statements())},
+        true};
   }
 
   auto get_jsast(ast::assignment& assignment) {
@@ -121,18 +122,22 @@ struct generator {
 
   auto get_jsast(ast::system_procedure_call& call) {
     static constexpr std::array<jsast::ast::node (*)(), 5> callee_map{
-        []() { return system_callee("draw_line"); } /* draw_line */,
-        []() { return system_callee("logo_forward"); } /* logo_forward */,
-        []() { return system_callee("logo_backward"); } /* logo_backward */,
-        []() { return system_callee("logo_turn_left"); } /* logo_turn_left */,
-        []() { return system_callee("logo_turn_right"); } /* logo_turn_right */
+        []() { return system_callee("graphics", "draw_line"); } /* draw_line */,
+        []() { return system_callee("logo", "forward"); } /* logo_forward */,
+        []() { return system_callee("logo", "backward"); } /* logo_backward */,
+        []() {
+          return system_callee("logo", "turn_left");
+        } /* logo_turn_left */,
+        []() {
+          return system_callee("logo", "turn_right");
+        } /* logo_turn_right */
     };
     jsast::utils::move_vector<jsast::ast::node> args;
     for (auto& arg : call.arguments()) {
       args.emplace_back(get_node(*arg));
     }
-    return jsast::ast::call_expression{
-        callee_map[static_cast<size_t>(call.proc)](), std::move(args)};
+    return jsast::ast::await_expression{jsast::ast::call_expression{
+        callee_map[static_cast<size_t>(call.proc)](), std::move(args)}};
   }
 
   auto get_jsast(ast::if_statement& statement) {

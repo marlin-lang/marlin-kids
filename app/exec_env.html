@@ -19,6 +19,14 @@
       }
     </style>
     <script>
+      function execute(func) {
+        async function _exec() {
+          // TODO: catch exceptions
+          await { __thefunc__: func }.__thefunc__();
+        }
+        _exec();
+      }
+
       function* range(first, second = undefined, third = undefined) {
         var begin = 0,
           end,
@@ -37,8 +45,10 @@
         }
       }
 
-      function execute(func) {
-        ({ __thefunc__: func }.__thefunc__());
+      async function sleep(time) {
+        return new Promise(accept => {
+          setTimeout(accept, time);
+        });
       }
 
       function print(obj) {
@@ -48,14 +58,49 @@
         });
       }
 
+      class Graphics {
+        captureContext(canvas) {
+          const newContext = canvas.getContext("2d");
+          if (this.context == undefined) {
+            // Default style
+            newContext.strokeStyle = "#ffffff";
+          } else {
+            newContext.strokeStyle = this.context.strokeStyle;
+            newContext.fillStyle = this.context.fillStyle;
+            newContext.lineWidth = this.context.lineWidth;
+            newContext.lineCap = this.context.lineCap;
+            newContext.lineJoin = this.context.lineJoin;
+            newContext.miterLimit = this.context.miterLimit;
+            newContext.lineDashOffset = this.context.lineDashOffset;
+            newContext.setLineDash(this.context.getLineDash());
+          }
+          this.context = newContext;
+        }
+
+        origin() {
+          return {
+            x: this.context.canvas.width / 2,
+            y: this.context.canvas.height / 2
+          };
+        }
+
+        async draw_line(start_x, start_y, end_x, end_y) {
+          const origin = this.origin();
+          this.context.beginPath();
+          this.context.moveTo(start_x + origin.x, start_y + origin.y);
+          this.context.lineTo(end_x + origin.x, end_y + origin.y);
+          this.context.stroke();
+          await sleep(0);
+        }
+      }
+      graphics = new Graphics();
+
       window.onload = () => {
         let canvas = document.getElementsByTagName("canvas")[0];
         canvas.width = document.body.scrollWidth;
         canvas.height = document.body.scrollHeight;
 
-        let context = canvas.getContext("2d");
-        context.fillStyle = "#00FF00";
-        context.fillRect(0, 0, canvas.width, canvas.height);
+        graphics.captureContext(canvas);
 
         let resizeEnd;
         window.onresize = () => {
@@ -65,8 +110,8 @@
             newCanvas.width = document.body.scrollWidth;
             newCanvas.height = document.body.scrollHeight;
 
-            context = newCanvas.getContext("2d");
-            context.drawImage(
+            graphics.captureContext(newCanvas);
+            graphics.context.drawImage(
               canvas,
               (newCanvas.width - canvas.width) / 2,
               (newCanvas.height - canvas.height) / 2

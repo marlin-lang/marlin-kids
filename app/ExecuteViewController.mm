@@ -4,8 +4,6 @@
 
 #include <chrono>
 
-#include "logo_sketcher.hpp"
-
 #import "DrawContext.h"
 #import "NSString+StringView.h"
 #import "Theme.h"
@@ -121,8 +119,6 @@ constexpr double refreshTimeInMS = 40;
                      completionHandler:^(id _Nullable result, NSError* _Nullable error) {
                        if (error != nil) {
                          NSLog(@"%@", error);
-                       } else {
-                         NSLog(@"%@", result);
                        }
                      }];
   }
