@@ -1,11 +1,6 @@
 include(jscutils)
 
-set(HEADERS
-    environment.hpp
-    exec_errors.hpp
-    generator.hpp
-    stacktrace.hpp
-    standard_lib.hpp)
+set(HEADERS exec_errors.hpp generator.hpp stacktrace.hpp)
 
 set(SOURCES stacktrace.cpp)
 

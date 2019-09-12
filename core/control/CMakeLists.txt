@@ -1,6 +1,5 @@
 set(HEADERS
     document.hpp
-    exec_env.hpp
     expression_inserter.hpp
     logo_sketcher.hpp
     placeholders.hpp

@@ -3,6 +3,7 @@
 
 #include <array>
 #include <type_traits>
+#include <unordered_set>
 
 #include <jsast/jsast.hpp>
 
@@ -32,6 +33,7 @@ struct generator {
   static constexpr const char* main_name{"__main__"};
 
   bool _is_async;
+  std::unordered_set<std::string> _identifiers;
   std::vector<generation_error> _errors;
 
   static jsast::ast::node scoped_callee_with_name(std::string name) {
@@ -91,12 +93,14 @@ struct generator {
     for (auto& block : program.blocks()) {
       blocks.emplace_back(get_node(*block));
     }
-    blocks.emplace_back(
-        jsast::ast::call_expression{scoped_callee_with_name(main_name), {}});
+    blocks.emplace_back(jsast::ast::expression_statement{
+        jsast::ast::call_expression{jsast::ast::identifier{"execute"},
+                                    {jsast::ast::identifier{main_name}}}});
     return jsast::ast::program{std::move(blocks)};
   }
 
   auto get_jsast(ast::on_start& start) {
+    _identifiers.clear();
     return jsast::ast::function_declaration{
         main_name,
         {},
@@ -104,14 +108,15 @@ struct generator {
   }
 
   auto get_jsast(ast::assignment& assignment) {
-    return jsast::ast::expression_statement{jsast::ast::assignment_expression{
-        get_node(*assignment.variable()), jsast::assignment_op::standard,
-        get_node(*assignment.value())}};
+    return jsast::ast::variable_declaration{
+        {jsast::ast::variable_declarator{get_node(*assignment.variable()),
+                                         get_node(*assignment.value())}},
+        jsast::variable_declaration_type::var};
   }
 
   auto get_jsast(ast::print_statement& statement) {
     return jsast::ast::expression_statement{jsast::ast::call_expression{
-        system_callee("print"), {get_node(*statement.value())}}};
+        jsast::ast::identifier{"print"}, {get_node(*statement.value())}}};
   }
 
   auto get_jsast(ast::system_procedure_call& call) {
@@ -147,9 +152,11 @@ struct generator {
   }
 
   auto get_jsast(ast::for_statement& statement) {
-    return jsast::ast::for_of_statement{get_node(*statement.variable()),
-                                        get_node(*statement.list()),
-                                        get_block(statement.statements())};
+    return jsast::ast::for_of_statement{
+        jsast::ast::variable_declaration{
+            {jsast::ast::variable_declarator{get_node(*statement.variable())}},
+            jsast::variable_declaration_type::var},
+        get_node(*statement.list()), get_block(statement.statements())};
   }
 
   auto get_jsast(ast::unary_expression& unary) {

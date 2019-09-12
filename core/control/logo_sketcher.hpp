@@ -3,8 +3,6 @@
 
 #include <cmath>
 
-#include "exec_env.hpp"
-
 namespace marlin::control {
 
 constexpr double pi = 3.141592653589793238463;

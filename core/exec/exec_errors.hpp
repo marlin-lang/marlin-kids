@@ -45,41 +45,6 @@ struct collected_generation_error : std::exception {
   std::vector<generation_error> _errors;
 };
 
-struct runtime_error : std::exception {
-  inline runtime_error(std::string message, std::vector<ast::base*> stack)
-      : _message{std::move(message)}, _stack{std::move(stack)} {}
-
-  [[nodiscard]] const char* what() const noexcept override {
-    return _message.data();
-  }
-
-  [[nodiscard]] inline size_t stack_depth() const { return _stack.size(); }
-  [[nodiscard]] inline ast::base& stack(size_t index) const noexcept {
-    return *_stack[index];
-  }
-
- private:
-  std::string _message;
-  std::vector<ast::base*> _stack;
-};
-
-struct external_interrupt : std::exception {
-  inline external_interrupt(std::vector<ast::base*> stack)
-      : _stack{std::move(stack)} {}
-
-  [[nodiscard]] const char* what() const noexcept override {
-    return "External interrupt received!";
-  }
-
-  [[nodiscard]] inline size_t stack_depth() const { return _stack.size(); }
-  [[nodiscard]] inline ast::base& stack(size_t index) const noexcept {
-    return *_stack[index];
-  }
-
- private:
-  std::vector<ast::base*> _stack;
-};
-
 };  // namespace marlin::exec
 
 #endif  // marlin_parse_errors_hpp

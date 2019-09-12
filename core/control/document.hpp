@@ -7,7 +7,7 @@
 #include <utility>
 
 #include "base.hpp"
-#include "exec_env.hpp"
+#include "generator.hpp"
 #include "prototypes.hpp"
 #include "source_update.hpp"
 #include "store.hpp"
@@ -58,7 +58,10 @@ struct document {
     return _program->locate(loc);
   }
 
-  exec_environment generate_exec_environment() { return {*_program}; }
+  [[nodiscard]] std::string generate_executable_code() {
+    exec::generator gen;
+    return gen.generate(*_program);
+  }
 
   store::data_vector write() const { return store::write({_program.get()}); }
 

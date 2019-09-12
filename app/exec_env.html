@@ -1,7 +1,86 @@
+<!DOCTYPE html>
 <html>
+  <head>
+    <style>
+      html,
+      body {
+        width: 100%;
+        height: 100%;
+        margin: 0;
+      }
+      body {
+        background: black;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+      }
+      canvas {
+        background: black;
+      }
+    </style>
+    <script>
+      function* range(first, second = undefined, third = undefined) {
+        var begin = 0,
+          end,
+          step = 1;
+        if (second != undefined) {
+          begin = first;
+          end = second;
+          if (third != undefined) {
+            step = third;
+          }
+        } else {
+          end = first;
+        }
+        for (var i = begin; step >= 0 ? i < end : i > end; i += step) {
+          yield i;
+        }
+      }
 
-<head></head>
+      function execute(func) {
+        ({ __thefunc__: func }.__thefunc__());
+      }
 
-<body>Test html</body>
+      function print(obj) {
+        webkit.messageHandlers.system.postMessage({
+          type: "log",
+          message: String(obj)
+        });
+      }
 
+      window.onload = () => {
+        let canvas = document.getElementsByTagName("canvas")[0];
+        canvas.width = document.body.scrollWidth;
+        canvas.height = document.body.scrollHeight;
+
+        let context = canvas.getContext("2d");
+        context.fillStyle = "#00FF00";
+        context.fillRect(0, 0, canvas.width, canvas.height);
+
+        let resizeEnd;
+        window.onresize = () => {
+          clearTimeout(resizeEnd);
+          resizeEnd = setTimeout(() => {
+            const newCanvas = document.createElement("canvas");
+            newCanvas.width = document.body.scrollWidth;
+            newCanvas.height = document.body.scrollHeight;
+
+            context = newCanvas.getContext("2d");
+            context.drawImage(
+              canvas,
+              (newCanvas.width - canvas.width) / 2,
+              (newCanvas.height - canvas.height) / 2
+            );
+
+            document.body.insertBefore(newCanvas, canvas);
+            document.body.removeChild(canvas);
+            canvas = newCanvas;
+          }, 100);
+        };
+      };
+    </script>
+  </head>
+  <body>
+    <canvas></canvas>
+  </body>
 </html>

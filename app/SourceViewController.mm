@@ -20,7 +20,7 @@
 @end
 
 @implementation SourceViewController {
-  std::optional<marlin::control::exec_environment> _exec_env;
+  NSString *_executableCode;
 }
 
 - (void)viewDidLoad {
@@ -40,21 +40,21 @@
 }
 
 - (void)prepareForSegue:(StoryboardSegue *)segue sender:(id)sender {
-    auto* destinationViewController = [self destinationViewControllerOfSegue:segue];
+  auto *destinationViewController = [self destinationViewControllerOfSegue:segue];
   if ([destinationViewController isKindOfClass:[ExecuteViewController class]]) {
-    assert(_exec_env.has_value());
+    assert(_executableCode != nil);
 
     auto *vc = (ExecuteViewController *)destinationViewController;
-    vc.environment = *std::move(_exec_env);
-    _exec_env = std::nullopt;
+    vc.executable = _executableCode;
   }
 }
 
 - (void)execute {
   [self.lineNumberView clearErrors];
-  _exec_env = std::nullopt;
+  _executableCode = nil;
   try {
-    _exec_env = self.document.content.generate_exec_environment();
+    _executableCode =
+        [NSString stringWithStringView:self.document.content.generate_executable_code()];
   } catch (marlin::exec::collected_generation_error &e) {
     for (auto &err : e.errors()) {
       [self.sourceView addErrorInSourceRange:err.node().source_code_range];
@@ -64,14 +64,14 @@
     }
   }
 
-  if (_exec_env.has_value()) {
+  if (_executableCode != nil) {
     [self performSegueWithIdentifier:@"ExecuteViewController" sender:self];
   }
 }
 
-- (ViewController*)destinationViewControllerOfSegue:(StoryboardSegue*)segue {
-    NSAssert(NO, @"Implemented by subclass");
-    return nil;
+- (ViewController *)destinationViewControllerOfSegue:(StoryboardSegue *)segue {
+  NSAssert(NO, @"Implemented by subclass");
+  return nil;
 }
 
 #pragma mark - CollectionViewDelegateFlowLayout
