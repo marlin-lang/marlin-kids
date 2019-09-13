@@ -5,7 +5,6 @@
 #include <type_traits>
 #include <unordered_set>
 #include <utility>
-#include <variant>
 
 #include <jsast/jsast.hpp>
 
@@ -74,35 +73,28 @@ struct generator {
 
   jsast::ast::node get_node(ast::base& c) {
     return c.apply<jsast::ast::node>([this](auto& node) {
-      auto js_node = get_jsast(node);
-      if constexpr (std::is_base_of_v<jsast::ast::base, decltype(js_node)>) {
+      return get_jsast(node, [&node](auto js_node) {
         return jsast::ast::node{
             std::move(js_node),
             [&node](source_range range) { node._js_range = range; }};
-      } else {
-        // js_node is std::variant
-        return std::visit(
-            [&node](auto&& js_node) {
-              return jsast::ast::node{
-                  std::move(js_node),
-                  [&node](source_range range) { node._js_range = range; }};
-            },
-            std::move(js_node));
-      }
+      });
     });
   }
 
-  auto get_jsast(ast::variable_placeholder& node) {
+  template <typename wrapper_type>
+  auto get_jsast(ast::variable_placeholder& node, wrapper_type&& wrapper) {
     _errors.emplace_back("Unexpected placeholder!", node);
-    return jsast::ast::identifier{"__error__"};
+    return wrapper(jsast::ast::identifier{"__error__"});
   }
 
-  auto get_jsast(ast::expression_placeholder& node) {
+  template <typename wrapper_type>
+  auto get_jsast(ast::expression_placeholder& node, wrapper_type&& wrapper) {
     _errors.emplace_back("Unexpected placeholder!", node);
-    return jsast::ast::identifier{"__error__"};
+    return wrapper(jsast::ast::identifier{"__error__"});
   }
 
-  auto get_jsast(ast::program& program) {
+  template <typename wrapper_type>
+  auto get_jsast(ast::program& program, wrapper_type&& wrapper) {
     jsast::utils::move_vector<jsast::ast::node> blocks;
     for (auto& block : program.blocks()) {
       blocks.emplace_back(get_node(*block));
@@ -110,26 +102,29 @@ struct generator {
     blocks.emplace_back(jsast::ast::expression_statement{
         jsast::ast::call_expression{jsast::ast::identifier{"execute"},
                                     {jsast::ast::identifier{main_name}}}});
-    return jsast::ast::program{std::move(blocks)};
+    return wrapper(jsast::ast::program{std::move(blocks)});
   }
 
-  auto get_jsast(ast::on_start& start) {
+  template <typename wrapper_type>
+  auto get_jsast(ast::on_start& start, wrapper_type&& wrapper) {
     _identifiers.clear();
-    return jsast::ast::function_declaration{
+    return wrapper(jsast::ast::function_declaration{
         main_name,
         {},
         jsast::ast::block_statement{get_block(start.statements())},
-        true};
+        true});
   }
 
-  auto get_jsast(ast::assignment& assignment) {
-    return jsast::ast::variable_declaration{
+  template <typename wrapper_type>
+  auto get_jsast(ast::assignment& assignment, wrapper_type&& wrapper) {
+    return wrapper(jsast::ast::variable_declaration{
         {jsast::ast::variable_declarator{get_node(*assignment.variable()),
                                          get_node(*assignment.value())}},
-        jsast::variable_declaration_type::var};
+        jsast::variable_declaration_type::var});
   }
 
-  auto get_jsast(ast::system_procedure_call& call) {
+  template <typename wrapper_type>
+  auto get_jsast(ast::system_procedure_call& call, wrapper_type&& wrapper) {
     static constexpr std::array<std::pair<jsast::ast::node (*)(), bool>, 9>
         callee_map{
             std::pair{[]() {
@@ -163,65 +158,73 @@ struct generator {
     }
     auto [node_maker, async] = callee_map[static_cast<size_t>(call.proc)];
     if (async) {
-      return jsast::ast::expression_statement{jsast::ast::await_expression{
-          jsast::ast::call_expression{node_maker(), std::move(args)}}};
+      return wrapper(
+          jsast::ast::expression_statement{jsast::ast::await_expression{
+              jsast::ast::call_expression{node_maker(), std::move(args)}}});
     } else {
-      return jsast::ast::expression_statement{
-          jsast::ast::call_expression{node_maker(), std::move(args)}};
+      return wrapper(jsast::ast::expression_statement{
+          jsast::ast::call_expression{node_maker(), std::move(args)}});
     }
   }
 
-  auto get_jsast(ast::if_statement& statement) {
-    return jsast::ast::if_statement{get_node(*statement.condition()),
-                                    get_block(statement.statements())};
+  template <typename wrapper_type>
+  auto get_jsast(ast::if_statement& statement, wrapper_type&& wrapper) {
+    return wrapper(jsast::ast::if_statement{get_node(*statement.condition()),
+                                            get_block(statement.statements())});
   }
 
-  auto get_jsast(ast::if_else_statement& statement) {
-    return jsast::ast::if_statement{get_node(*statement.condition()),
-                                    get_block(statement.consequence()),
-                                    get_block(statement.alternate())};
+  template <typename wrapper_type>
+  auto get_jsast(ast::if_else_statement& statement, wrapper_type&& wrapper) {
+    return wrapper(jsast::ast::if_statement{get_node(*statement.condition()),
+                                            get_block(statement.consequence()),
+                                            get_block(statement.alternate())});
   }
 
-  auto get_jsast(ast::while_statement& statement) {
-    return jsast::ast::while_statement{get_node(*statement.condition()),
-                                       get_block(statement.statements())};
+  template <typename wrapper_type>
+  auto get_jsast(ast::while_statement& statement, wrapper_type&& wrapper) {
+    return wrapper(jsast::ast::while_statement{
+        get_node(*statement.condition()), get_block(statement.statements())});
   }
 
-  auto get_jsast(ast::for_statement& statement) {
-    return jsast::ast::for_of_statement{
+  template <typename wrapper_type>
+  auto get_jsast(ast::for_statement& statement, wrapper_type&& wrapper) {
+    return wrapper(jsast::ast::for_of_statement{
         jsast::ast::variable_declaration{
             {jsast::ast::variable_declarator{get_node(*statement.variable())}},
             jsast::variable_declaration_type::var},
-        get_node(*statement.list()), get_block(statement.statements())};
+        get_node(*statement.list()), get_block(statement.statements())});
   }
 
-  auto get_jsast(ast::break_statement&) {
-    return jsast::ast::break_statement{};
+  template <typename wrapper_type>
+  auto get_jsast(ast::break_statement&, wrapper_type&& wrapper) {
+    return wrapper(jsast::ast::break_statement{});
   }
 
-  auto get_jsast(ast::continue_statement&) {
-    return jsast::ast::continue_statement{};
+  template <typename wrapper_type>
+  auto get_jsast(ast::continue_statement&, wrapper_type&& wrapper) {
+    return wrapper(jsast::ast::continue_statement{});
   }
 
-  auto get_jsast(ast::unary_expression& unary) {
+  template <typename wrapper_type>
+  auto get_jsast(ast::unary_expression& unary, wrapper_type&& wrapper) {
     static constexpr std::array symbol_map{
         jsast::unary_op::negative /* negative */
     };
-    return jsast::ast::unary_expression{
-        symbol_map[static_cast<uint8_t>(unary.op)],
-        get_node(*unary.argument())};
+    return wrapper(
+        jsast::ast::unary_expression{symbol_map[static_cast<uint8_t>(unary.op)],
+                                     get_node(*unary.argument())});
   }
 
-  std::variant<jsast::ast::logical_expression, jsast::ast::binary_expression>
-  get_jsast(ast::binary_expression& binary) {
+  template <typename wrapper_type>
+  auto get_jsast(ast::binary_expression& binary, wrapper_type&& wrapper) {
     if (binary.op == ast::binary_op::logical_and) {
-      return jsast::ast::logical_expression{get_node(*binary.left()),
-                                            jsast::logical_op::logical_and,
-                                            get_node(*binary.right())};
+      return wrapper(jsast::ast::logical_expression{
+          get_node(*binary.left()), jsast::logical_op::logical_and,
+          get_node(*binary.right())});
     } else if (binary.op == ast::binary_op::logical_or) {
-      return jsast::ast::logical_expression{get_node(*binary.left()),
-                                            jsast::logical_op::logical_or,
-                                            get_node(*binary.right())};
+      return wrapper(jsast::ast::logical_expression{
+          get_node(*binary.left()), jsast::logical_op::logical_or,
+          get_node(*binary.right())});
     } else {
       static constexpr std::array symbol_map{
           jsast::binary_op::add /* add */,
@@ -235,13 +238,14 @@ struct generator {
           jsast::binary_op::greater /* greater */,
           jsast::binary_op::greater_equal /* greater_equal */
       };
-      return jsast::ast::binary_expression{
+      return wrapper(jsast::ast::binary_expression{
           get_node(*binary.left()), symbol_map[static_cast<uint8_t>(binary.op)],
-          get_node(*binary.right())};
+          get_node(*binary.right())});
     }
   }
 
-  auto get_jsast(ast::system_function_call& call) {
+  template <typename wrapper_type>
+  auto get_jsast(ast::system_function_call& call, wrapper_type&& wrapper) {
     static constexpr std::array<jsast::ast::node (*)(), 6> callee_map{
         []() {
           return jsast::ast::node{jsast::ast::identifier{"range"}};
@@ -273,26 +277,30 @@ struct generator {
     for (auto& arg : call.arguments()) {
       args.emplace_back(get_node(*arg));
     }
-    return jsast::ast::call_expression{
-        callee_map[static_cast<size_t>(call.func)](), std::move(args)};
+    return wrapper(jsast::ast::call_expression{
+        callee_map[static_cast<size_t>(call.func)](), std::move(args)});
   }
 
-  auto get_jsast(ast::identifier& identifier) {
+  template <typename wrapper_type>
+  auto get_jsast(ast::identifier& identifier, wrapper_type&& wrapper) {
     auto name{"__var_" + identifier.name};
-    return jsast::ast::identifier{std::move(name)};
+    return wrapper(jsast::ast::identifier{std::move(name)});
   }
 
-  auto get_jsast(ast::variable_name& variable) {
+  template <typename wrapper_type>
+  auto get_jsast(ast::variable_name& variable, wrapper_type&& wrapper) {
     auto name{"__var_" + variable.name};
-    return jsast::ast::identifier{std::move(name)};
+    return wrapper(jsast::ast::identifier{std::move(name)});
   }
 
-  auto get_jsast(ast::number_literal& literal) {
-    return jsast::ast::raw_literal{literal.value};
+  template <typename wrapper_type>
+  auto get_jsast(ast::number_literal& literal, wrapper_type&& wrapper) {
+    return wrapper(jsast::ast::raw_literal{literal.value});
   }
 
-  auto get_jsast(ast::string_literal& literal) {
-    return jsast::ast::string_literal{literal.value};
+  template <typename wrapper_type>
+  auto get_jsast(ast::string_literal& literal, wrapper_type&& wrapper) {
+    return wrapper(jsast::ast::string_literal{literal.value});
   }
 
 };  // namespace marlin::exec
