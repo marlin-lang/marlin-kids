@@ -12,6 +12,7 @@ set(HEADERS
     SourceView.h
     SourceViewController.h
     Theme.h
+    ToolboxViewController.h
     Types.h)
 
 set(SOURCES
@@ -26,6 +27,7 @@ set(SOURCES
     SourceView.mm
     SourceViewController.mm
     Theme.mm
+    ToolboxViewController.mm
     Types.mm)
 
 set(RESOURCES exec_env.html)
@@ -68,7 +70,6 @@ else(IOS)
       mac/MacEditorViewController.h
       mac/MacSourceView.h
       mac/MacSourceViewController.h
-      mac/ToolboxHeaderView.h
       mac/ToolboxItem.h
       mac/WindowController.h)
 
@@ -80,7 +81,6 @@ else(IOS)
       mac/MacSourceView.mm
       mac/MacSourceViewController.mm
       mac/main.mm
-      mac/ToolboxHeaderView.mm
       mac/ToolboxItem.mm
       mac/WindowController.mm)
 
@@ -89,7 +89,6 @@ else(IOS)
       mac/marlin.entitlements
       mac/Assets.xcassets
       mac/Base.lproj/Main.storyboard
-      mac/ToolboxHeaderView.xib
       mac/ToolboxItem.xib)
 
   set(TARGET_NAME ${PROJECT_NAME}.app.mac)

@@ -1,5 +1,6 @@
 #import "WindowController.h"
 
+#import "NSObject+Casting.h"
 #import "SourceViewController.h"
 
 @interface WindowController ()
@@ -35,8 +36,12 @@
 }
 
 - (void)run:(NSToolbarItem *)sender {
-  auto *vc = (SourceViewController *)self.contentViewController;
-  [vc execute];
+  if (auto splitViewController = [NSSplitViewController cast:self.contentViewController]) {
+    if (auto *vc =
+            [SourceViewController cast:splitViewController.splitViewItems[1].viewController]) {
+      [vc execute];
+    }
+  }
 }
 
 @end

@@ -74,27 +74,6 @@
   return nil;
 }
 
-#pragma mark - CollectionViewDelegateFlowLayout
-
-- (CGSize)collectionView:(CollectionView *)collectionView
-                    layout:(CollectionViewLayout *)collectionViewLayout
-    sizeForItemAtIndexPath:(NSIndexPath *)indexPath {
-  return CGSizeMake(collectionView.bounds.size.width - 10, 25);
-}
-
-- (CGSize)collectionView:(CollectionView *)collectionView
-                             layout:(CollectionViewLayout *)collectionViewLayout
-    referenceSizeForHeaderInSection:(NSInteger)section {
-  return CGSizeMake(collectionView.bounds.size.width - 10, 35);
-}
-
-#pragma mark - NSTextViewDelegate
-
-- (void)textDidChange:(NSNotification *)notification {
-  [self.sourceView clearErrors];
-  [self.lineNumberView clearErrors];
-}
-
 #pragma mark - SourceViewDataSource
 
 - (marlin::control::source_selection)sourceView:(SourceView *)view

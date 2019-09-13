@@ -89,7 +89,7 @@
   }
   auto width = fmax(maxLineWidth + _insets.left + _insets.right, self.bounds.size.width);
   auto height = self.lineHeight * _strings.count + _insets.top + _insets.bottom;
-  [self setFrame:CGRectMake(self.frame.origin.x, self.frame.origin.y, width, height)];
+  self.frame = CGRectMake(self.frame.origin.x, self.frame.origin.y, width, height);
   [self setNeedsDisplayInRect:self.bounds];
   if (!isInitialize) {
     [self.delegate sourceViewChanged:self];
@@ -214,6 +214,7 @@
 - (void)drawRect:(CGRect)dirtyRect {
   [super drawRect:dirtyRect];
   [self drawBackgroundInRect:dirtyRect];
+  dirtyRect = self.bounds;
   auto lineHeight = self.lineHeight;
   NSUInteger beginIndex = fmax(0, dirtyRect.origin.y - _insets.top) / lineHeight;
   NSUInteger endIndex =
