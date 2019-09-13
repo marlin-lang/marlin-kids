@@ -6,7 +6,7 @@
 
 @interface MacSourceViewController () <SourceViewDelegate>
 
-@property (weak) IBOutlet SourceView *sourceView;
+@property(weak) IBOutlet SourceView *sourceView;
 
 @end
 
@@ -32,9 +32,9 @@
   self.sourceView.enclosingScrollView.rulersVisible = YES;
   self.sourceView.enclosingScrollView.hasHorizontalRuler = NO;
   self.sourceView.enclosingScrollView.hasVerticalRuler = YES;
-    auto lineNumberView = [[LineNumberView alloc] initWithSourceView:self.sourceView];
-    self.lineNumberView = lineNumberView;
-    self.sourceView.enclosingScrollView.verticalRulerView = lineNumberView;
+  auto lineNumberView = [[LineNumberView alloc] initWithSourceView:self.sourceView];
+  self.lineNumberView = lineNumberView;
+  self.sourceView.enclosingScrollView.verticalRulerView = lineNumberView;
 }
 
 - (NSViewController *)destinationViewControllerOfSegue:(NSStoryboardSegue *)segue {
@@ -63,10 +63,6 @@
 
   vc.type = type;
   vc.editorTextField.stringValue = [NSString stringWithStringView:data];
-}
-
-- (void)sourceViewChanged:(SourceView *)view {
-    [self.document updateChangeCount:NSChangeDone];
 }
 
 - (void)dismissEditorViewControllerForSourceView:(SourceView *)view {
