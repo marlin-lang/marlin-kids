@@ -58,6 +58,18 @@
         });
       }
 
+      const math_extra = {
+        RAD_PER_DEG: Math.PI / 180,
+
+        sin(degree) {
+          return Math.sin(degree * this.RAD_PER_DEG);
+        },
+
+        cos(degree) {
+          return Math.cos(degree * this.RAD_PER_DEG);
+        }
+      };
+
       const graphics = {
         captureContext(canvas) {
           const newContext = canvas.getContext("2d");
@@ -97,27 +109,38 @@
       const logo = {
         x: 0,
         y: 0,
-        dir: 0,
-        RAD_PER_DEG: Math.PI / 180,
+        dir: Math.PI,
+        isPenDown: true,
 
         async forward(length) {
           const originalX = this.x;
           const originalY = this.y;
           this.x -= length * Math.sin(this.dir);
           this.y += length * Math.cos(this.dir);
-          await graphics.drawLine(originalX, originalY, this.x, this.y);
+          if (this.isPenDown) {
+            await graphics.drawLine(originalX, originalY, this.x, this.y);
+          }
         },
 
         async backward(length) {
-          await forward(-length);
+          await this.forward(-length);
         },
 
         turnLeft(degree) {
-          this.dir = (this.dir + degree * this.RAD_PER_DEG) % (Math.PI * 2);
+          this.dir =
+            (this.dir + degree * math_extra.RAD_PER_DEG) % (Math.PI * 2);
         },
 
         turnRight(degree) {
-          turnLeft(-degree);
+          this.turnLeft(-degree);
+        },
+
+        penUp() {
+          this.isPenDown = false;
+        },
+
+        penDown() {
+          this.isPenDown = true;
         }
       };
 

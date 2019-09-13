@@ -2,11 +2,9 @@
 
 #include <optional>
 
-#include "DrawContext.h"
-
 NS_ASSUME_NONNULL_BEGIN
 
-@interface ExecuteViewController : ViewController <DrawContextDelegate>
+@interface ExecuteViewController : ViewController
 
 - (void)setExecutable:(NSString *)executable;
 

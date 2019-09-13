@@ -134,9 +134,8 @@ struct generator {
         jsast::ast::identifier{"print"}, {get_node(*statement.value())}}};
   }
 
-  std::variant<jsast::ast::await_expression, jsast::ast::call_expression>
-  get_jsast(ast::system_procedure_call& call) {
-    static constexpr std::array<std::pair<jsast::ast::node (*)(), bool>, 5>
+  auto get_jsast(ast::system_procedure_call& call) {
+    static constexpr std::array<std::pair<jsast::ast::node (*)(), bool>, 7>
         callee_map{
             std::pair{[]() { return system_callee("graphics", "drawLine"); },
                       true} /* draw_line */,
@@ -147,7 +146,11 @@ struct generator {
             std::pair{[]() { return system_callee("logo", "turnLeft"); },
                       false} /* logo_turn_left */,
             std::pair{[]() { return system_callee("logo", "turnRight"); },
-                      false} /* logo_turn_right */
+                      false} /* logo_turn_right */,
+            std::pair{[]() { return system_callee("logo", "penUp"); },
+                      false} /* logo_pen_up */,
+            std::pair{[]() { return system_callee("logo", "penDown"); },
+                      false} /* logo_pen_down */
         };
     jsast::utils::move_vector<jsast::ast::node> args;
     for (auto& arg : call.arguments()) {
@@ -155,10 +158,11 @@ struct generator {
     }
     auto [node_maker, async] = callee_map[static_cast<size_t>(call.proc)];
     if (async) {
-      return jsast::ast::await_expression{
-          jsast::ast::call_expression{node_maker(), std::move(args)}};
+      return jsast::ast::expression_statement{jsast::ast::await_expression{
+          jsast::ast::call_expression{node_maker(), std::move(args)}}};
     } else {
-      return jsast::ast::call_expression{node_maker(), std::move(args)};
+      return jsast::ast::expression_statement{
+          jsast::ast::call_expression{node_maker(), std::move(args)}};
     }
   }
 
@@ -208,7 +212,7 @@ struct generator {
   }
 
   auto get_jsast(ast::system_function_call& call) {
-    static constexpr std::array<jsast::ast::node (*)(), 4> callee_map{
+    static constexpr std::array<jsast::ast::node (*)(), 6> callee_map{
         []() {
           return jsast::ast::node{jsast::ast::identifier{"range"}};
         } /* range1 */,
@@ -222,7 +226,17 @@ struct generator {
           return jsast::ast::node{jsast::ast::member_expression{
               jsast::ast::identifier{"Date"},
               jsast::ast::member_identifier{"now"}}};
-        } /* range3 */
+        } /* time */,
+        []() {
+          return jsast::ast::node{jsast::ast::member_expression{
+              jsast::ast::identifier{"math_extra"},
+              jsast::ast::member_identifier{"sin"}}};
+        } /* sin */,
+        []() {
+          return jsast::ast::node{jsast::ast::member_expression{
+              jsast::ast::identifier{"math_extra"},
+              jsast::ast::member_identifier{"cos"}}};
+        } /* cos */
     };
     jsast::utils::move_vector<jsast::ast::node> args;
     for (auto& arg : call.arguments()) {

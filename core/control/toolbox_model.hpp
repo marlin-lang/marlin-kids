@@ -46,6 +46,12 @@ struct toolbox_model {
           item{system_procedure_prototype<
                    ast::system_procedure::logo_turn_right>::index(),
                pasteboard_t::statement},
+          item{system_procedure_prototype<
+                   ast::system_procedure::logo_pen_up>::index(),
+               pasteboard_t::statement},
+          item{system_procedure_prototype<
+                   ast::system_procedure::logo_pen_down>::index(),
+               pasteboard_t::statement},
       },
       std::vector{
           item{binary_prototype<ast::binary_op::add>::index(),
@@ -65,6 +71,10 @@ struct toolbox_model {
           item{system_function_prototype<ast::system_function::range3>::index(),
                pasteboard_t::expression},
           item{system_function_prototype<ast::system_function::time>::index(),
+               pasteboard_t::expression},
+          item{system_function_prototype<ast::system_function::sin>::index(),
+               pasteboard_t::expression},
+          item{system_function_prototype<ast::system_function::cos>::index(),
                pasteboard_t::expression},
       },
   };

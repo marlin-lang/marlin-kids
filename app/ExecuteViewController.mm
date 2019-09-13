@@ -4,7 +4,6 @@
 
 #include <chrono>
 
-#import "DrawContext.h"
 #import "NSString+StringView.h"
 #import "Theme.h"
 
@@ -24,8 +23,6 @@ constexpr double refreshTimeInMS = 40;
   bool _loaded;
 
   NSString* _outputText;
-  bool _needRefreshImage;
-  std::chrono::high_resolution_clock::time_point _image_refresh_time;
   std::chrono::high_resolution_clock::time_point _output_refresh_time;
 }
 
@@ -46,7 +43,6 @@ constexpr double refreshTimeInMS = 40;
 
   self.outputTextView.layer.borderWidth = 1;
   self.outputTextView.layer.borderColor = [Color blackColor].CGColor;
-  _needRefreshImage = NO;
 }
 
 #ifdef IOS
@@ -101,16 +97,6 @@ constexpr double refreshTimeInMS = 40;
   }
 }
 
-#pragma mark - DrawContextDelegate implementation
-
-- (void)setNeedRefreshImage {
-  auto time = std::chrono::high_resolution_clock::now();
-  auto diff = std::chrono::duration_cast<std::chrono::milliseconds>(time - _image_refresh_time);
-  if (diff.count() < refreshTimeInMS) {
-    _needRefreshImage = YES;
-  }
-}
-
 #pragma mark - Private methods
 
 - (void)tryStartExecute {
@@ -123,37 +109,6 @@ constexpr double refreshTimeInMS = 40;
                      }];
   }
 }
-
-// - (void)startExecute {
-//   assert(_environment.has_value());
-
-//   NativeEnvironment<ExecuteViewController> system{*_environment, "system", self};
-
-//   system.register_native_instruction<std::string>("print", [](auto self, std::string message) {
-//     _outputText += message;
-//     auto time = std::chrono::high_resolution_clock::now();
-//     auto diff = std::chrono::duration_cast<std::chrono::milliseconds>(time -
-//     _output_refresh_time); if (diff.count() >= refreshTimeInMS) {
-//       [self refreshOutput];
-//     }
-//   });
-
-//   system.register_native_instruction<double, double, double, double>(
-//       "draw_line", [](auto self, double start_x, double start_y, double end_x, double end_y) {
-//         self->_drawContext.draw_line(start_x, start_y, end_x, end_y);
-//       });
-
-//   auto logo = system.makeSubEnvironment([](auto self) { return &self->_logoSketcher; });
-//   decltype(self->_logoSketcher)::register_instructions(logo);
-
-//   _environment->execute();
-// }
-
-// - (void)stopExecute {
-//   assert(_environment.has_value());
-
-//   _environment->terminate();
-// }
 
 - (void)refreshOutput {
   if (_outputText.length > 0) {

@@ -43,41 +43,51 @@ enum class system_procedure : size_t {
   logo_forward,
   logo_backward,
   logo_turn_left,
-  logo_turn_right
+  logo_turn_right,
+  logo_pen_up,
+  logo_pen_down
 };
 
-static constexpr std::array<std::string_view, 5> system_procedure_name_map{
-    "draw_line" /* draw_line */, "logo_forward" /* logo_forward */,
-    "logo_backward" /* logo_backward */, "logo_turn_left" /* logo_turn_left */,
-    "logo_turn_right" /* logo_turn_right */};
+static constexpr std::array<std::string_view, 7> system_procedure_name_map{
+    "draw_line" /* draw_line */,
+    "logo_forward" /* logo_forward */,
+    "logo_backward" /* logo_backward */,
+    "logo_turn_left" /* logo_turn_left */,
+    "logo_turn_right" /* logo_turn_right */,
+    "logo_pen_up" /* logo_pen_up */,
+    "logo_pen_down" /* logo_pen_down */};
 [[nodiscard]] inline constexpr std::string_view name_for(
     system_procedure proc) noexcept {
   return system_procedure_name_map[static_cast<size_t>(proc)];
 }
 
-static constexpr std::array<std::string_view, 5> system_procedure_display_map{
-    "draw_line" /* draw_line */, "logo_forward" /* logo_forward */,
-    "logo_backward" /* logo_backward */, "logo_turn_left" /* logo_turn_left */,
-    "logo_turn_right" /* logo_turn_right */};
+static constexpr std::array<std::string_view, 7> system_procedure_display_map{
+    "draw_line" /* draw_line */,
+    "logo.forward" /* logo_forward */,
+    "logo.backward" /* logo_backward */,
+    "logo.turn_left" /* logo_turn_left */,
+    "logo.turn_right" /* logo_turn_right */,
+    "logo.pen_up" /* logo_pen_up */,
+    "logo.pen_down" /* logo_pen_down */};
 [[nodiscard]] inline constexpr std::string_view display_for(
     system_procedure proc) noexcept {
   return system_procedure_display_map[static_cast<size_t>(proc)];
 }
 
-enum class system_function : size_t { range1, range2, range3, time };
+enum class system_function : size_t { range1, range2, range3, time, sin, cos };
 
-static constexpr std::array<std::string_view, 4> system_function_name_map{
+static constexpr std::array<std::string_view, 6> system_function_name_map{
     "range1" /* range1 */, "range2" /* range2 */, "range3" /* range3 */,
-    "time" /* time */
+    "time" /* time */,     "sin" /* sin */,       "cos" /* cos */
 };
 [[nodiscard]] inline constexpr std::string_view name_for(
     system_function func) noexcept {
   return system_function_name_map[static_cast<size_t>(func)];
 }
 
-static constexpr std::array<std::string_view, 4> system_function_display_map{
+static constexpr std::array<std::string_view, 6> system_function_display_map{
     "range1" /* range1 */, "range2" /* range2 */, "range3" /* range3 */,
-    "time" /* time */
+    "time" /* time */,     "sin" /* sin */,       "cos" /* cos */
 };
 [[nodiscard]] inline constexpr std::string_view display_for(
     system_function func) noexcept {
