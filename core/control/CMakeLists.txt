@@ -1,7 +1,6 @@
 set(HEADERS
     document.hpp
     expression_inserter.hpp
-    logo_sketcher.hpp
     placeholders.hpp
     prototype_definition.hpp
     prototypes.hpp

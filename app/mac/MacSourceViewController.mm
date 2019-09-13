@@ -42,8 +42,8 @@
       [[LineNumberView alloc] initWithSourceView:self.sourceView];
 }
 
-- (NSViewController*)destinationViewControllerOfSegue:(NSStoryboardSegue*)segue {
-    return segue.destinationController;
+- (NSViewController *)destinationViewControllerOfSegue:(NSStoryboardSegue *)segue {
+  return segue.destinationController;
 }
 
 #pragma mark - NSCollectionViewDataSource
@@ -117,6 +117,10 @@
 
   vc.type = type;
   vc.editorTextField.stringValue = [NSString stringWithStringView:data];
+}
+
+- (void)sourceViewChanged:(SourceView *)view {
+  [self.document updateChangeCount:NSChangeDone];
 }
 
 - (void)dismissEditorViewControllerForSourceView:(SourceView *)view {
