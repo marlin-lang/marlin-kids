@@ -2,8 +2,4 @@
 
 @implementation ToolboxItem
 
-- (void)viewDidLoad {
-  [super viewDidLoad];
-}
-
 @end
