@@ -785,7 +785,7 @@
                                     <subviews>
                                         <view fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="yO4-Am-GG9" customClass="MacSourceView">
                                             <rect key="frame" x="0.0" y="0.0" width="800" height="800"/>
-                                            <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
+                                            <autoresizingMask key="autoresizingMask" flexibleMinX="YES" flexibleMaxX="YES" flexibleMinY="YES" flexibleMaxY="YES"/>
                                         </view>
                                     </subviews>
                                 </clipView>

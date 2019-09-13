@@ -14,11 +14,12 @@
   NSWindowController *controller = [[NSStoryboard storyboardWithName:@"Main" bundle:nil]
       instantiateControllerWithIdentifier:@"WindowController"];
   [self addWindowController:controller];
-    if (auto splitViewController = [NSSplitViewController cast:controller.contentViewController]) {
-        if (auto *vc = [MacSourceViewController cast:splitViewController.splitViewItems[1].viewController]) {
-    vc.document = self;
-  }
+  if (auto splitViewController = [NSSplitViewController cast:controller.contentViewController]) {
+    if (auto *vc =
+            [MacSourceViewController cast:splitViewController.splitViewItems[1].viewController]) {
+      vc.document = self;
     }
+  }
 }
 
 - (NSData *)dataOfType:(NSString *)typeName error:(NSError **)outError {
