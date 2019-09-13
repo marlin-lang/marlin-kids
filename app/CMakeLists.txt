@@ -1,6 +1,5 @@
 set(HEADERS
     Document.h
-    DrawContext.h
     DrawHelper.h
     EditorViewController.h
     ExecuteViewController.h
@@ -18,7 +17,6 @@ set(HEADERS
 
 set(SOURCES
     Document.mm
-    DrawContext.mm
     EditorViewController.mm
     ExecuteViewController.mm
     LineNumberView.mm

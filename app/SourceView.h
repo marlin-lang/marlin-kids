@@ -26,12 +26,12 @@ NS_ASSUME_NONNULL_BEGIN
 
 @protocol SourceViewDelegate
 
+- (void)sourceViewChanged:(SourceView *)view;
+
 - (void)showEditorViewControllerForSourceView:(SourceView *)view
                                      fromRect:(CGRect)rect
                                      withType:(marlin::control::literal_data_type)type
                                          data:(std::string_view)data;
-
-- (void)sourceViewChanged:(SourceView *)view;
 
 - (void)dismissEditorViewControllerForSourceView:(SourceView *)view;
 
@@ -47,6 +47,11 @@ NS_ASSUME_NONNULL_BEGIN
 - (void)insertStatementsBeforeLine:(NSUInteger)line
                         withSource:(std::string_view)source
                         highlights:(std::vector<marlin::control::highlight_token>)highlights;
+
+- (void)insertStatementsBeforeLine:(NSUInteger)line
+                        withSource:(std::string_view)source
+                        highlights:(std::vector<marlin::control::highlight_token>)highlights
+                      isInitialize:(bool)isInitialize;
 
 - (void)updateExpressionInSourceRange:(marlin::source_range)sourceRange
                            withSource:(std::string_view)source

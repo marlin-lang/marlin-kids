@@ -20,7 +20,8 @@
   if (auto initialData = [self.document initialize]) {
     [self.sourceView insertStatementsBeforeLine:1
                                      withSource:std::move(initialData->source)
-                                     highlights:std::move(initialData->highlights)];
+                                     highlights:std::move(initialData->highlights)
+                                   isInitialize:true];
   }
 }
 
@@ -36,11 +37,15 @@
     self.sourceView.enclosingScrollView.verticalRulerView = lineNumberView;
 }
 
-- (NSViewController*)destinationViewControllerOfSegue:(NSStoryboardSegue*)segue {
-    return segue.destinationController;
+- (NSViewController *)destinationViewControllerOfSegue:(NSStoryboardSegue *)segue {
+  return segue.destinationController;
 }
 
 #pragma mark - SourceViewDelegate
+
+- (void)sourceViewChanged:(SourceView *)view {
+  [self.document updateChangeCount:NSChangeDone];
+}
 
 - (void)showEditorViewControllerForSourceView:(SourceView *)view
                                      fromRect:(NSRect)rect
@@ -66,6 +71,7 @@
 
 - (void)dismissEditorViewControllerForSourceView:(SourceView *)view {
   [_popover close];
+  _popover = nil;
 }
 
 @end

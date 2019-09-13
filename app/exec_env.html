@@ -58,7 +58,19 @@
         });
       }
 
-      class Graphics {
+      const math_extra = {
+        RAD_PER_DEG: Math.PI / 180,
+
+        sin(degree) {
+          return Math.sin(degree * this.RAD_PER_DEG);
+        },
+
+        cos(degree) {
+          return Math.cos(degree * this.RAD_PER_DEG);
+        }
+      };
+
+      const graphics = {
         captureContext(canvas) {
           const newContext = canvas.getContext("2d");
           if (this.context == undefined) {
@@ -75,25 +87,62 @@
             newContext.setLineDash(this.context.getLineDash());
           }
           this.context = newContext;
-        }
+        },
 
         origin() {
           return {
             x: this.context.canvas.width / 2,
             y: this.context.canvas.height / 2
           };
-        }
+        },
 
-        async draw_line(start_x, start_y, end_x, end_y) {
+        async drawLine(startX, startY, endX, endY) {
           const origin = this.origin();
           this.context.beginPath();
-          this.context.moveTo(start_x + origin.x, start_y + origin.y);
-          this.context.lineTo(end_x + origin.x, end_y + origin.y);
+          this.context.moveTo(startX + origin.x, startY + origin.y);
+          this.context.lineTo(endX + origin.x, endY + origin.y);
           this.context.stroke();
           await sleep(0);
         }
-      }
-      graphics = new Graphics();
+      };
+
+      const logo = {
+        x: 0,
+        y: 0,
+        dir: Math.PI,
+        isPenDown: true,
+
+        async forward(length) {
+          const originalX = this.x;
+          const originalY = this.y;
+          this.x -= length * Math.sin(this.dir);
+          this.y += length * Math.cos(this.dir);
+          if (this.isPenDown) {
+            await graphics.drawLine(originalX, originalY, this.x, this.y);
+          }
+        },
+
+        async backward(length) {
+          await this.forward(-length);
+        },
+
+        turnLeft(degree) {
+          this.dir =
+            (this.dir + degree * math_extra.RAD_PER_DEG) % (Math.PI * 2);
+        },
+
+        turnRight(degree) {
+          this.turnLeft(-degree);
+        },
+
+        penUp() {
+          this.isPenDown = false;
+        },
+
+        penDown() {
+          this.isPenDown = true;
+        }
+      };
 
       window.onload = () => {
         let canvas = document.getElementsByTagName("canvas")[0];

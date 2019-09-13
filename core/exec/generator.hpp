@@ -4,6 +4,8 @@
 #include <array>
 #include <type_traits>
 #include <unordered_set>
+#include <utility>
+#include <variant>
 
 #include <jsast/jsast.hpp>
 
@@ -72,9 +74,21 @@ struct generator {
 
   jsast::ast::node get_node(ast::base& c) {
     return c.apply<jsast::ast::node>([this](auto& node) {
-      return jsast::ast::node{get_jsast(node), [&node](source_range range) {
-                                node._js_range = range;
-                              }};
+      auto js_node = get_jsast(node);
+      if constexpr (std::is_base_of_v<jsast::ast::base, decltype(js_node)>) {
+        return jsast::ast::node{
+            std::move(js_node),
+            [&node](source_range range) { node._js_range = range; }};
+      } else {
+        // js_node is std::variant
+        return std::visit(
+            [&node](auto&& js_node) {
+              return jsast::ast::node{
+                  std::move(js_node),
+                  [&node](source_range range) { node._js_range = range; }};
+            },
+            std::move(js_node));
+      }
     });
   }
 
@@ -121,23 +135,35 @@ struct generator {
   }
 
   auto get_jsast(ast::system_procedure_call& call) {
-    static constexpr std::array<jsast::ast::node (*)(), 5> callee_map{
-        []() { return system_callee("graphics", "draw_line"); } /* draw_line */,
-        []() { return system_callee("logo", "forward"); } /* logo_forward */,
-        []() { return system_callee("logo", "backward"); } /* logo_backward */,
-        []() {
-          return system_callee("logo", "turn_left");
-        } /* logo_turn_left */,
-        []() {
-          return system_callee("logo", "turn_right");
-        } /* logo_turn_right */
-    };
+    static constexpr std::array<std::pair<jsast::ast::node (*)(), bool>, 7>
+        callee_map{
+            std::pair{[]() { return system_callee("graphics", "drawLine"); },
+                      true} /* draw_line */,
+            std::pair{[]() { return system_callee("logo", "forward"); },
+                      true} /* logo_forward */,
+            std::pair{[]() { return system_callee("logo", "backward"); },
+                      true} /* logo_backward */,
+            std::pair{[]() { return system_callee("logo", "turnLeft"); },
+                      false} /* logo_turn_left */,
+            std::pair{[]() { return system_callee("logo", "turnRight"); },
+                      false} /* logo_turn_right */,
+            std::pair{[]() { return system_callee("logo", "penUp"); },
+                      false} /* logo_pen_up */,
+            std::pair{[]() { return system_callee("logo", "penDown"); },
+                      false} /* logo_pen_down */
+        };
     jsast::utils::move_vector<jsast::ast::node> args;
     for (auto& arg : call.arguments()) {
       args.emplace_back(get_node(*arg));
     }
-    return jsast::ast::await_expression{jsast::ast::call_expression{
-        callee_map[static_cast<size_t>(call.proc)](), std::move(args)}};
+    auto [node_maker, async] = callee_map[static_cast<size_t>(call.proc)];
+    if (async) {
+      return jsast::ast::expression_statement{jsast::ast::await_expression{
+          jsast::ast::call_expression{node_maker(), std::move(args)}}};
+    } else {
+      return jsast::ast::expression_statement{
+          jsast::ast::call_expression{node_maker(), std::move(args)}};
+    }
   }
 
   auto get_jsast(ast::if_statement& statement) {
@@ -186,7 +212,7 @@ struct generator {
   }
 
   auto get_jsast(ast::system_function_call& call) {
-    static constexpr std::array<jsast::ast::node (*)(), 4> callee_map{
+    static constexpr std::array<jsast::ast::node (*)(), 6> callee_map{
         []() {
           return jsast::ast::node{jsast::ast::identifier{"range"}};
         } /* range1 */,
@@ -200,7 +226,17 @@ struct generator {
           return jsast::ast::node{jsast::ast::member_expression{
               jsast::ast::identifier{"Date"},
               jsast::ast::member_identifier{"now"}}};
-        } /* range3 */
+        } /* time */,
+        []() {
+          return jsast::ast::node{jsast::ast::member_expression{
+              jsast::ast::identifier{"math_extra"},
+              jsast::ast::member_identifier{"sin"}}};
+        } /* sin */,
+        []() {
+          return jsast::ast::node{jsast::ast::member_expression{
+              jsast::ast::identifier{"math_extra"},
+              jsast::ast::member_identifier{"cos"}}};
+        } /* cos */
     };
     jsast::utils::move_vector<jsast::ast::node> args;
     for (auto& arg : call.arguments()) {

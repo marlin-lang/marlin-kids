@@ -148,7 +148,9 @@ struct placeholder_system_procedure_args {
         std::vector<std::string_view>{"length"} /* logo_forward */,
         std::vector<std::string_view>{"length"} /* logo_backward */,
         std::vector<std::string_view>{"degree"} /* logo_turn_left */,
-        std::vector<std::string_view>{"degree"} /* logo_turn_right */
+        std::vector<std::string_view>{"degree"} /* logo_turn_right */,
+        std::vector<std::string_view>{} /* logo_pen_up */,
+        std::vector<std::string_view>{} /* logo_pen_down */
     };
     return _placeholders;
   }
@@ -173,7 +175,9 @@ struct placeholder_system_function_args {
         std::vector<std::string_view>{"end"} /* range1 */,
         std::vector<std::string_view>{"begin", "end"} /* range2 */,
         std::vector<std::string_view>{"begin", "end", "step"} /* range3 */,
-        std::vector<std::string_view>{} /* time */
+        std::vector<std::string_view>{}         /* time */,
+        std::vector<std::string_view>{"radian"} /* sin */,
+        std::vector<std::string_view>{"radian"} /* cos */
     };
     return _placeholders;
   }
