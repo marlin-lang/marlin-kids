@@ -20,10 +20,28 @@ static constexpr std::array<std::string_view, 1> unary_op_symbol_map{
 // Using JavaScript precedence for now
 static constexpr size_t unary_op_precedence{14UL};
 
-enum class binary_op : uint8_t { add, subtract, multiply, divide };
+enum class binary_op : uint8_t {
+  add,
+  subtract,
+  multiply,
+  divide,
+  equal,
+  not_equal,
+  less,
+  less_equal,
+  greater,
+  greater_equal,
+  logical_and,
+  logical_or
+};
 
-static constexpr std::array<std::string_view, 4> binary_op_symbol_map{
-    "+" /* add */, "-" /* subtract */, "*" /* multiply */, "/" /* divide */
+static constexpr std::array<std::string_view, 12> binary_op_symbol_map{
+    "+" /* add */,           "-" /* subtract */,
+    "*" /* multiply */,      "/" /* divide */,
+    "==" /* equal */,        "!=" /* not_equal */,
+    "<" /* less */,          "<=" /* less_equal */,
+    ">" /* greater */,       ">=" /* greater_equal */,
+    "and" /* logical_and */, "or" /* logical_or */
 };
 [[nodiscard]] inline constexpr std::string_view symbol_for(
     binary_op op) noexcept {
@@ -32,13 +50,18 @@ static constexpr std::array<std::string_view, 4> binary_op_symbol_map{
 
 // Using JavaScript precedence for now
 static constexpr std::array binary_op_precedence_map{
-    11UL /* add */, 11UL /* subtract */, 12UL /* multiply */, 12UL /* divide */
+    11UL /* add */,          11UL /* subtract */,   12UL /* multiply */,
+    12UL /* divide */,       8UL /* equal */,       8UL /* not_equal */,
+    9UL /* less */,          9UL /* less_equal */,  9UL /* greater */,
+    9UL /* greater_equal */, 4UL /* logical_and */, 3UL /* logical_or */
 };
 [[nodiscard]] inline constexpr size_t precedence_for(binary_op op) noexcept {
   return binary_op_precedence_map[static_cast<uint8_t>(op)];
 }
 
 enum class system_procedure : size_t {
+  sleep,
+  print,
   draw_line,
   logo_forward,
   logo_backward,
@@ -48,7 +71,9 @@ enum class system_procedure : size_t {
   logo_pen_down
 };
 
-static constexpr std::array<std::string_view, 7> system_procedure_name_map{
+static constexpr std::array<std::string_view, 9> system_procedure_name_map{
+    "sleep" /* sleep */,
+    "print" /* print */,
     "draw_line" /* draw_line */,
     "logo_forward" /* logo_forward */,
     "logo_backward" /* logo_backward */,
@@ -61,7 +86,9 @@ static constexpr std::array<std::string_view, 7> system_procedure_name_map{
   return system_procedure_name_map[static_cast<size_t>(proc)];
 }
 
-static constexpr std::array<std::string_view, 7> system_procedure_display_map{
+static constexpr std::array<std::string_view, 9> system_procedure_display_map{
+    "sleep" /* sleep */,
+    "print" /* print */,
     "draw_line" /* draw_line */,
     "logo.forward" /* logo_forward */,
     "logo.backward" /* logo_backward */,
@@ -86,8 +113,8 @@ static constexpr std::array<std::string_view, 6> system_function_name_map{
 }
 
 static constexpr std::array<std::string_view, 6> system_function_display_map{
-    "range1" /* range1 */, "range2" /* range2 */, "range3" /* range3 */,
-    "time" /* time */,     "sin" /* sin */,       "cos" /* cos */
+    "range" /* range1 */, "range" /* range2 */, "range" /* range3 */,
+    "time" /* time */,    "sin" /* sin */,      "cos" /* cos */
 };
 [[nodiscard]] inline constexpr std::string_view display_for(
     system_function func) noexcept {

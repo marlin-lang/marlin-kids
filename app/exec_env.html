@@ -27,6 +27,12 @@
         _exec();
       }
 
+      async function sleep(time) {
+        return new Promise(accept => {
+          setTimeout(accept, time * 1000);
+        });
+      }
+
       function* range(first, second = undefined, third = undefined) {
         var begin = 0,
           end,
@@ -43,12 +49,6 @@
         for (var i = begin; step >= 0 ? i < end : i > end; i += step) {
           yield i;
         }
-      }
-
-      async function sleep(time) {
-        return new Promise(accept => {
-          setTimeout(accept, time);
-        });
       }
 
       function print(obj) {

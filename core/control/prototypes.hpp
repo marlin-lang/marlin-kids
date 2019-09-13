@@ -20,17 +20,6 @@ struct assignment_prototype : statement_prototype::impl<assignment_prototype> {
   }()};
 };
 
-struct print_prototype : statement_prototype::impl<print_prototype> {
-  [[nodiscard]] std::string_view name() const override { return "print"; }
-
-  inline static const store::data_vector _data{[]() {
-    const auto node{
-        ast::make<ast::print_statement>(ast::make<ast::expression_placeholder>(
-            std::string{placeholder::get<ast::print_statement>(0)}))};
-    return store::write({node.get()});
-  }()};
-};
-
 template <ast::system_procedure _proc>
 struct system_procedure_prototype
     : statement_prototype::impl<system_procedure_prototype<_proc>> {
@@ -98,6 +87,24 @@ struct for_prototype : statement_prototype::impl<for_prototype> {
         ast::make<ast::expression_placeholder>(
             std::string{placeholder::get<ast::for_statement>(1)}),
         std::vector<ast::node>{})};
+    return store::write({node.get()});
+  }()};
+};
+
+struct break_prototype : statement_prototype::impl<break_prototype> {
+  [[nodiscard]] std::string_view name() const override { return "break"; }
+
+  inline static const store::data_vector _data{[]() {
+    const auto node{ast::make<ast::break_statement>()};
+    return store::write({node.get()});
+  }()};
+};
+
+struct continue_prototype : statement_prototype::impl<continue_prototype> {
+  [[nodiscard]] std::string_view name() const override { return "continue"; }
+
+  inline static const store::data_vector _data{[]() {
+    const auto node{ast::make<ast::continue_statement>()};
     return store::write({node.get()});
   }()};
 };

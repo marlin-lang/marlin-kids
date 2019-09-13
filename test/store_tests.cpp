@@ -49,8 +49,11 @@ TEST_CASE("store::Write and read statements", "[store]") {
   auto assignment{marlin::ast::make<marlin::ast::assignment>(
       marlin::ast::make<marlin::ast::variable_name>("needs_print"),
       marlin::ast::make<marlin::ast::number_literal>("0"))};
-  auto print{marlin::ast::make<marlin::ast::print_statement>(
-      marlin::ast::make<marlin::ast::string_literal>("\"Hello, world!\""))};
+  std::vector<marlin::ast::node> print_arguments;
+  print_arguments.emplace_back(
+      marlin::ast::make<marlin::ast::string_literal>("\"Hello, world!\""));
+  auto print{marlin::ast::make<marlin::ast::system_procedure_call>(
+      marlin::ast::system_procedure::print, std::move(print_arguments))};
   std::vector<marlin::ast::node> inner_if_statements;
   inner_if_statements.emplace_back(std::move(print));
   auto inner_if{marlin::ast::make<marlin::ast::if_else_statement>(

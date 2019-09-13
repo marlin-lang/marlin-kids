@@ -10,6 +10,9 @@
 #include "store_definition.hpp"
 #include "store_errors.hpp"
 
+// For now we are supporting print statement for back capability
+// Will remove later
+
 namespace marlin::store {
 
 namespace v1 {
@@ -26,6 +29,9 @@ inline const std::string_view system_procedure{"sys_proc"};
 inline const std::string_view if_else{"if"};
 inline const std::string_view while_loop{"while"};
 inline const std::string_view for_loop{"for"};
+
+inline const std::string_view break_statement{"break"};
+inline const std::string_view continue_statement{"continue"};
 
 inline const std::string_view placeholder{"placeholder"};
 inline const std::string_view identifier{"id"};
@@ -234,6 +240,8 @@ struct store : base_store::impl<store> {
             {key::if_else, {&store::read_if_else_statement, true}},
             {key::while_loop, {&store::read_while_statement, true}},
             {key::for_loop, {&store::read_for_statement, true}},
+            {key::break_statement, {&store::read_break, true}},
+            {key::continue_statement, {&store::read_continue, true}},
             {key::placeholder, {&store::read_placeholder, false}},
             {key::identifier, {&store::read_identifier, false}},
             {key::unary, {&store::read_unary_expression, false}},
@@ -301,9 +309,12 @@ struct store : base_store::impl<store> {
     assert_type<type_expectation::statement>(type, "Unexpected statement!");
 
     emit_to_buffer("print(");
-    auto value{read_node(iter, end, type_expectation::rvalue)};
+    std::vector<ast::node> print_arguments;
+    print_arguments.emplace_back(
+        read_node(iter, end, type_expectation::rvalue));
     emit_to_buffer(");");
-    return ast::make<ast::print_statement>(std::move(value));
+    return ast::make<ast::system_procedure_call>(ast::system_procedure::print,
+                                                 std::move(print_arguments));
   }
 
   ast::node read_system_procedure(data_view::pointer& iter,
@@ -420,6 +431,24 @@ struct store : base_store::impl<store> {
                                          std::move(statements));
   }
 
+  ast::node read_break(data_view::pointer& iter, data_view::pointer end,
+                       type_expectation type, size_t paren_precedence) {
+    assert_type<type_expectation::statement>(type, "Unexpected statement!");
+
+    emit_highlight("break", highlight_token_type::keyword);
+    emit_to_buffer(";");
+    return ast::make<ast::break_statement>();
+  }
+
+  ast::node read_continue(data_view::pointer& iter, data_view::pointer end,
+                          type_expectation type, size_t paren_precedence) {
+    assert_type<type_expectation::statement>(type, "Unexpected statement!");
+
+    emit_highlight("continue", highlight_token_type::keyword);
+    emit_to_buffer(";");
+    return ast::make<ast::continue_statement>();
+  }
+
   ast::node read_placeholder(data_view::pointer& iter, data_view::pointer end,
                              type_expectation type, size_t paren_precedence) {
     assert_type<type_expectation::lvalue, type_expectation::rvalue>(
@@ -512,7 +541,12 @@ struct store : base_store::impl<store> {
       auto left{
           read_node(iter, end, type_expectation::rvalue, op_precedence - 1)};
       emit_to_buffer(" ");
-      emit_highlight(op_symbol, highlight_token_type::op);
+      auto highlight = highlight_token_type::op;
+      if (op == ast::binary_op::logical_and ||
+          op == ast::binary_op::logical_or) {
+        highlight = highlight_token_type::keyword;
+      }
+      emit_highlight(op_symbol, highlight);
       emit_to_buffer(" ");
       auto right{read_node(iter, end, type_expectation::rvalue, op_precedence)};
       if (op_precedence <= paren_precedence) {
@@ -653,11 +687,6 @@ struct store : base_store::impl<store> {
     write_base(*assignment.value());
   }
 
-  void write_node(const ast::print_statement& print) {
-    write_key(key::print);
-    write_base(*print.value());
-  }
-
   void write_node(const ast::system_procedure_call& call) {
     write_key(key::system_procedure);
     write_symbol(ast::name_for(call.proc));
@@ -690,6 +719,14 @@ struct store : base_store::impl<store> {
     write_base(*statement.variable());
     write_base(*statement.list());
     write_vector(statement.statements());
+  }
+
+  void write_node(const ast::break_statement& statement) {
+    write_key(key::break_statement);
+  }
+
+  void write_node(const ast::continue_statement& statement) {
+    write_key(key::continue_statement);
   }
 
   void write_node(const ast::variable_placeholder& placeholder) {

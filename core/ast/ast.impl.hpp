@@ -38,14 +38,6 @@ struct assignment
   using base_type::impl;
 };
 
-struct print_statement : base::impl<print_statement, subnode::concrete>,
-                         statement {
-  [[nodiscard]] decltype(auto) value() { return get_subnode<0>(); }
-  [[nodiscard]] decltype(auto) value() const { return get_subnode<0>(); }
-
-  using base_type::impl;
-};
-
 struct system_procedure_call
     : base::impl<system_procedure_call, subnode::vector>,
       expression {
@@ -112,6 +104,14 @@ struct for_statement : base::impl<for_statement, subnode::concrete,
   [[nodiscard]] decltype(auto) statements() { return get_subnode<2>(); }
   [[nodiscard]] decltype(auto) statements() const { return get_subnode<2>(); }
 
+  using base_type::impl;
+};
+
+struct break_statement : base::impl<break_statement>, statement {
+  using base_type::impl;
+};
+
+struct continue_statement : base::impl<continue_statement>, statement {
   using base_type::impl;
 };
 

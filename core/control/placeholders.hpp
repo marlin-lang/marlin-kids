@@ -84,12 +84,6 @@ inline std::string_view placeholder::get<ast::assignment>(size_t subnode_index,
   return subnodes[subnode_index];
 }
 
-template <>
-inline std::string_view placeholder::get<ast::print_statement>(
-    size_t subnode_index, size_t node_index) {
-  return "value";
-}
-
 inline std::string_view _get_if_placeholder(size_t subnode_index) {
   if (subnode_index == 0) {
     return "condition";
@@ -143,6 +137,8 @@ struct placeholder_system_procedure_args {
  private:
   static const auto& placeholders() {
     static const std::array _placeholders{
+        std::vector<std::string_view>{"seconds"} /* sleep */,
+        std::vector<std::string_view>{"message"} /* print */,
         std::vector<std::string_view>{"start_x", "start_y", "end_x",
                                       "end_y"} /* draw_line */,
         std::vector<std::string_view>{"length"} /* logo_forward */,
@@ -175,7 +171,7 @@ struct placeholder_system_function_args {
         std::vector<std::string_view>{"end"} /* range1 */,
         std::vector<std::string_view>{"begin", "end"} /* range2 */,
         std::vector<std::string_view>{"begin", "end", "step"} /* range3 */,
-        std::vector<std::string_view>{}         /* time */,
+        std::vector<std::string_view>{} /* time */,
         std::vector<std::string_view>{"radian"} /* sin */,
         std::vector<std::string_view>{"radian"} /* cos */
     };

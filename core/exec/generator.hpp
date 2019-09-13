@@ -129,14 +129,19 @@ struct generator {
         jsast::variable_declaration_type::var};
   }
 
-  auto get_jsast(ast::print_statement& statement) {
-    return jsast::ast::expression_statement{jsast::ast::call_expression{
-        jsast::ast::identifier{"print"}, {get_node(*statement.value())}}};
-  }
-
   auto get_jsast(ast::system_procedure_call& call) {
-    static constexpr std::array<std::pair<jsast::ast::node (*)(), bool>, 7>
+    static constexpr std::array<std::pair<jsast::ast::node (*)(), bool>, 9>
         callee_map{
+            std::pair{[]() {
+                        return jsast::ast::node{
+                            jsast::ast::identifier{"sleep"}};
+                      },
+                      true} /* sleep */,
+            std::pair{[]() {
+                        return jsast::ast::node{
+                            jsast::ast::identifier{"print"}};
+                      },
+                      false} /* print */,
             std::pair{[]() { return system_callee("graphics", "drawLine"); },
                       true} /* draw_line */,
             std::pair{[]() { return system_callee("logo", "forward"); },
@@ -190,6 +195,14 @@ struct generator {
         get_node(*statement.list()), get_block(statement.statements())};
   }
 
+  auto get_jsast(ast::break_statement&) {
+    return jsast::ast::break_statement{};
+  }
+
+  auto get_jsast(ast::continue_statement&) {
+    return jsast::ast::continue_statement{};
+  }
+
   auto get_jsast(ast::unary_expression& unary) {
     static constexpr std::array symbol_map{
         jsast::unary_op::negative /* negative */
@@ -199,23 +212,41 @@ struct generator {
         get_node(*unary.argument())};
   }
 
-  auto get_jsast(ast::binary_expression& binary) {
-    static constexpr std::array symbol_map{
-        jsast::binary_op::add /* add */,
-        jsast::binary_op::subtract /* subtract */,
-        jsast::binary_op::multiply /* multiply */,
-        jsast::binary_op::divide /* divide */
-    };
-    return jsast::ast::binary_expression{
-        get_node(*binary.left()), symbol_map[static_cast<uint8_t>(binary.op)],
-        get_node(*binary.right())};
+  std::variant<jsast::ast::logical_expression, jsast::ast::binary_expression>
+  get_jsast(ast::binary_expression& binary) {
+    if (binary.op == ast::binary_op::logical_and) {
+      return jsast::ast::logical_expression{get_node(*binary.left()),
+                                            jsast::logical_op::logical_and,
+                                            get_node(*binary.right())};
+    } else if (binary.op == ast::binary_op::logical_or) {
+      return jsast::ast::logical_expression{get_node(*binary.left()),
+                                            jsast::logical_op::logical_or,
+                                            get_node(*binary.right())};
+    } else {
+      static constexpr std::array symbol_map{
+          jsast::binary_op::add /* add */,
+          jsast::binary_op::subtract /* subtract */,
+          jsast::binary_op::multiply /* multiply */,
+          jsast::binary_op::divide /* divide */,
+          jsast::binary_op::strict_equal /* equal */,
+          jsast::binary_op::strict_not_equal /* not_equal */,
+          jsast::binary_op::less /* less */,
+          jsast::binary_op::less_equal /* less_equal */,
+          jsast::binary_op::greater /* greater */,
+          jsast::binary_op::greater_equal /* greater_equal */
+      };
+      return jsast::ast::binary_expression{
+          get_node(*binary.left()), symbol_map[static_cast<uint8_t>(binary.op)],
+          get_node(*binary.right())};
+    }
   }
 
   auto get_jsast(ast::system_function_call& call) {
     static constexpr std::array<jsast::ast::node (*)(), 6> callee_map{
         []() {
           return jsast::ast::node{jsast::ast::identifier{"range"}};
-        } /* range1 */,
+        } /* range1 */
+        ,
         []() {
           return jsast::ast::node{jsast::ast::identifier{"range"}};
         } /* range2 */,

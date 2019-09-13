@@ -30,12 +30,13 @@ struct type_map {
   X(program)                \
   X(on_start)               \
   X(assignment)             \
-  X(print_statement)        \
   X(system_procedure_call)  \
   X(if_statement)           \
   X(if_else_statement)      \
   X(while_statement)        \
   X(for_statement)          \
+  X(break_statement)        \
+  X(continue_statement)     \
   X(variable_placeholder)   \
   X(variable_name)          \
   X(expression_placeholder) \
