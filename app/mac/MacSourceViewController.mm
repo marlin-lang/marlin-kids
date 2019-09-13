@@ -27,7 +27,8 @@
   if (auto initialData = [self.document initialize]) {
     [self.sourceView insertStatementsBeforeLine:1
                                      withSource:std::move(initialData->source)
-                                     highlights:std::move(initialData->highlights)];
+                                     highlights:std::move(initialData->highlights)
+                                   isInitialize:true];
   }
 }
 
@@ -101,6 +102,10 @@
 
 #pragma mark - SourceViewDelegate
 
+- (void)sourceViewChanged:(SourceView *)view {
+  [self.document updateChangeCount:NSChangeDone];
+}
+
 - (void)showEditorViewControllerForSourceView:(SourceView *)view
                                      fromRect:(NSRect)rect
                                      withType:(marlin::control::literal_data_type)type
@@ -119,12 +124,9 @@
   vc.editorTextField.stringValue = [NSString stringWithStringView:data];
 }
 
-- (void)sourceViewChanged:(SourceView *)view {
-  [self.document updateChangeCount:NSChangeDone];
-}
-
 - (void)dismissEditorViewControllerForSourceView:(SourceView *)view {
   [_popover close];
+  _popover = nil;
 }
 
 @end

@@ -50,7 +50,8 @@
       if (auto initialData = [self.document initialize]) {
         [self.sourceView insertStatementsBeforeLine:1
                                          withSource:std::move(initialData->source)
-                                         highlights:std::move(initialData->highlights)];
+                                         highlights:std::move(initialData->highlights)
+                                       isInitialize:true];
         [self.lineNumberView setNeedsDisplay];
       }
     } else {
@@ -145,6 +146,10 @@
 
 #pragma mark - SourceViewDelegate
 
+- (void)sourceViewChanged:(SourceView *)view {
+  [self.document updateChangeCount:UIDocumentChangeDone];
+}
+
 - (void)showEditorViewControllerForSourceView:(SourceView *)view
                                      fromRect:(CGRect)rect
                                      withType:(marlin::control::literal_data_type)type
@@ -159,10 +164,6 @@
   [self presentViewController:vc animated:YES completion:nil];
   vc.type = type;
   vc.editorTextField.text = [NSString stringWithStringView:data];
-}
-
-- (void)sourceViewChanged:(SourceView *)view {
-  [self.document updateChangeCount:UIDocumentChangeDone];
 }
 
 - (void)dismissEditorViewControllerForSourceView:(SourceView *)view {

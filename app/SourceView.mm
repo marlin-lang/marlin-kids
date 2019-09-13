@@ -20,9 +20,7 @@
   NSMutableArray* _strings;
 
   std::optional<marlin::control::statement_inserter> _statementInserter;
-  std::optional<NSUInteger> _statementInsertionLine;
   std::optional<marlin::control::expression_inserter> _expressionInserter;
-  std::optional<marlin::source_range> _expressionInsertionRange;
 
   std::optional<marlin::control::source_selection> _selection;
   BOOL _isDraggingFromSelection;
@@ -54,17 +52,27 @@
 - (void)insertStatementsBeforeLine:(NSUInteger)line
                         withSource:(std::string_view)source
                         highlights:(std::vector<marlin::control::highlight_token>)highlights {
+  [self insertStatementsBeforeLine:line
+                        withSource:source
+                        highlights:std::move(highlights)
+                      isInitialize:false];
+}
+
+- (void)insertStatementsBeforeLine:(NSUInteger)line
+                        withSource:(std::string_view)source
+                        highlights:(std::vector<marlin::control::highlight_token>)highlights
+                      isInitialize:(bool)isInitialize {
   auto lineIndex = line - 1;
   if (lineIndex > _strings.count) {
     lineIndex = _strings.count;
   }
   size_t lineBegin = 0;
   CGFloat maxLineWidth = 0;
-  auto highlightIndex = 0;
+  size_t highlightIndex = 0;
   while (lineBegin < source.size()) {
     auto lineEnd = source.find_first_of('\n', lineBegin);
     auto str_view = std::string_view{&source[lineBegin], lineEnd - lineBegin};
-    auto* str =
+    auto str =
         [[NSMutableAttributedString alloc] initWithString:[NSString stringWithStringView:str_view]];
     std::vector<marlin::control::highlight_token> lineHighlights;
     while (highlightIndex < highlights.size() && highlights[highlightIndex].offset < lineEnd) {
@@ -83,7 +91,9 @@
   auto height = self.lineHeight * _strings.count + _insets.top + _insets.bottom;
   [self setFrame:CGRectMake(self.frame.origin.x, self.frame.origin.y, width, height)];
   [self setNeedsDisplayInRect:self.bounds];
-  [self.delegate sourceViewChanged:self];
+  if (!isInitialize) {
+    [self.delegate sourceViewChanged:self];
+  }
 }
 
 - (void)updateExpressionInSourceRange:(marlin::source_range)sourceRange
@@ -99,8 +109,8 @@
   applyTheme(currentTheme(), str, range, highlights);
   auto width = str.size.width + _insets.left + _insets.right;
   if (width > self.frame.size.width) {
-    [self setFrame:CGRectMake(self.frame.origin.x, self.frame.origin.y, width,
-                              self.frame.size.height)];
+    self.frame =
+        CGRectMake(self.frame.origin.x, self.frame.origin.y, width, self.frame.size.height);
   }
   [self setNeedsDisplayInRect:self.bounds];
   [self.delegate sourceViewChanged:self];
@@ -110,10 +120,11 @@
   NSAssert(from > 0 && from <= _strings.count, @"%lu out of range", from);
   NSAssert(to > 0 && to <= _strings.count, @"");
   NSAssert(from <= to, @"");
-  auto* indexSet = [NSMutableIndexSet new];
+  auto indexSet = [NSMutableIndexSet new];
   [indexSet addIndexesInRange:NSMakeRange(from - 1, to - from + 1)];
   [_strings removeObjectsAtIndexes:indexSet];
   [self setNeedsDisplayInRect:self.bounds];
+  [self.delegate sourceViewChanged:self];
 }
 
 - (void)removeExpressionInSourceRange:(marlin::source_range)sourceRange {
@@ -124,6 +135,7 @@
       NSMakeRange(sourceRange.begin.column - 1, sourceRange.end.column - sourceRange.begin.column);
   [str replaceCharactersInRange:range withString:@""];
   [self setNeedsDisplayInRect:self.bounds];
+  [self.delegate sourceViewChanged:self];
 }
 
 - (marlin::source_loc)sourceLocationOfPoint:(CGPoint)point {
@@ -222,10 +234,10 @@
 }
 
 - (void)drawStatementInsertionPointInRect:(CGRect)rect {
-  if (_statementInsertionLine && _statementInserter && _statementInserter->can_insert()) {
+  if (_statementInserter.has_value() && _statementInserter->can_insert()) {
     auto oneCharSize = characterSizeWithAttributes(currentTheme().allAttrs);
     auto x = _insets.left + oneCharSize.width * (_statementInserter->get_location().column - 1);
-    auto y = oneCharSize.height * (*_statementInsertionLine - 1) + _insets.top;
+    auto y = oneCharSize.height * (_statementInserter->get_location().line - 1) + _insets.top;
     if (CGRectContainsPoint(rect, CGPointMake(x, y))) {
       drawLine(CGPointMake(x, y), CGPointMake(x + 200, y), 5, [Color blueColor]);
     }
@@ -233,14 +245,14 @@
 }
 
 - (void)drawSelectionInRect:(CGRect)rect {
-  if (_selection) {
+  if (_selection.has_value()) {
     [self drawSourceRange:_selection->get_range() inRect:rect forSelection:YES];
   }
 }
 
 - (void)drawExpressionInsertionInRect:(CGRect)rect {
-  if (_expressionInsertionRange && _expressionInserter && _expressionInserter->can_insert()) {
-    [self drawSourceRange:*_expressionInsertionRange inRect:rect forSelection:NO];
+  if (_expressionInserter.has_value() && _expressionInserter->can_insert()) {
+    [self drawSourceRange:_expressionInserter->get_range() inRect:rect forSelection:NO];
   }
 }
 
@@ -346,37 +358,37 @@
 #pragma mark - Drag and drop
 
 - (BOOL)draggingStatementAtLocation:(CGPoint)location {
+  if (_selection.has_value()) {
+    [self.delegate dismissEditorViewControllerForSourceView:self];
+    _selection.reset();
+  }
+
   auto source_loc = [self sourceLocationOfPoint:location];
 
-  if (!_statementInserter) {
+  if (!_statementInserter.has_value()) {
     _statementInserter = [self.dataSource statementInserterForSourceView:self];
   }
   _statementInserter->move_to_line(source_loc.line);
-  if (_statementInserter->can_insert()) {
-    _statementInsertionLine = source_loc.line;
-    return YES;
-  }
-  _statementInsertionLine.reset();
-  return NO;
+  return _statementInserter->can_insert();
 }
 
 - (BOOL)draggingExpressionAtLocation:(CGPoint)location {
+  if (_selection.has_value()) {
+    [self.delegate dismissEditorViewControllerForSourceView:self];
+    _selection.reset();
+  }
+
   auto source_loc = [self sourceLocationOfPoint:location];
 
-  if (!_expressionInserter) {
+  if (!_expressionInserter.has_value()) {
     _expressionInserter = [self.dataSource expressionInserterForSourceView:self];
   }
   _expressionInserter->move_to_loc(source_loc);
-  if (_expressionInserter->can_insert()) {
-    _expressionInsertionRange = _expressionInserter->get_range();
-    return YES;
-  }
-  _expressionInsertionRange.reset();
-  return NO;
+  return _expressionInserter->can_insert();
 }
 
 - (BOOL)performStatementDropForData:(NSData*)data {
-  if (_statementInsertionLine && _statementInserter && _statementInserter->can_insert()) {
+  if (_statementInserter.has_value() && _statementInserter->can_insert()) {
     if (auto update = _statementInserter->insert(data.dataView)) {
       [self insertStatementsBeforeLine:update->range.begin.line
                             withSource:std::move(update->source)
@@ -396,7 +408,7 @@
       [self updateExpressionInSourceRange:update->range
                                withSource:std::move(update->source)
                                highlights:std::move(update->highlights)];
-      _statementInserter.reset();
+      _expressionInserter.reset();
       [self removeDraggingSelection];
       return YES;
     }
@@ -406,8 +418,8 @@
 }
 
 - (void)resetAll {
-  _statementInsertionLine.reset();
-  _expressionInsertionRange.reset();
+  _statementInserter.reset();
+  _expressionInserter.reset();
   _isDraggingFromSelection = NO;
   [self setNeedsDisplayInRect:self.bounds];
 }
