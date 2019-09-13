@@ -1,12 +1,15 @@
 #import "IosDocument.h"
 
+#import "NSData+DataView.h"
+
 @implementation IosDocument
 
 - (id)contentsForType:(NSString *)typeName error:(NSError **)errorPtr {
-  return [[NSData alloc] init];
+  return [NSData dataWithDataView:self.content.write()];
 }
 
 - (BOOL)loadFromContents:(id)contents ofType:(NSString *)typeName error:(NSError **)errorPtr {
+  self.initialData = contents;
   return YES;
 }
 

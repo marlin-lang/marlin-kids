@@ -116,11 +116,18 @@
                         <viewLayoutGuide key="safeArea" id="BoZ-jc-2Y8"/>
                     </view>
                     <navigationItem key="navigationItem" id="csU-x8-vDu">
-                        <barButtonItem key="leftBarButtonItem" title="Run" id="Jbk-VA-3ph">
-                            <connections>
-                                <action selector="run:" destination="M2k-L8-Olo" id="Rdy-Os-32L"/>
-                            </connections>
-                        </barButtonItem>
+                        <leftBarButtonItems>
+                            <barButtonItem title="Close" id="cRD-pP-uSx">
+                                <connections>
+                                    <action selector="close:" destination="M2k-L8-Olo" id="4tE-Zb-4qF"/>
+                                </connections>
+                            </barButtonItem>
+                            <barButtonItem title="Run" id="Jbk-VA-3ph">
+                                <connections>
+                                    <action selector="run:" destination="M2k-L8-Olo" id="Rdy-Os-32L"/>
+                                </connections>
+                            </barButtonItem>
+                        </leftBarButtonItems>
                     </navigationItem>
                     <connections>
                         <outlet property="scrollView" destination="Og2-WW-gps" id="ePy-8G-Mue"/>

@@ -56,11 +56,7 @@ if(IOS)
       ios/ToolboxCell.mm
       ios/ToolboxHeaderView.mm)
 
-  set(RESOURCES
-      ${RESOURCES}
-      ios/Info.plist
-      ios/Assets.xcassets
-      ios/Base.lproj/Main.storyboard)
+  set(RESOURCES ${RESOURCES} ios/Assets.xcassets ios/Base.lproj/Main.storyboard)
 
   set(TARGET_NAME ${PROJECT_NAME}.app.ios)
   set(DEFINITIONS IOS)

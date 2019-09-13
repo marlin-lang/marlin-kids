@@ -31,6 +31,8 @@ NS_ASSUME_NONNULL_BEGIN
                                      withType:(marlin::control::literal_data_type)type
                                          data:(std::string_view)data;
 
+- (void)sourceViewChanged:(SourceView *)view;
+
 - (void)dismissEditorViewControllerForSourceView:(SourceView *)view;
 
 @end

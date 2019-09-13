@@ -83,6 +83,7 @@
   auto height = self.lineHeight * _strings.count + _insets.top + _insets.bottom;
   [self setFrame:CGRectMake(self.frame.origin.x, self.frame.origin.y, width, height)];
   [self setNeedsDisplayInRect:self.bounds];
+  [self.delegate sourceViewChanged:self];
 }
 
 - (void)updateExpressionInSourceRange:(marlin::source_range)sourceRange
@@ -102,6 +103,7 @@
                               self.frame.size.height)];
   }
   [self setNeedsDisplayInRect:self.bounds];
+  [self.delegate sourceViewChanged:self];
 }
 
 - (void)removeStatementFromLine:(NSUInteger)from toLine:(NSUInteger)to {

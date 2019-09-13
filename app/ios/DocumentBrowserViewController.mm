@@ -1,7 +1,10 @@
 #import "DocumentBrowserViewController.h"
 
+#include "document.hpp"
+
 #import "IosDocument.h"
 #import "IosSourceViewController.h"
+#import "NSData+DataView.h"
 
 @interface DocumentBrowserViewController () <UIDocumentBrowserViewControllerDelegate>
 
@@ -21,9 +24,11 @@
 - (void)documentBrowser:(UIDocumentBrowserViewController *)controller
     didRequestDocumentCreationWithHandler:
         (void (^)(NSURL *_Nullable, UIDocumentBrowserImportMode))importHandler {
-  NSURL *url = [NSURL
-      fileURLWithPath:[NSTemporaryDirectory() stringByAppendingPathComponent:@"Untitled.mar"]];
-  [@"" writeToURL:url atomically:YES encoding:NSUTF8StringEncoding error:nil];
+  auto filePath = [[NSTemporaryDirectory() stringByAppendingPathComponent:@"Untitled"]
+      stringByAppendingPathExtension:@"mar"];
+  auto url = [NSURL fileURLWithPath:filePath];
+  auto data = [NSData dataWithDataView:marlin::control::document::default_data()];
+  [data writeToURL:url atomically:YES];
   importHandler(url, UIDocumentBrowserImportModeMove);
 }
 

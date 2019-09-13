@@ -45,25 +45,32 @@
   [lineNumberView.heightAnchor constraintEqualToAnchor:self.view.heightAnchor].active = YES;
   [lineNumberView.widthAnchor constraintEqualToConstant:lineNumberView.ruleThickness].active = YES;
 
-    [self.document openWithCompletionHandler:^(BOOL success) {
-        if (success) {
-            if (auto initialData = [self.document initialize]) {
-                [self.sourceView insertStatementsBeforeLine:1
-                                                 withSource:std::move(initialData->source)
-                                                 highlights:std::move(initialData->highlights)];
-                [self.lineNumberView setNeedsDisplay];
-            }
-        } else {
-        }
-    }];
+  [self.document openWithCompletionHandler:^(BOOL success) {
+    if (success) {
+      if (auto initialData = [self.document initialize]) {
+        [self.sourceView insertStatementsBeforeLine:1
+                                         withSource:std::move(initialData->source)
+                                         highlights:std::move(initialData->highlights)];
+        [self.lineNumberView setNeedsDisplay];
+      }
+    } else {
+    }
+  }];
+}
+
+- (IBAction)close:(id)sender {
+  [self dismissViewControllerAnimated:YES
+                           completion:^{
+                             [self.document closeWithCompletionHandler:nil];
+                           }];
 }
 
 - (IBAction)run:(id)sender {
-    [self execute];
+  [self execute];
 }
 
-- (UIViewController*)destinationViewControllerOfSegue:(UIStoryboardSegue*)segue {
-    return segue.destinationViewController;
+- (UIViewController *)destinationViewControllerOfSegue:(UIStoryboardSegue *)segue {
+  return segue.destinationViewController;
 }
 
 #pragma mark - UICollectionViewDataSource
@@ -152,6 +159,10 @@
   [self presentViewController:vc animated:YES completion:nil];
   vc.type = type;
   vc.editorTextField.text = [NSString stringWithStringView:data];
+}
+
+- (void)sourceViewChanged:(SourceView *)view {
+  [self.document updateChangeCount:UIDocumentChangeDone];
 }
 
 - (void)dismissEditorViewControllerForSourceView:(SourceView *)view {

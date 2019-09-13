@@ -18,10 +18,10 @@
                 <key>CFBundleTypeRole</key>
                 <string>Editor</string>
                 <key>LSHandlerRank</key>
-                <string>Alternate</string>
+                <string>Owner</string>
                 <key>LSItemContentTypes</key>
                 <array>
-                    <string>public.text</string>
+                    <string>com.marlin-lang.marlin</string>
                 </array>
             </dict>
         </array>
@@ -64,19 +64,24 @@
         </array>
         <key>UISupportsDocumentBrowser</key>
         <true/>
-        <key>UTImportedTypeDeclarations</key>
+        <key>UTExportedTypeDeclarations</key>
         <array>
             <dict>
                 <key>UTTypeConformsTo</key>
                 <array>
-                    <string>public.text</string>
+                    <string>public.data</string>
                 </array>
                 <key>UTTypeDescription</key>
-                <string>Marlin File</string>
+                <string>Marlin</string>
                 <key>UTTypeIconFiles</key>
                 <array/>
                 <key>UTTypeIdentifier</key>
                 <string>com.marlin-lang.marlin</string>
+                <key>UTTypeTagSpecification</key>
+                <dict>
+                    <key>public.filename-extension</key>
+                    <string>mar</string>
+                </dict>
             </dict>
         </array>
     </dict>
