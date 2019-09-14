@@ -30,6 +30,7 @@ struct type_map {
   X(program)                \
   X(on_start)               \
   X(assignment)             \
+  X(use_global)             \
   X(system_procedure_call)  \
   X(if_statement)           \
   X(if_else_statement)      \

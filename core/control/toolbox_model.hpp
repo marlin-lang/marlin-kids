@@ -35,6 +35,7 @@ struct toolbox_model {
       },
       std::vector{
           item{assignment_prototype::index(), pasteboard_t::statement},
+          item{use_global_prototype::index(), pasteboard_t::statement},
           item{
               system_procedure_prototype<ast::system_procedure::print>::index(),
               pasteboard_t::statement},

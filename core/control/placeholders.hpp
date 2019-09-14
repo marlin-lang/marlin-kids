@@ -84,6 +84,12 @@ inline std::string_view placeholder::get<ast::assignment>(size_t subnode_index,
   return subnodes[subnode_index];
 }
 
+template <>
+inline std::string_view placeholder::get<ast::use_global>(size_t subnode_index,
+                                                          size_t node_index) {
+  return "variable";
+}
+
 inline std::string_view _get_if_placeholder(size_t subnode_index) {
   if (subnode_index == 0) {
     return "condition";

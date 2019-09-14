@@ -38,6 +38,13 @@ struct assignment
   using base_type::impl;
 };
 
+struct use_global : base::impl<use_global, subnode::concrete>, statement {
+  [[nodiscard]] decltype(auto) variable() { return get_subnode<0>(); }
+  [[nodiscard]] decltype(auto) variable() const { return get_subnode<0>(); }
+
+  using base_type::impl;
+};
+
 struct system_procedure_call
     : base::impl<system_procedure_call, subnode::vector>,
       expression {

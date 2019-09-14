@@ -34,7 +34,7 @@ struct generator {
   static constexpr const char* main_name{"__main__"};
 
   bool _is_async;
-  std::unordered_set<std::string> _identifiers;
+  std::unordered_set<std::string> _global_identifiers;
   std::vector<generation_error> _errors;
 
   static jsast::ast::node scoped_callee_with_name(std::string name) {
@@ -57,6 +57,20 @@ struct generator {
             jsast::ast::identifier{"global_clock"},
             jsast::ast::member_identifier{"check_termination"}},
         {}}};
+  }
+
+  bool is_local_identifier(ast::base& node) {
+    if (node.is<ast::identifier>() &&
+        _global_identifiers.find(node.as<ast::identifier>().name) ==
+            _global_identifiers.end()) {
+      return true;
+    } else if (node.is<ast::variable_name>() &&
+               _global_identifiers.find(node.as<ast::variable_name>().name) ==
+                   _global_identifiers.end()) {
+      return true;
+    } else {
+      return false;
+    }
   }
 
   template <typename vector_type>
@@ -107,7 +121,7 @@ struct generator {
 
   template <typename wrapper_type>
   auto get_jsast(ast::on_start& start, wrapper_type&& wrapper) {
-    _identifiers.clear();
+    _global_identifiers.clear();
     return wrapper(jsast::ast::function_declaration{
         main_name,
         {},
@@ -117,10 +131,29 @@ struct generator {
 
   template <typename wrapper_type>
   auto get_jsast(ast::assignment& assignment, wrapper_type&& wrapper) {
-    return wrapper(jsast::ast::variable_declaration{
-        {jsast::ast::variable_declarator{get_node(*assignment.variable()),
-                                         get_node(*assignment.value())}},
-        jsast::variable_declaration_type::var});
+    if (is_local_identifier(*assignment.variable())) {
+      return wrapper(jsast::ast::variable_declaration{
+          {jsast::ast::variable_declarator{get_node(*assignment.variable()),
+                                           get_node(*assignment.value())}},
+          jsast::variable_declaration_type::var});
+    } else {
+      return wrapper(
+          jsast::ast::expression_statement{jsast::ast::assignment_expression{
+              get_node(*assignment.variable()), jsast::assignment_op::standard,
+              get_node(*assignment.value())}});
+    }
+  }
+
+  template <typename wrapper_type>
+  auto get_jsast(ast::use_global& use_global, wrapper_type&& wrapper) {
+    if (use_global.variable()->is<ast::variable_name>()) {
+      auto name = use_global.variable()->as<ast::variable_name>().name;
+      _global_identifiers.emplace(std::move(name));
+    } else {
+      _errors.emplace_back("Unexpected node, expecting variable name!",
+                           use_global);
+    }
+    return wrapper(jsast::ast::empty_statement{});
   }
 
   template <typename wrapper_type>
@@ -188,11 +221,18 @@ struct generator {
 
   template <typename wrapper_type>
   auto get_jsast(ast::for_statement& statement, wrapper_type&& wrapper) {
-    return wrapper(jsast::ast::for_of_statement{
-        jsast::ast::variable_declaration{
-            {jsast::ast::variable_declarator{get_node(*statement.variable())}},
-            jsast::variable_declaration_type::var},
-        get_node(*statement.list()), get_block(statement.statements())});
+    if (is_local_identifier(*statement.variable())) {
+      return wrapper(jsast::ast::for_of_statement{
+          jsast::ast::variable_declaration{
+              {jsast::ast::variable_declarator{
+                  get_node(*statement.variable())}},
+              jsast::variable_declaration_type::var},
+          get_node(*statement.list()), get_block(statement.statements())});
+    } else {
+      return wrapper(jsast::ast::for_of_statement{
+          get_node(*statement.variable()), get_node(*statement.list()),
+          get_block(statement.statements())});
+    }
   }
 
   template <typename wrapper_type>
@@ -282,15 +322,24 @@ struct generator {
   }
 
   template <typename wrapper_type>
+  auto get_identifier(std::string name, wrapper_type&& wrapper) {
+    if (_global_identifiers.find(name) != _global_identifiers.end()) {
+      return wrapper(jsast::ast::member_expression{
+          jsast::ast::identifier{"globals"},
+          jsast::ast::member_identifier{std::move(name)}});
+    } else {
+      return wrapper(jsast::ast::identifier{"__var_" + std::move(name)});
+    }
+  }
+
+  template <typename wrapper_type>
   auto get_jsast(ast::identifier& identifier, wrapper_type&& wrapper) {
-    auto name{"__var_" + identifier.name};
-    return wrapper(jsast::ast::identifier{std::move(name)});
+    return get_identifier(identifier.name, std::forward<wrapper_type>(wrapper));
   }
 
   template <typename wrapper_type>
   auto get_jsast(ast::variable_name& variable, wrapper_type&& wrapper) {
-    auto name{"__var_" + variable.name};
-    return wrapper(jsast::ast::identifier{std::move(name)});
+    return get_identifier(variable.name, std::forward<wrapper_type>(wrapper));
   }
 
   template <typename wrapper_type>

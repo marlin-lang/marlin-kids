@@ -23,7 +23,7 @@ inline const std::string_view program{"program"};
 inline const std::string_view on_start{"on_start"};
 
 inline const std::string_view assignment{"assign"};
-inline const std::string_view print{"print"};
+inline const std::string_view use_global{"global"};
 inline const std::string_view system_procedure{"sys_proc"};
 
 inline const std::string_view if_else{"if"};
@@ -235,7 +235,7 @@ struct store : base_store::impl<store> {
             {key::program, {&store::read_program, true}},
             {key::on_start, {&store::read_on_start, true}},
             {key::assignment, {&store::read_assignment, true}},
-            {key::print, {&store::read_print_statement, true}},
+            {key::use_global, {&store::read_use_global, true}},
             {key::system_procedure, {&store::read_system_procedure, true}},
             {key::if_else, {&store::read_if_else_statement, true}},
             {key::while_loop, {&store::read_while_statement, true}},
@@ -303,18 +303,17 @@ struct store : base_store::impl<store> {
     return ast::make<ast::assignment>(std::move(variable), std::move(value));
   }
 
-  ast::node read_print_statement(data_view::pointer& iter,
-                                 data_view::pointer end, type_expectation type,
-                                 size_t paren_precedence) {
+  ast::node read_use_global(data_view::pointer& iter, data_view::pointer end,
+                            type_expectation type, size_t paren_precedence) {
     assert_type<type_expectation::statement>(type, "Unexpected statement!");
 
-    emit_to_buffer("print(");
-    std::vector<ast::node> print_arguments;
-    print_arguments.emplace_back(
-        read_node(iter, end, type_expectation::rvalue));
-    emit_to_buffer(");");
-    return ast::make<ast::system_procedure_call>(ast::system_procedure::print,
-                                                 std::move(print_arguments));
+    emit_highlight("use", highlight_token_type::keyword);
+    emit_to_buffer(" ");
+    emit_highlight("global", highlight_token_type::keyword);
+    emit_to_buffer(" ");
+    auto variable{read_node(iter, end, type_expectation::lvalue)};
+    emit_to_buffer(";");
+    return ast::make<ast::use_global>(std::move(variable));
   }
 
   ast::node read_system_procedure(data_view::pointer& iter,
@@ -685,6 +684,11 @@ struct store : base_store::impl<store> {
     write_key(key::assignment);
     write_base(*assignment.variable());
     write_base(*assignment.value());
+  }
+
+  void write_node(const ast::use_global& use_global) {
+    write_key(key::use_global);
+    write_base(*use_global.variable());
   }
 
   void write_node(const ast::system_procedure_call& call) {

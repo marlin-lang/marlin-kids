@@ -20,6 +20,17 @@ struct assignment_prototype : statement_prototype::impl<assignment_prototype> {
   }()};
 };
 
+struct use_global_prototype : statement_prototype::impl<use_global_prototype> {
+  [[nodiscard]] std::string_view name() const override { return "global"; }
+
+  inline static const store::data_vector _data{[]() {
+    const auto node{
+        ast::make<ast::use_global>(ast::make<ast::variable_placeholder>(
+            std::string{placeholder::get<ast::use_global>(0)}))};
+    return store::write({node.get()});
+  }()};
+};
+
 template <ast::system_procedure _proc>
 struct system_procedure_prototype
     : statement_prototype::impl<system_procedure_prototype<_proc>> {
