@@ -19,9 +19,36 @@ struct program : base::impl<program, subnode::vector> {
   using base_type::impl;
 };
 
-struct on_start : base::impl<on_start, subnode::vector> {
+struct on_start : base::impl<on_start, subnode::vector>, block {
   [[nodiscard]] decltype(auto) statements() { return get_subnode<0>(); }
   [[nodiscard]] decltype(auto) statements() const { return get_subnode<0>(); }
+
+  using base_type::impl;
+};
+
+struct function_placeholder : base::impl<function_placeholder> {
+  std::string name;
+
+  explicit function_placeholder(std::string _name) : name{std::move(_name)} {}
+};
+
+struct function_signature : base::impl<function_signature, subnode::vector> {
+  std::string name;
+
+  [[nodiscard]] decltype(auto) parameters() { return get_subnode<0>(); }
+  [[nodiscard]] decltype(auto) parameters() const { return get_subnode<0>(); }
+
+  explicit function_signature(std::string _name, std::vector<node> _args)
+      : base_type{std::move(_args)}, name{std::move(_name)} {}
+};
+
+struct function : base::impl<function, subnode::concrete, subnode::vector>,
+                  block {
+  [[nodiscard]] decltype(auto) signature() { return get_subnode<0>(); }
+  [[nodiscard]] decltype(auto) signature() const { return get_subnode<0>(); }
+
+  [[nodiscard]] decltype(auto) statements() { return get_subnode<1>(); }
+  [[nodiscard]] decltype(auto) statements() const { return get_subnode<1>(); }
 
   using base_type::impl;
 };
@@ -34,6 +61,13 @@ struct assignment
 
   [[nodiscard]] decltype(auto) value() { return get_subnode<1>(); }
   [[nodiscard]] decltype(auto) value() const { return get_subnode<1>(); }
+
+  using base_type::impl;
+};
+
+struct use_global : base::impl<use_global, subnode::concrete>, statement {
+  [[nodiscard]] decltype(auto) variable() { return get_subnode<0>(); }
+  [[nodiscard]] decltype(auto) variable() const { return get_subnode<0>(); }
 
   using base_type::impl;
 };

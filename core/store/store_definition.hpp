@@ -11,7 +11,15 @@
 
 namespace marlin::store {
 
-enum class type_expectation { program, block, statement, lvalue, rvalue, any };
+enum class type_expectation {
+  program,
+  block,
+  function_signature,
+  statement,
+  lvalue,
+  rvalue,
+  any
+};
 
 enum class highlight_token_type {
   keyword,

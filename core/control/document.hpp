@@ -19,8 +19,11 @@ using enable_if_ast_t =
     std::enable_if_t<std::is_base_of_v<ast::base, node_type> &&
                      !std::is_same_v<ast::base, node_type>>;
 
+enum struct line_node_type : uint8_t;
+
 struct document {
-  friend struct statement_inserter;
+  template <line_node_type node_type>
+  friend struct line_inserter;
   friend struct expression_inserter;
   friend struct source_selection;
 

@@ -29,7 +29,11 @@ struct type_map {
 #define ASTS(X)             \
   X(program)                \
   X(on_start)               \
+  X(function_placeholder)   \
+  X(function_signature)     \
+  X(function)               \
   X(assignment)             \
+  X(use_global)             \
   X(system_procedure_call)  \
   X(if_statement)           \
   X(if_else_statement)      \

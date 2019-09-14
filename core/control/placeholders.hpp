@@ -77,11 +77,27 @@ struct placeholder {
 };
 
 template <>
+inline std::string_view placeholder::get<ast::function>(size_t subnode_index,
+                                                        size_t node_index) {
+  if (subnode_index == 0) {
+    return "name";
+  } else {
+    return placeholder::default_text;
+  }
+}
+
+template <>
 inline std::string_view placeholder::get<ast::assignment>(size_t subnode_index,
                                                           size_t node_index) {
   static constexpr std::array<std::string_view, 2> subnodes{"variable",
                                                             "value"};
   return subnodes[subnode_index];
+}
+
+template <>
+inline std::string_view placeholder::get<ast::use_global>(size_t subnode_index,
+                                                          size_t node_index) {
+  return "variable";
 }
 
 inline std::string_view _get_if_placeholder(size_t subnode_index) {

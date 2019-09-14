@@ -6,10 +6,10 @@ set(HEADERS
     prototypes.hpp
     source_update.hpp
     source_selection.hpp
-    statement_inserter.hpp
+    line_inserter.hpp
     toolbox_model.hpp)
 
-set(SOURCES expression_inserter.cpp statement_inserter.cpp)
+set(SOURCES expression_inserter.cpp line_inserter.cpp)
 
 add_library(${PROJECT_NAME}.core.control ${SOURCES})
 target_sources(${PROJECT_NAME}.core.control PRIVATE ${HEADERS})

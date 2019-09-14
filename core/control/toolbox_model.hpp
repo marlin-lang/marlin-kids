@@ -10,7 +10,7 @@
 
 namespace marlin::control {
 
-enum class pasteboard_t : uint8_t { statement = 0, expression };
+enum class pasteboard_t : uint8_t { block, statement, expression };
 
 struct toolbox_model {
   struct item {
@@ -23,6 +23,7 @@ struct toolbox_model {
 
   inline static const std::array items{
       std::vector{
+          item{function_prototype::index(), pasteboard_t::block},
           item{if_prototype::index(), pasteboard_t::statement},
           item{if_else_prototype::index(), pasteboard_t::statement},
           item{while_prototype::index(), pasteboard_t::statement},
@@ -35,6 +36,7 @@ struct toolbox_model {
       },
       std::vector{
           item{assignment_prototype::index(), pasteboard_t::statement},
+          item{use_global_prototype::index(), pasteboard_t::statement},
           item{
               system_procedure_prototype<ast::system_procedure::print>::index(),
               pasteboard_t::statement},
@@ -105,12 +107,7 @@ struct toolbox_model {
   static_assert(sections.size() == items.size());
 
   static const base_prototype& prototype_at(size_t section, size_t item) {
-    switch (items[section][item].type) {
-      case pasteboard_t::statement:
-        return *statement_prototypes[items[section][item].index];
-      case pasteboard_t::expression:
-        return *expression_prototypes[items[section][item].index];
-    }
+    return *prototypes[items[section][item].index];
   }
 };
 

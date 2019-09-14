@@ -27,6 +27,7 @@
 
 - (NSArray<NSPasteboardType>*)acceptableDragTypes {
   return @[
+    pasteboardOfType(marlin::control::pasteboard_t::block),
     pasteboardOfType(marlin::control::pasteboard_t::statement),
     pasteboardOfType(marlin::control::pasteboard_t::expression)
   ];
@@ -36,7 +37,12 @@
   auto location = [self convertPoint:sender.draggingLocation fromView:nil];
 
   auto* type = [sender.draggingPasteboard availableTypeFromArray:self.acceptableDragTypes];
-  if ([type isEqualToString:pasteboardOfType(marlin::control::pasteboard_t::statement)]) {
+  if ([type isEqualToString:pasteboardOfType(marlin::control::pasteboard_t::block)]) {
+    if ([self draggingBlockAtLocation:location]) {
+      [self setNeedsDisplayInRect:self.bounds];
+      return NSDragOperationMove;
+    }
+  } else if ([type isEqualToString:pasteboardOfType(marlin::control::pasteboard_t::statement)]) {
     if ([self draggingStatementAtLocation:location]) {
       [self setNeedsDisplayInRect:self.bounds];
       return NSDragOperationMove;
@@ -53,7 +59,12 @@
 
 - (BOOL)performDragOperation:(id<NSDraggingInfo>)sender {
   auto type = [sender.draggingPasteboard availableTypeFromArray:self.acceptableDragTypes];
-  if (type == pasteboardOfType(marlin::control::pasteboard_t::statement)) {
+
+  if (type == pasteboardOfType(marlin::control::pasteboard_t::block)) {
+    auto* data = [sender.draggingPasteboard
+        dataForType:pasteboardOfType(marlin::control::pasteboard_t::block)];
+    return [self performBlockDropForData:data];
+  } else if (type == pasteboardOfType(marlin::control::pasteboard_t::statement)) {
     auto* data = [sender.draggingPasteboard
         dataForType:pasteboardOfType(marlin::control::pasteboard_t::statement)];
     return [self performStatementDropForData:data];
@@ -80,7 +91,10 @@
                   item:(NSPasteboardItem*)item
     provideDataForType:(NSPasteboardType)type {
   /*NSAssert(_isDraggingFromSelection, @"Should be in dragging");
-  if (_selection->is_statement()) {
+  if (_selection->is_block()) {
+      [pasteboard setData:[NSData dataWithDataView:_selection->get_data()]
+                  forType:pasteboardOfType(marlin::control::pasteboard_t::block)];
+  } else if (_selection->is_statement()) {
       [pasteboard setData:[NSData dataWithDataView:_selection->get_data()]
                   forType:pasteboardOfType(marlin::control::pasteboard_t::statement)];
   } else if (_selection->is_expression()) {

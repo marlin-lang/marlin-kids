@@ -21,9 +21,11 @@ namespace key {
 
 inline const std::string_view program{"program"};
 inline const std::string_view on_start{"on_start"};
+inline const std::string_view function{"function"};
+inline const std::string_view function_signature{"signature"};
 
 inline const std::string_view assignment{"assign"};
-inline const std::string_view print{"print"};
+inline const std::string_view use_global{"global"};
 inline const std::string_view system_procedure{"sys_proc"};
 
 inline const std::string_view if_else{"if"};
@@ -228,14 +230,33 @@ struct store : base_store::impl<store> {
     return result;
   }
 
+  std::vector<ast::node> read_arguments(data_view::pointer& iter,
+                                        data_view::pointer end,
+                                        type_expectation type) {
+    emit_to_buffer("(");
+    auto length{read_int(iter, end)};
+    std::vector<ast::node> args;
+    args.reserve(length);
+    for (size_t i{0}; i < length; i++) {
+      if (i > 0) {
+        emit_to_buffer(", ");
+      }
+      args.emplace_back(read_node(iter, end, type));
+    }
+    emit_to_buffer(")");
+    return args;
+  }
+
   ast::node read_node(data_view::pointer& iter, data_view::pointer end,
                       type_expectation type, size_t paren_precedence = 0) {
     static const std::unordered_map<std::string_view, read_node_entry>
         read_node_map{
             {key::program, {&store::read_program, true}},
             {key::on_start, {&store::read_on_start, true}},
+            {key::function, {&store::read_function, true}},
+            {key::function_signature, {&store::read_function_signature, true}},
             {key::assignment, {&store::read_assignment, true}},
-            {key::print, {&store::read_print_statement, true}},
+            {key::use_global, {&store::read_use_global, true}},
             {key::system_procedure, {&store::read_system_procedure, true}},
             {key::if_else, {&store::read_if_else_statement, true}},
             {key::while_loop, {&store::read_while_statement, true}},
@@ -281,7 +302,7 @@ struct store : base_store::impl<store> {
                           type_expectation type, size_t paren_precedence) {
     assert_type<type_expectation::block>(type, "Unexpected block!");
 
-    emit_highlight("on_start", highlight_token_type::keyword);
+    emit_highlight("on start", highlight_token_type::keyword);
     emit_to_buffer(" {");
     emit_new_line();
     _indent++;
@@ -290,6 +311,39 @@ struct store : base_store::impl<store> {
     emit_indent();
     emit_to_buffer("}");
     return ast::make<ast::on_start>(std::move(statements));
+  }
+
+  ast::node read_function_signature(data_view::pointer& iter,
+                                    data_view::pointer end,
+                                    type_expectation type,
+                                    size_t paren_precedence) {
+    assert_type<type_expectation::function_signature>(type,
+                                                      "Unexpected function!");
+
+    auto name{read_string(iter, end)};
+    emit_to_buffer(name);
+
+    auto args{read_arguments(iter, end, type_expectation::lvalue)};
+    return ast::make<ast::function_signature>(std::string{std::move(name)},
+                                              std::move(args));
+  }
+
+  ast::node read_function(data_view::pointer& iter, data_view::pointer end,
+                          type_expectation type, size_t paren_precedence) {
+    assert_type<type_expectation::block>(type, "Unexpected function!");
+
+    emit_highlight("function", highlight_token_type::keyword);
+    emit_to_buffer(" ");
+    auto signature{read_node(iter, end, type_expectation::function_signature)};
+    emit_to_buffer(" {");
+    emit_new_line();
+    _indent++;
+    auto statements{read_vector(iter, end, type_expectation::statement)};
+    _indent--;
+    emit_indent();
+    emit_to_buffer("}");
+    return ast::make<ast::function>(std::move(signature),
+                                    std::move(statements));
   }
 
   ast::node read_assignment(data_view::pointer& iter, data_view::pointer end,
@@ -303,18 +357,15 @@ struct store : base_store::impl<store> {
     return ast::make<ast::assignment>(std::move(variable), std::move(value));
   }
 
-  ast::node read_print_statement(data_view::pointer& iter,
-                                 data_view::pointer end, type_expectation type,
-                                 size_t paren_precedence) {
+  ast::node read_use_global(data_view::pointer& iter, data_view::pointer end,
+                            type_expectation type, size_t paren_precedence) {
     assert_type<type_expectation::statement>(type, "Unexpected statement!");
 
-    emit_to_buffer("print(");
-    std::vector<ast::node> print_arguments;
-    print_arguments.emplace_back(
-        read_node(iter, end, type_expectation::rvalue));
-    emit_to_buffer(");");
-    return ast::make<ast::system_procedure_call>(ast::system_procedure::print,
-                                                 std::move(print_arguments));
+    emit_highlight("use global", highlight_token_type::keyword);
+    emit_to_buffer(" ");
+    auto variable{read_node(iter, end, type_expectation::lvalue)};
+    emit_to_buffer(";");
+    return ast::make<ast::use_global>(std::move(variable));
   }
 
   ast::node read_system_procedure(data_view::pointer& iter,
@@ -337,18 +388,8 @@ struct store : base_store::impl<store> {
       const auto proc{it->second};
       emit_to_buffer(display_for(proc));
 
-      // custom read_vector to emit deliminators
-      emit_to_buffer("(");
-      auto length{read_int(iter, end)};
-      std::vector<ast::node> args;
-      args.reserve(length);
-      for (size_t i{0}; i < length; i++) {
-        if (i > 0) {
-          emit_to_buffer(", ");
-        }
-        args.emplace_back(read_node(iter, end, type_expectation::rvalue));
-      }
-      emit_to_buffer(");");
+      auto args{read_arguments(iter, end, type_expectation::rvalue)};
+      emit_to_buffer(";");
 
       return ast::make<ast::system_procedure_call>(proc, std::move(args));
     }
@@ -451,13 +492,17 @@ struct store : base_store::impl<store> {
 
   ast::node read_placeholder(data_view::pointer& iter, data_view::pointer end,
                              type_expectation type, size_t paren_precedence) {
-    assert_type<type_expectation::lvalue, type_expectation::rvalue>(
-        type, "Unexpected placeholder!");
+    assert_type<type_expectation::lvalue, type_expectation::function_signature,
+                type_expectation::rvalue>(type, "Unexpected placeholder!");
 
     auto string{read_string(iter, end)};
     emit_placeholder(string);
     if (type == type_expectation::lvalue) {
       return ast::make<ast::variable_placeholder>(
+          std::string{std::move(string)});
+    } else if (type == type_expectation::function_signature) {
+      emit_to_buffer("()");
+      return ast::make<ast::function_placeholder>(
           std::string{std::move(string)});
     } else {
       return ast::make<ast::expression_placeholder>(
@@ -578,19 +623,7 @@ struct store : base_store::impl<store> {
       const auto func{it->second};
       emit_to_buffer(display_for(func));
 
-      // custom read_vector to emit deliminators
-      emit_to_buffer("(");
-      auto length{read_int(iter, end)};
-      std::vector<ast::node> args;
-      args.reserve(length);
-      for (size_t i{0}; i < length; i++) {
-        if (i > 0) {
-          emit_to_buffer(", ");
-        }
-        args.emplace_back(read_node(iter, end, type_expectation::rvalue));
-      }
-      emit_to_buffer(")");
-
+      auto args{read_arguments(iter, end, type_expectation::rvalue)};
       return ast::make<ast::system_function_call>(func, std::move(args));
     }
   }
@@ -681,10 +714,32 @@ struct store : base_store::impl<store> {
     write_vector(block.statements());
   }
 
+  void write_node(const ast::function_placeholder& placeholder) {
+    write_key(key::placeholder);
+    write_string(placeholder.name);
+  }
+
+  void write_node(const ast::function_signature& signature) {
+    write_key(key::function_signature);
+    write_string(signature.name);
+    write_vector(signature.parameters());
+  }
+
+  void write_node(const ast::function& function) {
+    write_key(key::function);
+    write_base(*function.signature());
+    write_vector(function.statements());
+  }
+
   void write_node(const ast::assignment& assignment) {
     write_key(key::assignment);
     write_base(*assignment.variable());
     write_base(*assignment.value());
+  }
+
+  void write_node(const ast::use_global& use_global) {
+    write_key(key::use_global);
+    write_base(*use_global.variable());
   }
 
   void write_node(const ast::system_procedure_call& call) {

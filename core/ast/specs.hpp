@@ -7,6 +7,23 @@
 
 namespace marlin::ast {
 
+enum class click_state : uint8_t { begin, move, end };
+
+static constexpr std::array<std::string_view, 3> click_state_name_map{
+    "touch_begin" /* begin */, "touch_move" /* move */, "touch_end" /* end */
+};
+[[nodiscard]] inline constexpr std::string_view name_for(
+    click_state proc) noexcept {
+  return click_state_name_map[static_cast<size_t>(proc)];
+}
+
+static constexpr std::array<std::string_view, 3> click_state_display_map{
+    "begin" /* begin */, "move" /* move */, "end" /* end */};
+[[nodiscard]] inline constexpr std::string_view display_for(
+    click_state proc) noexcept {
+  return click_state_display_map[static_cast<size_t>(proc)];
+}
+
 enum class unary_op : uint8_t { negative };
 
 static constexpr std::array<std::string_view, 1> unary_op_symbol_map{
