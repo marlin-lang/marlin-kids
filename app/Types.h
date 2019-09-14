@@ -23,6 +23,7 @@
 #define View UIView
 #define RulerView UIView
 #define ImageView UIImageView
+#define StackView UIStackView
 #define TextView UITextView
 #define CollectionView UICollectionView
 #define CollectionViewItem UICollectionViewCell
@@ -50,6 +51,7 @@
 #define View NSView
 #define RulerView NSRulerView
 #define ImageView NSImageView
+#define StackView NSStackView
 #define TextView NSTextView
 #define CollectionView NSCollectionView
 #define CollectionViewItem NSCollectionViewItem

@@ -41,8 +41,8 @@ if(IOS)
       ios/IosEditorViewController.h
       ios/IosSourceView.h
       ios/IosSourceViewController.h
-      ios/ToolboxCell.h
-      ios/ToolboxHeaderView.h)
+      ios/IosToolboxViewController.h
+      ios/ToolboxCell.h)
 
   set(SOURCES
       ${SOURCES}
@@ -52,9 +52,9 @@ if(IOS)
       ios/IosEditorViewController.mm
       ios/IosSourceView.mm
       ios/IosSourceViewController.mm
+      ios/IosToolboxViewController.mm
       ios/main.mm
-      ios/ToolboxCell.mm
-      ios/ToolboxHeaderView.mm)
+      ios/ToolboxCell.mm)
 
   set(RESOURCES ${RESOURCES} ios/Assets.xcassets ios/Base.lproj/Main.storyboard)
 
@@ -70,6 +70,7 @@ else(IOS)
       mac/MacEditorViewController.h
       mac/MacSourceView.h
       mac/MacSourceViewController.h
+      mac/MacToolboxViewController.h
       mac/ToolboxItem.h
       mac/WindowController.h)
 
@@ -80,6 +81,7 @@ else(IOS)
       mac/MacEditorViewController.mm
       mac/MacSourceView.mm
       mac/MacSourceViewController.mm
+      mac/MacToolboxViewController.mm
       mac/main.mm
       mac/ToolboxItem.mm
       mac/WindowController.mm)
