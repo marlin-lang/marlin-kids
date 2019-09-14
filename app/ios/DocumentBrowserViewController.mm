@@ -6,6 +6,7 @@
 #import "IosSourceViewController.h"
 #import "NSData+DataView.h"
 #import "NSObject+Casting.h"
+#import "SplitViewController.h"
 
 @interface DocumentBrowserViewController () <UIDocumentBrowserViewControllerDelegate>
 
@@ -54,12 +55,22 @@
 }
 
 - (void)presentDocumentAtURL:(NSURL *)documentURL {
-  auto *storyBoard = [UIStoryboard storyboardWithName:@"Main" bundle:nil];
-  UISplitViewController* splitViewController =
-      [storyBoard instantiateViewControllerWithIdentifier:@"SplitViewController"];
-    auto vc = [IosSourceViewController cast:splitViewController.viewControllers[1]];
-  vc.document = [[IosDocument alloc] initWithFileURL:documentURL];
-  [self presentViewController:splitViewController animated:YES completion:nil];
+  UINavigationController *navigationController =
+      [self.storyboard instantiateViewControllerWithIdentifier:@"NavigationViewController"];
+  [self presentViewController:navigationController
+                     animated:YES
+                   completion:^{
+                     auto document = [[IosDocument alloc] initWithFileURL:documentURL];
+                     [document openWithCompletionHandler:^(BOOL success) {
+                       if (success) {
+                         auto splitViewController =
+                             [SplitViewController cast:navigationController.topViewController];
+                         splitViewController.sourceViewController.document = document;
+                       } else {
+                         NSAssert(NO, @"todo");
+                       }
+                     }];
+                   }];
 }
 
 @end
