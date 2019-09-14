@@ -39,6 +39,10 @@
   return nil;
 }
 
+- (IBAction)close:(id)sender {
+  [self.navigationController dismissViewControllerAnimated:YES completion:nil];
+}
+
 - (IBAction)run:(id)sender {
   [self.sourceViewController execute];
 }

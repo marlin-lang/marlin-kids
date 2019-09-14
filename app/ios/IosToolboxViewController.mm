@@ -15,8 +15,7 @@
 
 - (void)viewDidLoad {
   [super viewDidLoad];
-  self.toolboxView.layer.borderWidth = 1;
-  self.toolboxView.layer.borderColor = UIColor.blackColor.CGColor;
+  self.toolboxView.contentInset = UIEdgeInsetsMake(10, 0, 0, 0);
   self.toolboxView.dragDelegate = self;
 }
 
@@ -25,6 +24,10 @@
   [button setTitle:title forState:UIControlStateNormal];
   [button addTarget:self action:selector forControlEvents:UIControlEventTouchUpInside];
   return button;
+}
+
+- (void)setBackgroundColor:(UIColor *)color forButton:(UIButton *)button {
+  button.backgroundColor = color;
 }
 
 #pragma mark - UICollectionViewDataSource

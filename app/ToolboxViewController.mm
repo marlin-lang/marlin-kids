@@ -12,7 +12,9 @@
 
 @end
 
-@implementation ToolboxViewController
+@implementation ToolboxViewController {
+  __weak Button *_currentSectionButton;
+}
 
 - (void)viewDidLoad {
   [super viewDidLoad];
@@ -25,25 +27,42 @@
   }
 }
 
+- (NSInteger)currentSection {
+  return _currentSectionButton.tag;
+}
+
 - (void)sectionButtonPressed:(Button *)sender {
   if (sender.tag >= 0) {
-    _currentSection = sender.tag;
+    [self setCurrentSectionButton:sender];
     [self.toolboxView reloadData];
   }
 }
 
 - (void)createButtonWithTitle:(NSString *)title tag:(NSInteger)tag {
-    auto button = [self buttonWithTitle:title action:@selector(sectionButtonPressed:)];
-    button.tag = tag;
-    button.translatesAutoresizingMaskIntoConstraints = NO;
-    [self.stackView addArrangedSubview:button];
-    [button.widthAnchor constraintEqualToAnchor:self.stackView.widthAnchor].active = YES;
-    [button.widthAnchor constraintEqualToAnchor:button.heightAnchor].active = YES;
+  auto button = [self buttonWithTitle:title action:@selector(sectionButtonPressed:)];
+  button.tag = tag;
+  if (tag == 0) {
+    [self setCurrentSectionButton:button];
+  }
+  button.translatesAutoresizingMaskIntoConstraints = NO;
+  [self.stackView addArrangedSubview:button];
+  [button.widthAnchor constraintEqualToAnchor:self.stackView.widthAnchor].active = YES;
+  [button.widthAnchor constraintEqualToAnchor:button.heightAnchor].active = YES;
 }
 
-- (Button*)buttonWithTitle:(NSString*)title action:(SEL)selector {
-    NSAssert(NO, @"Implemented by subclass");
-    return nil;
+- (Button *)buttonWithTitle:(NSString *)title action:(SEL)selector {
+  NSAssert(NO, @"Implemented by subclass");
+  return nil;
+}
+
+- (void)setCurrentSectionButton:(Button *)button {
+  [self setBackgroundColor:Color.whiteColor forButton:_currentSectionButton];
+  _currentSectionButton = button;
+  [self setBackgroundColor:[Color colorWithWhite:0.92 alpha:1] forButton:_currentSectionButton];
+}
+
+- (void)setBackgroundColor:(Color *)color forButton:(Button *)button {
+  NSAssert(NO, @"Implemented by subclass");
 }
 
 #pragma mark - CollectionViewDelegateFlowLayout

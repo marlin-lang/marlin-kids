@@ -6,7 +6,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 @property(weak) IBOutlet CollectionView *toolboxView;
 
-@property NSInteger currentSection;
+@property(readonly) NSInteger currentSection;
 
 @end
 

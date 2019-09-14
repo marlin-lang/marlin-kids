@@ -720,14 +720,14 @@
                                     <constraint firstAttribute="width" constant="50" id="yt9-yT-BW1"/>
                                 </constraints>
                             </stackView>
-                            <scrollView wantsLayer="YES" borderType="line" autohidesScrollers="YES" horizontalLineScroll="10" horizontalPageScroll="10" verticalLineScroll="10" verticalPageScroll="10" hasHorizontalScroller="NO" usesPredominantAxisScrolling="NO" translatesAutoresizingMaskIntoConstraints="NO" id="wbY-Zg-fxj">
+                            <scrollView wantsLayer="YES" borderType="none" autohidesScrollers="YES" horizontalLineScroll="10" horizontalPageScroll="10" verticalLineScroll="10" verticalPageScroll="10" hasHorizontalScroller="NO" usesPredominantAxisScrolling="NO" translatesAutoresizingMaskIntoConstraints="NO" id="wbY-Zg-fxj">
                                 <rect key="frame" x="50" y="0.0" width="150" height="800"/>
                                 <clipView key="contentView" id="FEP-Ru-flX">
-                                    <rect key="frame" x="1" y="1" width="148" height="798"/>
+                                    <rect key="frame" x="0.0" y="0.0" width="150" height="800"/>
                                     <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                                     <subviews>
                                         <collectionView selectable="YES" id="yLj-xX-h7d">
-                                            <rect key="frame" x="0.0" y="0.0" width="148" height="798"/>
+                                            <rect key="frame" x="0.0" y="0.0" width="150" height="800"/>
                                             <autoresizingMask key="autoresizingMask" widthSizable="YES"/>
                                             <collectionViewFlowLayout key="collectionViewLayout" minimumInteritemSpacing="10" minimumLineSpacing="10" id="xcW-K2-Aol">
                                                 <size key="itemSize" width="50" height="50"/>
