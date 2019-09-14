@@ -108,6 +108,20 @@ struct generator {
   }
 
   template <typename wrapper_type>
+  auto get_jsast(ast::function_placeholder& node, wrapper_type&& wrapper) {
+    // This should never be called
+    _errors.emplace_back("Unexpected function signature!", node);
+    return wrapper(jsast::ast::identifier{"__error__"});
+  }
+
+  template <typename wrapper_type>
+  auto get_jsast(ast::function_signature& node, wrapper_type&& wrapper) {
+    // This should never be called
+    _errors.emplace_back("Unexpected function signature!", node);
+    return wrapper(jsast::ast::identifier{"__error__"});
+  }
+
+  template <typename wrapper_type>
   auto get_jsast(ast::program& program, wrapper_type&& wrapper) {
     jsast::utils::move_vector<jsast::ast::node> blocks;
     for (auto& block : program.blocks()) {
@@ -127,6 +141,29 @@ struct generator {
         {},
         jsast::ast::block_statement{get_block(start.statements())},
         true});
+  }
+
+  template <typename wrapper_type>
+  auto get_jsast(ast::function& function, wrapper_type&& wrapper) {
+    if (function.signature()->is<ast::function_signature>()) {
+      auto& signature{function.signature()->as<ast::function_signature>()};
+      auto name{"__func_" + signature.name};
+      jsast::utils::move_vector<jsast::ast::node> params;
+      for (auto& param : signature.parameters()) {
+        params.emplace_back(get_node(*param));
+      }
+      _global_identifiers.clear();
+      return wrapper(jsast::ast::function_declaration{
+          std::move(name), std::move(params),
+          jsast::ast::block_statement{get_block(function.statements())}, true});
+    } else if (function.signature()->is<ast::function_placeholder>()) {
+      _errors.emplace_back("Unexpected placeholder!", *function.signature());
+      return wrapper(jsast::ast::empty_statement{});
+    } else {
+      _errors.emplace_back("Unexpected node, expecting function signature!",
+                           *function.signature());
+      return wrapper(jsast::ast::empty_statement{});
+    }
   }
 
   template <typename wrapper_type>

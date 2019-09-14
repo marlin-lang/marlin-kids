@@ -44,46 +44,25 @@ struct prototype_container {
   }
 };
 
-struct base_prototype {
+struct base_prototype : prototype_container<base_prototype, base_prototype> {
+  template <typename prototype>
+  struct impl;
+
   virtual ~base_prototype() noexcept = default;
 
   [[nodiscard]] virtual std::string_view name() const = 0;
   [[nodiscard]] virtual store::data_view data() const = 0;
 };
 
-struct statement_prototype
-    : base_prototype,
-      prototype_container<statement_prototype, statement_prototype> {
-  template <typename prototype>
-  struct impl;
-};
-
 template <typename prototype>
-struct statement_prototype::impl : statement_prototype,
-                                   statement_prototype::element<prototype> {
+struct base_prototype::impl : base_prototype,
+                              base_prototype::element<prototype> {
   [[nodiscard]] store::data_view data() const override {
     return prototype::_data;
   }
 };
 
-struct expression_prototype
-    : base_prototype,
-      prototype_container<expression_prototype, expression_prototype> {
-  template <typename prototype>
-  struct impl;
-};
-
-template <typename prototype>
-struct expression_prototype::impl : expression_prototype,
-                                    expression_prototype::element<prototype> {
-  [[nodiscard]] store::data_view data() const override {
-    return prototype::_data;
-  }
-};
-
-inline static auto& statement_prototypes{statement_prototype::elements()};
-
-inline static auto& expression_prototypes{expression_prototype::elements()};
+inline static auto& prototypes{base_prototype::elements()};
 
 }  // namespace marlin::control
 

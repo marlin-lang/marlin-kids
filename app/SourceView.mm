@@ -19,6 +19,7 @@
 
   NSMutableArray* _strings;
 
+  std::optional<marlin::control::block_inserter> _blockInserter;
   std::optional<marlin::control::statement_inserter> _statementInserter;
   std::optional<marlin::control::expression_inserter> _expressionInserter;
 
@@ -198,17 +199,19 @@
 
 - (void)removeDraggingSelection {
   if (_isDraggingFromSelection) {
-    auto range = _selection->get_range();
-    if (auto update = _selection->remove_from_document()) {
-      if (_selection->is_statement()) {
-        [self removeStatementFromLine:range.begin.line toLine:range.end.line];
-      } else if (_selection->is_expression()) {
-        [self removeExpressionInSourceRange:update->range];
+    if (_selection->is_block() || _selection->is_statement()) {
+      if (auto update = (*std::move(_selection)).remove_from_document()) {
+        [self removeStatementFromLine:update->range.begin.line toLine:update->range.end.line];
+        _selection.reset();
       }
-      _selection.reset();
+    } else if (_selection->is_expression()) {
+      if (auto update = (*std::move(_selection)).remove_from_document()) {
+        [self removeExpressionInSourceRange:update->range];
+        _selection.reset();
+      }
     }
-    _isDraggingFromSelection = NO;
   }
+  _isDraggingFromSelection = NO;
 }
 
 - (void)drawRect:(CGRect)dirtyRect {
@@ -230,8 +233,20 @@
 - (void)drawBackgroundInRect:(CGRect)rect {
   [self drawSelectionInRect:rect];
   [self drawExpressionInsertionInRect:rect];
+  [self drawBlockInsertionPointInRect:rect];
   [self drawStatementInsertionPointInRect:rect];
   [self drawErrorMessage];
+}
+
+- (void)drawBlockInsertionPointInRect:(CGRect)rect {
+  if (_blockInserter.has_value() && _blockInserter->can_insert()) {
+    auto oneCharSize = characterSizeWithAttributes(currentTheme().allAttrs);
+    auto x = _insets.left + oneCharSize.width * (_blockInserter->get_location().column - 1);
+    auto y = oneCharSize.height * (_blockInserter->get_location().line - 1) + _insets.top;
+    if (CGRectContainsPoint(rect, CGPointMake(x, y))) {
+      drawLine(CGPointMake(x, y), CGPointMake(x + 200, y), 5, [Color blueColor]);
+    }
+  }
 }
 
 - (void)drawStatementInsertionPointInRect:(CGRect)rect {
@@ -245,15 +260,15 @@
   }
 }
 
-- (void)drawSelectionInRect:(CGRect)rect {
-  if (_selection.has_value()) {
-    [self drawSourceRange:_selection->get_range() inRect:rect forSelection:YES];
-  }
-}
-
 - (void)drawExpressionInsertionInRect:(CGRect)rect {
   if (_expressionInserter.has_value() && _expressionInserter->can_insert()) {
     [self drawSourceRange:_expressionInserter->get_range() inRect:rect forSelection:NO];
+  }
+}
+
+- (void)drawSelectionInRect:(CGRect)rect {
+  if (_selection.has_value()) {
+    [self drawSourceRange:_selection->get_range() inRect:rect forSelection:YES];
   }
 }
 
@@ -358,6 +373,21 @@
 
 #pragma mark - Drag and drop
 
+- (BOOL)draggingBlockAtLocation:(CGPoint)location {
+  if (_selection.has_value()) {
+    [self.delegate dismissEditorViewControllerForSourceView:self];
+    _selection.reset();
+  }
+
+  auto source_loc = [self sourceLocationOfPoint:location];
+
+  if (!_blockInserter.has_value()) {
+    _blockInserter = [self.dataSource blockInserterForSourceView:self];
+  }
+  _blockInserter->move_to_line(source_loc.line);
+  return _blockInserter->can_insert();
+}
+
 - (BOOL)draggingStatementAtLocation:(CGPoint)location {
   if (_selection.has_value()) {
     [self.delegate dismissEditorViewControllerForSourceView:self];
@@ -386,6 +416,21 @@
   }
   _expressionInserter->move_to_loc(source_loc);
   return _expressionInserter->can_insert();
+}
+
+- (BOOL)performBlockDropForData:(NSData*)data {
+  if (_blockInserter.has_value() && _blockInserter->can_insert()) {
+    if (auto update = _blockInserter->insert(data.dataView)) {
+      [self insertStatementsBeforeLine:update->range.begin.line
+                            withSource:std::move(update->source)
+                            highlights:std::move(update->highlights)];
+      _blockInserter.reset();
+      [self removeDraggingSelection];
+      return YES;
+    }
+  }
+  [self removeDraggingSelection];
+  return NO;
 }
 
 - (BOOL)performStatementDropForData:(NSData*)data {
@@ -419,6 +464,7 @@
 }
 
 - (void)resetAll {
+  _blockInserter.reset();
   _statementInserter.reset();
   _expressionInserter.reset();
   _isDraggingFromSelection = NO;

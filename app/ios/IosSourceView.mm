@@ -44,20 +44,29 @@
 
 - (BOOL)dropInteraction:(UIDropInteraction*)interaction
        canHandleSession:(id<UIDropSession>)session {
-  return [session hasItemsConformingToTypeIdentifiers:@[
-           pasteboardOfType(marlin::control::pasteboard_t::statement)
-         ]] ||
-         [session hasItemsConformingToTypeIdentifiers:@[
-           pasteboardOfType(marlin::control::pasteboard_t::expression)
-         ]];
+  return
+      [session hasItemsConformingToTypeIdentifiers:@[ pasteboardOfType(
+                                                       marlin::control::pasteboard_t::block) ]] ||
+      [session hasItemsConformingToTypeIdentifiers:@[
+        pasteboardOfType(marlin::control::pasteboard_t::statement)
+      ]] ||
+      [session hasItemsConformingToTypeIdentifiers:@[
+        pasteboardOfType(marlin::control::pasteboard_t::expression)
+      ]];
 }
 
 - (UIDropProposal*)dropInteraction:(UIDropInteraction*)interaction
                   sessionDidUpdate:(id<UIDropSession>)session {
   auto location = [session locationInView:self];
-  if ([session hasItemsConformingToTypeIdentifiers:@[
-        pasteboardOfType(marlin::control::pasteboard_t::statement)
-      ]]) {
+  if ([session hasItemsConformingToTypeIdentifiers:@[ pasteboardOfType(
+                                                       marlin::control::pasteboard_t::block) ]]) {
+    if ([self draggingBlockAtLocation:location]) {
+      [self setNeedsDisplayInRect:self.bounds];
+      return [[UIDropProposal alloc] initWithDropOperation:UIDropOperationMove];
+    }
+  } else if ([session hasItemsConformingToTypeIdentifiers:@[
+               pasteboardOfType(marlin::control::pasteboard_t::statement)
+             ]]) {
     if ([self draggingStatementAtLocation:location]) {
       [self setNeedsDisplayInRect:self.bounds];
       return [[UIDropProposal alloc] initWithDropOperation:UIDropOperationMove];
@@ -75,9 +84,22 @@
 }
 
 - (void)dropInteraction:(UIDropInteraction*)interaction performDrop:(id<UIDropSession>)session {
-  if ([session hasItemsConformingToTypeIdentifiers:@[
-        pasteboardOfType(marlin::control::pasteboard_t::statement)
-      ]]) {
+  if ([session hasItemsConformingToTypeIdentifiers:@[ pasteboardOfType(
+                                                       marlin::control::pasteboard_t::block) ]]) {
+    for (UIDragItem* item in session.items) {
+      [item.itemProvider
+          loadDataRepresentationForTypeIdentifier:pasteboardOfType(
+                                                      marlin::control::pasteboard_t::block)
+                                completionHandler:^(NSData* _Nullable data,
+                                                    NSError* _Nullable error) {
+                                  dispatch_async(dispatch_get_main_queue(), ^{
+                                    [self performBlockDropForData:data];
+                                  });
+                                }];
+    }
+  } else if ([session hasItemsConformingToTypeIdentifiers:@[
+               pasteboardOfType(marlin::control::pasteboard_t::statement)
+             ]]) {
     for (UIDragItem* item in session.items) {
       [item.itemProvider
           loadDataRepresentationForTypeIdentifier:pasteboardOfType(

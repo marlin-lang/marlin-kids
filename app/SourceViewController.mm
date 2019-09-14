@@ -81,6 +81,10 @@
   return {self.document.content, loc};
 }
 
+- (marlin::control::block_inserter)blockInserterForSourceView:(SourceView *)view {
+  return {self.document.content};
+}
+
 - (marlin::control::statement_inserter)statementInserterForSourceView:(SourceView *)view {
   return {self.document.content};
 }

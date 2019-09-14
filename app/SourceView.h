@@ -4,8 +4,8 @@
 #include <vector>
 
 #include "expression_inserter.hpp"
+#include "line_inserter.hpp"
 #include "source_selection.hpp"
-#include "statement_inserter.hpp"
 
 #import "EditorViewController.h"
 
@@ -18,8 +18,8 @@ NS_ASSUME_NONNULL_BEGIN
 - (marlin::control::source_selection)sourceView:(SourceView *)view
                                     selectionAt:(marlin::source_loc)loc;
 
+- (marlin::control::block_inserter)blockInserterForSourceView:(SourceView *)view;
 - (marlin::control::statement_inserter)statementInserterForSourceView:(SourceView *)view;
-
 - (marlin::control::expression_inserter)expressionInserterForSourceView:(SourceView *)view;
 
 @end
@@ -71,12 +71,12 @@ NS_ASSUME_NONNULL_BEGIN
 
 - (void)clearErrors;
 
+- (BOOL)draggingBlockAtLocation:(CGPoint)location;
 - (BOOL)draggingStatementAtLocation:(CGPoint)location;
-
 - (BOOL)draggingExpressionAtLocation:(CGPoint)location;
 
+- (BOOL)performBlockDropForData:(NSData *)data;
 - (BOOL)performStatementDropForData:(NSData *)data;
-
 - (BOOL)performExpressionDropForData:(NSData *)data;
 
 - (void)removeDraggingSelection;

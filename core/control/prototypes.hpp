@@ -7,7 +7,19 @@
 
 namespace marlin::control {
 
-struct assignment_prototype : statement_prototype::impl<assignment_prototype> {
+struct function_prototype : base_prototype::impl<function_prototype> {
+  [[nodiscard]] std::string_view name() const override { return "function"; }
+
+  inline static const store::data_vector _data{[]() {
+    const auto node{ast::make<ast::function>(
+        ast::make<ast::function_placeholder>(
+            std::string{placeholder::get<ast::function>(0)}),
+        std::vector<ast::node>{})};
+    return store::write({node.get()});
+  }()};
+};
+
+struct assignment_prototype : base_prototype::impl<assignment_prototype> {
   [[nodiscard]] std::string_view name() const override { return "assign"; }
 
   inline static const store::data_vector _data{[]() {
@@ -20,7 +32,7 @@ struct assignment_prototype : statement_prototype::impl<assignment_prototype> {
   }()};
 };
 
-struct use_global_prototype : statement_prototype::impl<use_global_prototype> {
+struct use_global_prototype : base_prototype::impl<use_global_prototype> {
   [[nodiscard]] std::string_view name() const override { return "global"; }
 
   inline static const store::data_vector _data{[]() {
@@ -33,7 +45,7 @@ struct use_global_prototype : statement_prototype::impl<use_global_prototype> {
 
 template <ast::system_procedure _proc>
 struct system_procedure_prototype
-    : statement_prototype::impl<system_procedure_prototype<_proc>> {
+    : base_prototype::impl<system_procedure_prototype<_proc>> {
   [[nodiscard]] std::string_view name() const override {
     return name_for(_proc);
   }
@@ -52,7 +64,7 @@ struct system_procedure_prototype
   }()};
 };
 
-struct if_prototype : statement_prototype::impl<if_prototype> {
+struct if_prototype : base_prototype::impl<if_prototype> {
   [[nodiscard]] std::string_view name() const override { return "if"; }
 
   inline static const store::data_vector _data{[]() {
@@ -64,7 +76,7 @@ struct if_prototype : statement_prototype::impl<if_prototype> {
   }()};
 };
 
-struct if_else_prototype : statement_prototype::impl<if_else_prototype> {
+struct if_else_prototype : base_prototype::impl<if_else_prototype> {
   [[nodiscard]] std::string_view name() const override { return "if-else"; }
 
   inline static const store::data_vector _data{[]() {
@@ -76,7 +88,7 @@ struct if_else_prototype : statement_prototype::impl<if_else_prototype> {
   }()};
 };
 
-struct while_prototype : statement_prototype::impl<while_prototype> {
+struct while_prototype : base_prototype::impl<while_prototype> {
   [[nodiscard]] std::string_view name() const override { return "while"; }
 
   inline static const store::data_vector _data{[]() {
@@ -88,7 +100,7 @@ struct while_prototype : statement_prototype::impl<while_prototype> {
   }()};
 };
 
-struct for_prototype : statement_prototype::impl<for_prototype> {
+struct for_prototype : base_prototype::impl<for_prototype> {
   [[nodiscard]] std::string_view name() const override { return "for"; }
 
   inline static const store::data_vector _data{[]() {
@@ -102,7 +114,7 @@ struct for_prototype : statement_prototype::impl<for_prototype> {
   }()};
 };
 
-struct break_prototype : statement_prototype::impl<break_prototype> {
+struct break_prototype : base_prototype::impl<break_prototype> {
   [[nodiscard]] std::string_view name() const override { return "break"; }
 
   inline static const store::data_vector _data{[]() {
@@ -111,7 +123,7 @@ struct break_prototype : statement_prototype::impl<break_prototype> {
   }()};
 };
 
-struct continue_prototype : statement_prototype::impl<continue_prototype> {
+struct continue_prototype : base_prototype::impl<continue_prototype> {
   [[nodiscard]] std::string_view name() const override { return "continue"; }
 
   inline static const store::data_vector _data{[]() {
@@ -121,7 +133,7 @@ struct continue_prototype : statement_prototype::impl<continue_prototype> {
 };
 
 template <ast::unary_op _op>
-struct unary_prototype : expression_prototype::impl<unary_prototype<_op>> {
+struct unary_prototype : base_prototype::impl<unary_prototype<_op>> {
   [[nodiscard]] std::string_view name() const override {
     return symbol_for(_op);
   }
@@ -135,7 +147,7 @@ struct unary_prototype : expression_prototype::impl<unary_prototype<_op>> {
 };
 
 template <ast::binary_op _op>
-struct binary_prototype : expression_prototype::impl<binary_prototype<_op>> {
+struct binary_prototype : base_prototype::impl<binary_prototype<_op>> {
   [[nodiscard]] std::string_view name() const override {
     return symbol_for(_op);
   }
@@ -153,7 +165,7 @@ struct binary_prototype : expression_prototype::impl<binary_prototype<_op>> {
 
 template <ast::system_function _func>
 struct system_function_prototype
-    : expression_prototype::impl<system_function_prototype<_func>> {
+    : base_prototype::impl<system_function_prototype<_func>> {
   [[nodiscard]] std::string_view name() const override {
     return name_for(_func);
   }

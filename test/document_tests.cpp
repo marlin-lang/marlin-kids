@@ -1,19 +1,19 @@
 #include <catch2/catch.hpp>
 
 #include "expression_inserter.hpp"
+#include "line_inserter.hpp"
 #include "source_selection.hpp"
-#include "statement_inserter.hpp"
 
 template <typename prototype>
 auto insert_prototype(marlin::control::statement_inserter &inserter) {
   return inserter.insert(
-      marlin::control::statement_prototypes[prototype::index()]->data());
+      marlin::control::prototypes[prototype::index()]->data());
 }
 
 template <typename prototype>
 auto insert_prototype(marlin::control::expression_inserter &inserter) {
   return inserter.insert(
-      marlin::control::expression_prototypes[prototype::index()]->data());
+      marlin::control::prototypes[prototype::index()]->data());
 }
 
 TEST_CASE("control::Insert statement in empty document", "[control]") {
@@ -189,7 +189,7 @@ TEST_CASE("control::Remove expressions", "[control]") {
 
   marlin::control::source_selection literal_selection{document, {2, 7}};
   REQUIRE(literal_selection.is_literal());
-  auto removal = literal_selection.remove_from_document();
+  auto removal = std::move(literal_selection).remove_from_document();
   REQUIRE(removal.has_value());
   auto remove_update = *std::move(removal);
   REQUIRE(remove_update.source == "@condition");
