@@ -44,27 +44,27 @@ CGSize characterSizeWithAttributes(NSDictionary<NSAttributedStringKey, id>* attr
 }
 
 void applyTheme(id<Theme> theme, NSMutableAttributedString* attributedString, NSRange range,
-                const std::vector<marlin::control::highlight_token>& highlights) {
+                const std::vector<marlin::format::highlight_token>& highlights) {
   [attributedString setAttributes:theme.allAttrs range:range];
   for (const auto& highlight : highlights) {
     auto highlight_range = NSMakeRange(range.location + highlight.offset, highlight.length);
     switch (highlight.type) {
-      case marlin::control::highlight_token_type::keyword:
+      case marlin::format::highlight_token_type::keyword:
         [attributedString setAttributes:theme.keywordAttrs range:highlight_range];
         break;
-      case marlin::control::highlight_token_type::op:
+      case marlin::format::highlight_token_type::op:
         [attributedString setAttributes:theme.opAttrs range:highlight_range];
         break;
-      case marlin::control::highlight_token_type::boolean:
+      case marlin::format::highlight_token_type::boolean:
         [attributedString setAttributes:theme.booleanAttrs range:highlight_range];
         break;
-      case marlin::control::highlight_token_type::number:
+      case marlin::format::highlight_token_type::number:
         [attributedString setAttributes:theme.numberAttrs range:highlight_range];
         break;
-      case marlin::control::highlight_token_type::string:
+      case marlin::format::highlight_token_type::string:
         [attributedString setAttributes:theme.stringAttrs range:highlight_range];
         break;
-      case marlin::control::highlight_token_type::placeholder:
+      case marlin::format::highlight_token_type::placeholder:
         [attributedString setAttributes:theme.placeholderAttrs range:highlight_range];
         break;
     }

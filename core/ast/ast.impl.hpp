@@ -74,7 +74,7 @@ struct use_global : base::impl<use_global, subnode::concrete>, statement {
 
 struct system_procedure_call
     : base::impl<system_procedure_call, subnode::vector>,
-      expression {
+      statement {
   system_procedure proc;
 
   [[nodiscard]] decltype(auto) arguments() { return get_subnode<0>(); }

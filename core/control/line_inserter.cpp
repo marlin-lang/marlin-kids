@@ -11,7 +11,7 @@ std::optional<source_update> line_inserter<node_type>::insert(
 
   std::optional<store::reconstruction_result> try_result;
   try {
-    try_result = store::read(data, *_loc->parent, _loc->line);
+    try_result = store::read(data, _loc->line, *_loc->parent);
   } catch (const store::read_error&) {
     // Leave try_result as std::nullopt
   }
@@ -29,8 +29,7 @@ std::optional<source_update> line_inserter<node_type>::insert(
     _doc->update_source_line_after_node(*_loc->block[_loc->index], line_offset);
 
     return source_update{{{_loc->line, 1}, {_loc->line, 1}},
-                         std::move(result.source),
-                         std::move(result.highlights)};
+                         std::move(result.display)};
   } else {
     return std::nullopt;
   }

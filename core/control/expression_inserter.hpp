@@ -6,6 +6,7 @@
 #include "ast.hpp"
 #include "byte_span.hpp"
 #include "document.hpp"
+#include "formatter.hpp"
 #include "prototypes.hpp"
 
 namespace marlin::control {
@@ -35,30 +36,8 @@ struct expression_inserter {
     }
   }
 
- private:
-  auto insert_literal(ast::node node) const&& {
-    auto data{store::write({node.get()})};
-    return std::move(*this).insert(data);
-  }
-
-  auto insert_number(std::string_view value) const&& {
-    auto node = ast::make<ast::number_literal>(std::string{std::move(value)});
-    return std::move(*this).insert_literal(std::move(node));
-  }
-
-  auto insert_string(std::string_view value) const&& {
-    auto node = ast::make<ast::string_literal>(std::string{std::move(value)});
-    return std::move(*this).insert_literal(std::move(node));
-  }
-
-  auto insert_identifier(std::string_view value) const&& {
-    auto node = ast::make<ast::identifier>(std::string{std::move(value)});
-    return std::move(*this).insert_literal(std::move(node));
-  }
-
- public:
-  auto insert_literal(literal_data_type type,
-                      std::string_view literal) const&& {
+  source_update insert_literal(literal_data_type type,
+                               std::string_view literal) const&& {
     switch (type) {
       case literal_data_type::variable_name:
         [[fallthrough]];
@@ -81,6 +60,31 @@ struct expression_inserter {
   // Special constructor for constructing from source_selection
   expression_inserter(document& doc, source_loc loc, ast::base& selection)
       : _doc{&doc}, _loc{loc}, _selection{&selection} {}
+
+  source_update insert_number(std::string_view value) const&& {
+    auto node = ast::make<ast::number_literal>(std::string{std::move(value)});
+    return std::move(*this).insert_literal(std::move(node));
+  }
+
+  source_update insert_string(std::string_view value) const&& {
+    auto node = ast::make<ast::string_literal>(std::string{std::move(value)});
+    return std::move(*this).insert_literal(std::move(node));
+  }
+
+  source_update insert_identifier(std::string_view value) const&& {
+    auto node = ast::make<ast::identifier>(std::string{std::move(value)});
+    return std::move(*this).insert_literal(std::move(node));
+  }
+
+  source_update insert_literal(ast::node node) const&& {
+    auto original{_selection->source_code_range};
+
+    format::formatter formatter;
+    auto display{formatter.format(node, *_selection)};
+
+    _doc->replace_expression(*_selection, std::move(node));
+    return source_update{original, std::move(display)};
+  }
 };
 
 }  // namespace marlin::control

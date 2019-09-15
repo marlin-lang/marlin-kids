@@ -21,8 +21,7 @@
 
   if (auto initialData = [self.document initialize]) {
     [self.sourceView insertStatementsBeforeLine:1
-                                     withSource:std::move(initialData->source)
-                                     highlights:std::move(initialData->highlights)
+                                    withDisplay:std::move(initialData->display)
                                    isInitialize:true];
     [self.lineNumberView setNeedsDisplay];
   }

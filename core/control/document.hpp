@@ -42,10 +42,9 @@ struct document {
     try {
       auto result{store::read(data, store::type_expectation::program)};
       assert(result.nodes.size() == 1);
-      return std::make_pair(document{std::move(result.nodes[0])},
-                            source_update{{{1, 1}, {1, 1}},
-                                          std::move(result.source),
-                                          std::move(result.highlights)});
+      return std::make_pair(
+          document{std::move(result.nodes[0])},
+          source_update{{{1, 1}, {1, 1}}, std::move(result.display)});
     } catch (const store::read_error&) {
       return std::nullopt;
     }

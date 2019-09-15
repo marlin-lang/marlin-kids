@@ -38,18 +38,14 @@ NS_ASSUME_NONNULL_BEGIN
 
 @property(readonly) CGFloat lineHeight;
 
-- (void)insertStatementsBeforeLine:(NSUInteger)line
-                        withSource:(std::string_view)source
-                        highlights:(std::vector<marlin::control::highlight_token>)highlights;
+- (void)insertStatementsBeforeLine:(NSUInteger)line withDisplay:(marlin::format::display)display;
 
 - (void)insertStatementsBeforeLine:(NSUInteger)line
-                        withSource:(std::string_view)source
-                        highlights:(std::vector<marlin::control::highlight_token>)highlights
+                       withDisplay:(marlin::format::display)display
                       isInitialize:(bool)isInitialize;
 
 - (void)updateExpressionInSourceRange:(marlin::source_range)sourceRange
-                           withSource:(std::string_view)source
-                           highlights:(std::vector<marlin::control::highlight_token>)highlights;
+                          withDisplay:(marlin::format::display)display;
 
 - (void)removeStatementFromLine:(NSUInteger)from toLine:(NSUInteger)to;
 

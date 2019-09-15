@@ -1,6 +1,6 @@
 #import <Types.h>
 
-#import "source_update.hpp"
+#import "formatter.hpp"
 
 @protocol Theme <NSObject>
 
@@ -41,4 +41,4 @@ void setCurrentTheme(id<Theme> theme);
 CGSize characterSizeWithAttributes(NSDictionary<NSAttributedStringKey, id>* attrs);
 
 void applyTheme(id<Theme> theme, NSMutableAttributedString* attributedString, NSRange range,
-                const std::vector<marlin::control::highlight_token>& highlights);
+                const std::vector<marlin::format::highlight_token>& highlights);

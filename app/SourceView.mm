@@ -62,18 +62,12 @@ struct DocumentGetter {
   _inserter = {{self}};
 }
 
-- (void)insertStatementsBeforeLine:(NSUInteger)line
-                        withSource:(std::string_view)source
-                        highlights:(std::vector<marlin::control::highlight_token>)highlights {
-  [self insertStatementsBeforeLine:line
-                        withSource:source
-                        highlights:std::move(highlights)
-                      isInitialize:false];
+- (void)insertStatementsBeforeLine:(NSUInteger)line withDisplay:(marlin::format::display)display {
+  [self insertStatementsBeforeLine:line withDisplay:std::move(display) isInitialize:false];
 }
 
 - (void)insertStatementsBeforeLine:(NSUInteger)line
-                        withSource:(std::string_view)source
-                        highlights:(std::vector<marlin::control::highlight_token>)highlights
+                       withDisplay:(marlin::format::display)display
                       isInitialize:(bool)isInitialize {
   auto lineIndex = line - 1;
   if (lineIndex > _strings.count) {
@@ -82,14 +76,15 @@ struct DocumentGetter {
   size_t lineBegin = 0;
   CGFloat maxLineWidth = 0;
   size_t highlightIndex = 0;
-  while (lineBegin < source.size()) {
-    auto lineEnd = source.find_first_of('\n', lineBegin);
-    auto str_view = std::string_view{&source[lineBegin], lineEnd - lineBegin};
+  while (lineBegin < display.source.size()) {
+    auto lineEnd = display.source.find_first_of('\n', lineBegin);
+    std::string_view str_view{&display.source[lineBegin], lineEnd - lineBegin};
     auto str =
         [[NSMutableAttributedString alloc] initWithString:[NSString stringWithStringView:str_view]];
-    std::vector<marlin::control::highlight_token> lineHighlights;
-    while (highlightIndex < highlights.size() && highlights[highlightIndex].offset < lineEnd) {
-      auto highlight = highlights[highlightIndex];
+    std::vector<marlin::format::highlight_token> lineHighlights;
+    while (highlightIndex < display.highlights.size() &&
+           display.highlights[highlightIndex].offset < lineEnd) {
+      auto highlight = display.highlights[highlightIndex];
       highlight.offset -= lineBegin;
       lineHighlights.push_back(highlight);
       ++highlightIndex;
@@ -110,16 +105,15 @@ struct DocumentGetter {
 }
 
 - (void)updateExpressionInSourceRange:(marlin::source_range)sourceRange
-                           withSource:(std::string_view)source
-                           highlights:(std::vector<marlin::control::highlight_token>)highlights {
+                          withDisplay:(marlin::format::display)display {
   NSAssert(sourceRange.begin.line == sourceRange.end.line, @"Only support one line expression");
   NSAssert(sourceRange.begin.line > 0 && sourceRange.begin.line <= _strings.count, @"");
   NSMutableAttributedString* str = [_strings objectAtIndex:sourceRange.begin.line - 1];
   auto range =
       NSMakeRange(sourceRange.begin.column - 1, sourceRange.end.column - sourceRange.begin.column);
-  [str replaceCharactersInRange:range withString:[NSString stringWithStringView:source]];
-  range.length = source.size();
-  applyTheme(currentTheme(), str, range, highlights);
+  [str replaceCharactersInRange:range withString:[NSString stringWithStringView:display.source]];
+  range.length = display.source.size();
+  applyTheme(currentTheme(), str, range, display.highlights);
   auto width = str.size.width + _insets.left + _insets.right;
   if (width > self.frame.size.width) {
     self.frame =
@@ -190,12 +184,10 @@ struct DocumentGetter {
                   ofType:(EditorType)type {
   [self.delegate dismissEditorViewControllerForSourceView:self];
   if (string.length > 0 && _selection.has_value()) {
-    auto inserter = (*std::exchange(_selection, std::nullopt)).as_expression_inserter();
-    if (auto update = std::move(inserter).insert_literal(type, string.stringView)) {
-      [self updateExpressionInSourceRange:update->range
-                               withSource:std::move(update->source)
-                               highlights:std::move(update->highlights)];
-    }
+    auto update = (*std::exchange(_selection, std::nullopt))
+                      .as_expression_inserter()
+                      .insert_literal(type, string.stringView);
+    [self updateExpressionInSourceRange:update.range withDisplay:std::move(update.display)];
   } else {
     _selection.reset();
   }
@@ -398,13 +390,10 @@ struct DocumentGetter {
   NSAssert(_inserter.has_value(), @"");
   if (auto update = _inserter->insert(type, data.dataView)) {
     if (type == marlin::control::pasteboard_t::expression) {
-      [self updateExpressionInSourceRange:update->range
-                               withSource:std::move(update->source)
-                               highlights:std::move(update->highlights)];
+      [self updateExpressionInSourceRange:update->range withDisplay:std::move(update->display)];
     } else {
       [self insertStatementsBeforeLine:update->range.begin.line
-                            withSource:std::move(update->source)
-                            highlights:std::move(update->highlights)];
+                           withDisplay:std::move(update->display)];
     }
     [self removeDraggingSelection];
     return YES;

@@ -13,4 +13,5 @@ target_compile_features(${PROJECT_NAME}.core.store PUBLIC cxx_std_17)
 
 target_include_directories(${PROJECT_NAME}.core.store INTERFACE .)
 
-target_link_libraries(${PROJECT_NAME}.core.store ${PROJECT_NAME}.core.ast)
+target_link_libraries(${PROJECT_NAME}.core.store ${PROJECT_NAME}.core.ast
+                      ${PROJECT_NAME}.core.format)

@@ -7,6 +7,7 @@
 #include "ast.hpp"
 #include "document.hpp"
 #include "expression_inserter.hpp"
+#include "formatter.hpp"
 #include "placeholders.hpp"
 #include "store.hpp"
 
@@ -201,27 +202,22 @@ struct source_selection {
                      static_cast<ptrdiff_t>(statement_range.end.line)};
     _doc->update_source_line_after_node(*_selection, line_offset);
     _doc->remove_line(*_selection);
-    return source_update{statement_range, "", {}};
+    return source_update{statement_range, {"", {}}};
   }
 
   source_update remove_expression() const {
     assert(_selection->has_parent());
 
+    auto original_range{_selection->source_code_range};
+
     auto placeholder_name{placeholder::get_replacing_node(*_selection)};
-    std::string source{"@"};
-    source.append(placeholder_name);
     auto placeholder{ast::make<ast::expression_placeholder>(
         std::string{std::move(placeholder_name)})};
-    auto original_range{_selection->source_code_range};
-    placeholder->source_code_range = {
-        original_range.begin,
-        {original_range.begin.line,
-         original_range.begin.column + source.size()}};
+
+    format::formatter formatter;
+    auto display{formatter.format(placeholder, *_selection)};
     _doc->replace_expression(*_selection, std::move(placeholder));
-    return source_update{
-        original_range,
-        std::move(source),
-        {highlight_token{highlight_token_type::placeholder, 0, source.size()}}};
+    return source_update{original_range, std::move(display)};
   }
 };
 

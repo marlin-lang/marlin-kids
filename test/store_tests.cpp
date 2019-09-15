@@ -17,7 +17,7 @@ TEST_CASE("store::Write and read expressions", "[store]") {
 
   auto result{marlin::store::read(data)};
   REQUIRE(result.nodes.size() == 1);
-  REQUIRE(result.source == "@left * @right");
+  REQUIRE(result.display.source == "@left * @right");
 
   auto& left = *result.nodes[0]->as<marlin::ast::binary_expression>().left();
 
@@ -29,7 +29,7 @@ TEST_CASE("store::Write and read expressions", "[store]") {
 
   auto inner_result{marlin::store::read(inner_data, left)};
   REQUIRE(inner_result.nodes.size() == 1);
-  REQUIRE(inner_result.source == "(@left + @right)");
+  REQUIRE(inner_result.display.source == "(@left + @right)");
 }
 
 TEST_CASE("store::Write and read statements", "[store]") {
@@ -61,9 +61,9 @@ TEST_CASE("store::Write and read statements", "[store]") {
       std::move(inner_if_statements), std::vector<marlin::ast::node>{})};
 
   auto data{marlin::store::write({assignment.get(), inner_if.get()})};
-  auto result{marlin::store::read(data, outer_if_ref, 3)};
+  auto result{marlin::store::read(data, 3, outer_if_ref)};
   REQUIRE(result.nodes.size() == 2);
-  REQUIRE(result.source ==
+  REQUIRE(result.display.source ==
           "    needs_print = 0;\n"
           "    if (needs_print) {\n"
           "      print(\"\\\"Hello, world!\\\"\");\n"
@@ -80,7 +80,7 @@ TEST_CASE("store::Report type error", "[store]") {
 
   auto result{marlin::store::read(data)};
   REQUIRE(result.nodes.size() == 1);
-  REQUIRE(result.source == "@left * @right");
+  REQUIRE(result.display.source == "@left * @right");
 
   auto& left = *result.nodes[0]->as<marlin::ast::binary_expression>().left();
 

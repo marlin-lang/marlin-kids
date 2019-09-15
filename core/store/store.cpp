@@ -7,9 +7,8 @@
 
 namespace marlin::store {
 
-[[nodiscard]] reconstruction_result read(data_view data,
-                                         const ast::base& parent,
-                                         size_t start_line) {
+[[nodiscard]] reconstruction_result read(data_view data, size_t start_line,
+                                         const ast::base& parent) {
   auto* s{base_store::corresponding_store(data)};
 
   type_expectation type;
@@ -19,14 +18,10 @@ namespace marlin::store {
     type = type_expectation::statement;
   }
 
-  size_t indent{0};
-  const ast::base* curr_parent{&parent};
-  while (curr_parent->has_parent()) {
-    indent++;
-    curr_parent = &curr_parent->parent();
-  }
-
-  return s->read(std::move(data), {start_line, 1}, indent, type);
+  auto nodes{s->read(std::move(data), type)};
+  format::formatter formatter;
+  auto display{formatter.format(nodes, start_line, &parent)};
+  return {std::move(nodes), std::move(display)};
 }
 
 [[nodiscard]] reconstruction_result read(data_view data,
@@ -44,28 +39,20 @@ namespace marlin::store {
     type = type_expectation::rvalue;
   }
 
-  size_t paren_precedence{0};
-  if (target.has_parent()) {
-    if (target.parent().is<ast::unary_expression>()) {
-      paren_precedence = ast::unary_op_precedence;
-    } else if (target.parent().is<ast::binary_expression>()) {
-      auto& binary{target.parent().as<ast::binary_expression>()};
-      if (&target == binary.left().get()) {
-        paren_precedence = precedence_for(binary.op) - 1;
-      } else {
-        paren_precedence = precedence_for(binary.op);
-      }
-    }
-  }
-
-  return s->read(std::move(data), target.source_code_range.begin, 0, type,
-                 paren_precedence);
+  auto nodes{s->read(std::move(data), type)};
+  format::formatter formatter;
+  auto display{formatter.format(nodes, target)};
+  return {std::move(nodes), std::move(display)};
 }
 
 [[nodiscard]] reconstruction_result read(data_view data,
                                          type_expectation type) {
   auto* s{base_store::corresponding_store(data)};
-  return s->read(std::move(data), {1, 1}, 0, type);
+
+  auto nodes{s->read(std::move(data), type)};
+  format::formatter formatter;
+  auto display{formatter.format(nodes)};
+  return {std::move(nodes), std::move(display)};
 }
 
 [[nodiscard]] data_vector write(std::vector<const ast::base*> nodes) {

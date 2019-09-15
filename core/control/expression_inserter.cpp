@@ -21,8 +21,7 @@ std::optional<source_update> expression_inserter::insert(
 
     auto original{_selection->source_code_range};
     _doc->replace_expression(*_selection, std::move(result.nodes[0]));
-    return source_update{original, std::move(result.source),
-                         std::move(result.highlights)};
+    return source_update{original, std::move(result.display)};
   } else {
     return std::nullopt;
   }

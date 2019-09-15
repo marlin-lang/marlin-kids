@@ -5,6 +5,7 @@
 #include <vector>
 
 #include "byte_span.hpp"
+#include "formatter.hpp"
 #include "node.hpp"
 #include "store_errors.hpp"
 #include "utils.hpp"
@@ -21,34 +22,12 @@ enum struct type_expectation {
   any
 };
 
-enum struct highlight_token_type {
-  keyword,
-  op,
-  boolean,
-  number,
-  string,
-  placeholder
-};
-
-struct highlight_token {
-  highlight_token_type type;
-  size_t offset;
-  size_t length;
-
-  highlight_token(highlight_token_type _type, size_t _offset, size_t _length)
-      : type(_type), offset(_offset), length(_length) {}
-};
-
 struct reconstruction_result {
   std::vector<ast::node> nodes;
-  std::string source;
-  std::vector<highlight_token> highlights;
+  format::display display;
 
-  reconstruction_result(std::vector<ast::node> _nodes, std::string _source,
-                        std::vector<highlight_token> _highlights)
-      : nodes{std::move(_nodes)},
-        source{std::move(_source)},
-        highlights{std::move(_highlights)} {}
+  reconstruction_result(std::vector<ast::node> _nodes, format::display _display)
+      : nodes{std::move(_nodes)}, display{std::move(_display)} {}
 };
 
 struct base_store {
@@ -67,9 +46,8 @@ struct base_store {
   virtual ~base_store() noexcept = default;
 
   virtual bool recognize(data_view data) = 0;
-  virtual reconstruction_result read(data_view data, source_loc start,
-                                     size_t indent, type_expectation type,
-                                     size_t paren_precedence = 0) = 0;
+  virtual std::vector<ast::node> read(data_view data,
+                                      type_expectation type) = 0;
 
   // The latest version also needs to implement
   // data_vector write(std::vector<const ast::base*> node);

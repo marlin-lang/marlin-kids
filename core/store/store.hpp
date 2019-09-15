@@ -5,9 +5,8 @@
 
 namespace marlin::store {
 
-[[nodiscard]] reconstruction_result read(data_view data,
-                                         const ast::base& parent,
-                                         size_t start_line);
+[[nodiscard]] reconstruction_result read(data_view data, size_t start_line,
+                                         const ast::base& parent);
 
 [[nodiscard]] reconstruction_result read(data_view data,
                                          const ast::base& target);

@@ -4,24 +4,17 @@
 #include <string>
 #include <vector>
 
-#include "store.hpp"
+#include "formatter.hpp"
 #include "utils.hpp"
 
 namespace marlin::control {
 
-using highlight_token_type = store::highlight_token_type;
-using highlight_token = store::highlight_token;
-
 struct source_update {
   source_range range;
-  std::string source;
-  std::vector<highlight_token> highlights;
+  format::display display;
 
-  source_update(source_range _range, std::string _source,
-                std::vector<highlight_token> _highlights)
-      : range{_range},
-        source{std::move(_source)},
-        highlights{std::move(_highlights)} {}
+  source_update(source_range _range, format::display _display)
+      : range{_range}, display{std::move(_display)} {}
 };
 
 }  // namespace marlin::control
