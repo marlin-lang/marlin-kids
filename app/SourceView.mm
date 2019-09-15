@@ -177,17 +177,40 @@ struct DocumentGetter {
   [self setNeedsDisplayInRect:self.bounds];
 }
 
-#pragma mark - EditorViewControllerDelegate implementation
+#pragma mark - EditorViewControllerDelegate
 
 - (void)viewController:(EditorViewController*)vc
     finishEditWithString:(NSString*)string
                   ofType:(EditorType)type {
-  [self.delegate dismissEditorViewControllerForSourceView:self];
+  [self.delegate dismissPopoverViewControllerForSourceView:self];
   if (string.length > 0 && _selection.has_value()) {
     auto update = (*std::exchange(_selection, std::nullopt))
                       .as_expression_inserter()
                       .insert_literal(type, string.stringView);
     [self updateExpressionInSourceRange:update.range withDisplay:std::move(update.display)];
+  } else {
+    _selection.reset();
+  }
+}
+
+#pragma mark - FunctionViewControllerDelegate
+
+- (void)viewController:(FunctionViewController*)vc
+    finishEditingWithName:(NSString*)name
+               parameters:(NSArray<NSString*>*)parameters {
+  [self.delegate dismissPopoverViewControllerForSourceView:self];
+  if (name.length > 0 && _selection.has_value()) {
+    marlin::control::source_selection::function_signature signature;
+    signature.name = name.stringView;
+    for (NSString* parameter in parameters) {
+      if (parameter.length > 0) {
+        signature.parameters.emplace_back(parameter.stringView);
+      }
+    }
+    if (auto update =
+            (*std::exchange(_selection, std::nullopt)).replace_function_signature(signature)) {
+      [self updateExpressionInSourceRange:update->range withDisplay:std::move(update->display)];
+    }
   } else {
     _selection.reset();
   }
@@ -316,13 +339,15 @@ struct DocumentGetter {
   _selection = {self.dataSource.document.content, [self sourceLocationOfPoint:location]};
   [self setNeedsDisplayInRect:self.bounds];
 
+  auto rect = [self rectOfSourceRange:_selection->get_range()];
   if (_selection->is_literal()) {
-    auto rect = [self rectOfSourceRange:_selection->get_range()];
     auto [type, data] = _selection->get_literal_content();
     [self.delegate showEditorViewControllerForSourceView:self
                                                 fromRect:rect
                                                 withType:type
                                                     data:data];
+  } else if (_selection->is_function_signature()) {
+    [self.delegate showFunctionViewControllerForSourceView:self fromRect:rect];
   }
 }
 
@@ -378,7 +403,7 @@ struct DocumentGetter {
 
 - (BOOL)draggingPasteboardOfType:(marlin::control::pasteboard_t)type toLocation:(CGPoint)location {
   if (_selection.has_value()) {
-    [self.delegate dismissEditorViewControllerForSourceView:self];
+    [self.delegate dismissPopoverViewControllerForSourceView:self];
     _selection.reset();
   }
 

@@ -7,6 +7,7 @@
 
 #import "Document.h"
 #import "EditorViewController.h"
+#import "FunctionViewController.h"
 
 NS_ASSUME_NONNULL_BEGIN
 
@@ -27,11 +28,14 @@ NS_ASSUME_NONNULL_BEGIN
                                      withType:(marlin::control::literal_data_type)type
                                          data:(std::string_view)data;
 
-- (void)dismissEditorViewControllerForSourceView:(SourceView *)view;
+- (void)showFunctionViewControllerForSourceView:(SourceView *)view
+                                       fromRect:(CGRect)rect;
+
+- (void)dismissPopoverViewControllerForSourceView:(SourceView *)view;
 
 @end
 
-@interface SourceView : View <EditorViewControllerDelegate>
+@interface SourceView : View <EditorViewControllerDelegate, FunctionViewControllerDelegate>
 
 @property(weak) id<SourceViewDataSource> dataSource;
 @property(weak) id<SourceViewDelegate> delegate;
