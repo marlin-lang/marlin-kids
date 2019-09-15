@@ -59,8 +59,7 @@
     writeItemsAtIndexPaths:(NSSet<NSIndexPath *> *)indexPaths
               toPasteboard:(NSPasteboard *)pasteboard {
   auto item = indexPaths.anyObject.item;
-  [self addRecentForCurrentCategoryItem:item];
-  auto &prototype = self.model.current_category_prototype(item);
+  auto &prototype = self.model.use_current_category_prototype(item);
   NSData *data = [NSData dataWithDataView:prototype.data];
   return [pasteboard setData:data forType:pasteboardOfType(prototype.type)];
 }

@@ -13,7 +13,6 @@ using ToolIndex = std::pair<NSInteger, NSInteger>;
 @implementation ToolboxViewController {
   marlin::control::toolbox _model;
 
-  std::vector<ToolIndex> _recentTools;
   __weak Button *_currentCategoryButton;
 }
 
@@ -31,21 +30,6 @@ using ToolIndex = std::pair<NSInteger, NSInteger>;
   return _model;
 }
 
-- (void)addRecentForCurrentCategoryItem:(NSInteger)item {
-  if (_model.current_category().type != marlin::control::toolbox::category::category_type::recent) {
-    auto it = std::find(_recentTools.begin(), _recentTools.end(),
-                        ToolIndex{_currentCategoryButton.tag, item});
-    if (it != _recentTools.end()) {
-      _recentTools.erase(it);
-    }
-    _recentTools.insert(_recentTools.begin(), {_currentCategoryButton.tag, item});
-    constexpr size_t maxRecentTools = 20;
-    if (_recentTools.size() > maxRecentTools) {
-      _recentTools.erase(_recentTools.begin() + maxRecentTools, _recentTools.end());
-    }
-  }
-}
-
 - (void)sectionButtonPressed:(Button *)sender {
   [self setCurrentcategoryButton:sender];
   [self.toolboxView reloadData];
@@ -54,7 +38,7 @@ using ToolIndex = std::pair<NSInteger, NSInteger>;
 - (void)createButtonWithTitle:(NSString *)title tag:(NSInteger)tag {
   auto button = [self buttonWithTitle:title action:@selector(sectionButtonPressed:)];
   button.tag = tag;
-  if (tag == 0) {
+  if (tag == _model.current_category_index()) {
     [self setCurrentcategoryButton:button];
   }
   button.translatesAutoresizingMaskIntoConstraints = NO;

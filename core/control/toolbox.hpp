@@ -92,7 +92,7 @@ struct toolbox {
     auto& category{current_category()};
     switch (category.type) {
       case category::category_type::recent:
-        return 0;
+        return _recent.size();
       case category::category_type::shared:
         return category.prototypes->size();
       case category::category_type::local:
@@ -100,15 +100,14 @@ struct toolbox {
     }
   }
 
-  const prototype& current_category_prototype(size_t index) const {
+  [[nodiscard]] const prototype& current_category_prototype(
+      size_t index) const {
     assert(index < current_category_size());
 
     auto& category{current_category()};
     switch (category.type) {
       case category::category_type::recent:
-        // TODO: to be implemented
-        assert(false);
-        throw std::exception{};
+        return *_recent[index];
       case category::category_type::shared:
         return (*category.prototypes)[index];
       case category::category_type::local:
@@ -118,8 +117,11 @@ struct toolbox {
     }
   }
 
+  const prototype& use_current_category_prototype(size_t index);
+
  private:
   std::vector<category> _categories;
+  std::vector<const prototype*> _recent;
 
   // Default value: the first category that is not recent
   size_t _current_category{1};
