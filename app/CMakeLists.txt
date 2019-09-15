@@ -3,6 +3,7 @@ set(HEADERS
     DrawHelper.h
     EditorViewController.h
     ExecuteViewController.h
+    FunctionViewController.h
     LineNumberView.h
     MessageViewController.h
     NSData+DataView.h
@@ -19,6 +20,7 @@ set(SOURCES
     Document.mm
     EditorViewController.mm
     ExecuteViewController.mm
+    FunctionViewController.mm
     LineNumberView.mm
     MessageViewController.mm
     NSData+DataView.mm
@@ -70,9 +72,11 @@ else(IOS)
       mac/AppDelegate.h
       mac/MacDocument.h
       mac/MacEditorViewController.h
+      mac/MacFunctionViewController.h
       mac/MacSourceView.h
       mac/MacSourceViewController.h
       mac/MacToolboxViewController.h
+      mac/ParameterItem.h
       mac/ToolboxItem.h
       mac/WindowController.h)
 
@@ -81,10 +85,12 @@ else(IOS)
       mac/AppDelegate.mm
       mac/MacDocument.mm
       mac/MacEditorViewController.mm
+      mac/MacFunctionViewController.mm
       mac/MacSourceView.mm
       mac/MacSourceViewController.mm
       mac/MacToolboxViewController.mm
       mac/main.mm
+      mac/ParameterItem.mm
       mac/ToolboxItem.mm
       mac/WindowController.mm)
 
@@ -93,6 +99,7 @@ else(IOS)
       mac/marlin.entitlements
       mac/Assets.xcassets
       mac/Base.lproj/Main.storyboard
+      mac/ParameterItem.xib
       mac/ToolboxItem.xib)
 
   set(TARGET_NAME ${PROJECT_NAME}.app.mac)

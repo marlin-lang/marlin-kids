@@ -3,6 +3,7 @@
 #import "LineNumberView.h"
 #import "NSObject+Casting.h"
 #import "NSString+StringView.h"
+#import "MacFunctionViewController.h"
 
 @interface MacSourceViewController () <SourceViewDelegate>
 
@@ -48,15 +49,14 @@
 }
 
 - (void)showEditorViewControllerForSourceView:(SourceView *)view
-                                     fromRect:(NSRect)rect
+                                     fromRect:(CGRect)rect
                                      withType:(marlin::control::literal_data_type)type
                                          data:(std::string_view)data {
-  auto *storyboard = [NSStoryboard storyboardWithName:@"Main" bundle:nil];
   EditorViewController *vc =
-      [storyboard instantiateControllerWithIdentifier:@"EditorViewController"];
+      [self.storyboard instantiateControllerWithIdentifier:@"EditorViewController"];
   vc.delegate = view;
 
-  _popover = [NSPopover new];
+  _popover = [[NSPopover alloc] init];
   _popover.behavior = NSPopoverBehaviorTransient;
   _popover.contentViewController = vc;
   [_popover showRelativeToRect:rect ofView:view preferredEdge:NSMinYEdge];
@@ -68,6 +68,22 @@
 - (void)dismissEditorViewControllerForSourceView:(SourceView *)view {
   [_popover close];
   _popover = nil;
+}
+
+- (void)showFunctionViewControllerForSourceView:(SourceView *)view
+                                       fromRect:(CGRect)rect {
+    MacFunctionViewController *vc =
+    [self.storyboard instantiateControllerWithIdentifier:@"FunctionViewController"];
+    vc.delegate = view;
+    _popover = [[NSPopover alloc] init];
+    _popover.behavior = NSPopoverBehaviorTransient;
+    _popover.contentViewController = vc;
+    [_popover showRelativeToRect:rect ofView:view preferredEdge:NSMinYEdge];
+}
+
+- (void)dismissPopoverViewControllerForSourceView:(SourceView *)view {
+    [_popover close];
+    _popover = nil;
 }
 
 @end

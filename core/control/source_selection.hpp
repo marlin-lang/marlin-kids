@@ -135,8 +135,6 @@ struct source_selection {
   }
 
   [[nodiscard]] expression_inserter as_expression_inserter() const&& {
-    // For now only placeholders and literals can be directly overridden
-    assert(is_literal());
     return {*_doc, _loc, *_selection};
   }
 
