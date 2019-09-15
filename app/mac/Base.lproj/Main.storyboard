@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <document type="com.apple.InterfaceBuilder3.Cocoa.Storyboard.XIB" version="3.0" toolsVersion="14490.70" targetRuntime="MacOSX.Cocoa" propertyAccessControl="none" useAutolayout="YES">
     <dependencies>
+        <deployment identifier="macosx"/>
         <plugIn identifier="com.apple.InterfaceBuilder.CocoaPlugin" version="14490.70"/>
         <plugIn identifier="com.apple.WebKit2IBPlugin" version="14490.70"/>
         <capability name="documents saved in the Xcode 8 format" minToolsVersion="8.0"/>
@@ -722,7 +723,7 @@
                             </stackView>
                             <scrollView wantsLayer="YES" borderType="none" autohidesScrollers="YES" horizontalLineScroll="10" horizontalPageScroll="10" verticalLineScroll="10" verticalPageScroll="10" hasHorizontalScroller="NO" usesPredominantAxisScrolling="NO" translatesAutoresizingMaskIntoConstraints="NO" id="wbY-Zg-fxj">
                                 <rect key="frame" x="50" y="0.0" width="150" height="800"/>
-                                <clipView key="contentView" id="FEP-Ru-flX">
+                                <clipView key="contentView" drawsBackground="NO" id="FEP-Ru-flX">
                                     <rect key="frame" x="0.0" y="0.0" width="150" height="800"/>
                                     <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                                     <subviews>
@@ -740,11 +741,11 @@
                                         </collectionView>
                                     </subviews>
                                 </clipView>
-                                <scroller key="horizontalScroller" hidden="YES" wantsLayer="YES" verticalHuggingPriority="750" horizontal="YES" id="K8I-7U-qSm">
+                                <scroller key="horizontalScroller" hidden="YES" verticalHuggingPriority="750" horizontal="YES" id="K8I-7U-qSm">
                                     <rect key="frame" x="-100" y="-100" width="153" height="16"/>
                                     <autoresizingMask key="autoresizingMask"/>
                                 </scroller>
-                                <scroller key="verticalScroller" hidden="YES" wantsLayer="YES" verticalHuggingPriority="750" horizontal="NO" id="tbz-Ok-mcr">
+                                <scroller key="verticalScroller" hidden="YES" verticalHuggingPriority="750" horizontal="NO" id="tbz-Ok-mcr">
                                     <rect key="frame" x="133" y="1" width="16" height="798"/>
                                     <autoresizingMask key="autoresizingMask"/>
                                 </scroller>
@@ -760,7 +761,7 @@
                         </constraints>
                     </view>
                     <connections>
-                        <outlet property="stackView" destination="pgd-Zu-sqa" id="hxU-Wk-meW"/>
+                        <outlet property="categoryStackView" destination="pgd-Zu-sqa" id="FFw-Ed-1Ql"/>
                         <outlet property="toolboxView" destination="yLj-xX-h7d" id="K7Q-g7-Y0N"/>
                     </connections>
                 </viewController>
@@ -788,11 +789,11 @@
                                         </view>
                                     </subviews>
                                 </clipView>
-                                <scroller key="horizontalScroller" wantsLayer="YES" verticalHuggingPriority="750" horizontal="YES" id="be9-s5-3wn">
+                                <scroller key="horizontalScroller" verticalHuggingPriority="750" horizontal="YES" id="be9-s5-3wn">
                                     <rect key="frame" x="1" y="783" width="798" height="16"/>
                                     <autoresizingMask key="autoresizingMask"/>
                                 </scroller>
-                                <scroller key="verticalScroller" wantsLayer="YES" verticalHuggingPriority="750" doubleValue="1" horizontal="NO" id="jjx-Ns-iBs">
+                                <scroller key="verticalScroller" verticalHuggingPriority="750" doubleValue="1" horizontal="NO" id="jjx-Ns-iBs">
                                     <rect key="frame" x="783" y="1" width="16" height="798"/>
                                     <autoresizingMask key="autoresizingMask"/>
                                 </scroller>
@@ -958,11 +959,11 @@ DQ
                                 <constraints>
                                     <constraint firstAttribute="height" constant="100" id="RTw-kb-PCH"/>
                                 </constraints>
-                                <scroller key="horizontalScroller" hidden="YES" wantsLayer="YES" verticalHuggingPriority="750" horizontal="YES" id="lQF-Gc-awC">
+                                <scroller key="horizontalScroller" hidden="YES" verticalHuggingPriority="750" horizontal="YES" id="lQF-Gc-awC">
                                     <rect key="frame" x="-100" y="-100" width="240" height="16"/>
                                     <autoresizingMask key="autoresizingMask"/>
                                 </scroller>
-                                <scroller key="verticalScroller" wantsLayer="YES" verticalHuggingPriority="750" horizontal="NO" id="V3o-NK-0oa">
+                                <scroller key="verticalScroller" verticalHuggingPriority="750" horizontal="NO" id="V3o-NK-0oa">
                                     <rect key="frame" x="1007" y="1" width="16" height="98"/>
                                     <autoresizingMask key="autoresizingMask"/>
                                 </scroller>

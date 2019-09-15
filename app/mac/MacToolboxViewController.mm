@@ -1,11 +1,8 @@
 #import "MacToolboxViewController.h"
 
-#include "toolbox_model.hpp"
-
 #import "NSData+DataView.h"
 #import "NSObject+Casting.h"
 #import "NSString+StringView.h"
-#import "Pasteboard.h"
 #import "ToolboxItem.h"
 
 @interface MacToolboxViewController () <NSCollectionViewDataSource>
@@ -38,16 +35,14 @@
 
 - (NSInteger)collectionView:(CollectionView *)collectionView
      numberOfItemsInSection:(NSInteger)section {
-  return marlin::control::toolbox_model::items[self.currentSection].size();
+  return self.sizeOfCurrentCategory;
 }
 
 - (NSCollectionViewItem *)collectionView:(NSCollectionView *)collectionView
      itemForRepresentedObjectAtIndexPath:(NSIndexPath *)indexPath {
   ToolboxItem *item = [collectionView makeItemWithIdentifier:@"ToolboxItem" forIndexPath:indexPath];
   item.textField.stringValue =
-      [NSString stringWithStringView:marlin::control::toolbox_model::prototype_at(
-                                         self.currentSection, indexPath.item)
-                                         .name()];
+      [NSString stringWithStringView:[self prototypeOfCurrentCategoryItem:indexPath.item].name()];
   return item;
 }
 
@@ -63,13 +58,9 @@
     writeItemsAtIndexPaths:(NSSet<NSIndexPath *> *)indexPaths
               toPasteboard:(NSPasteboard *)pasteboard {
   auto item = indexPaths.anyObject.item;
-  NSData *data = [NSData
-      dataWithDataView:marlin::control::toolbox_model::prototype_at(self.currentSection, item)
-                           .data()];
-  return [pasteboard
-      setData:data
-      forType:pasteboardOfType(
-                  marlin::control::toolbox_model::items[self.currentSection][item].type)];
+  [self addRecentForCurrentCategoryItem:item];
+  NSData *data = [NSData dataWithDataView:[self prototypeOfCurrentCategoryItem:item].data()];
+  return [pasteboard setData:data forType:[self pasteboardTypeOfCurrentCategoryItem:item]];
 }
 
 @end

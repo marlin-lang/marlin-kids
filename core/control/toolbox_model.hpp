@@ -18,7 +18,7 @@ struct toolbox_model {
     pasteboard_t type;
   };
 
-  inline static const std::array<std::string_view, 4> sections{
+  inline static const std::array<std::string_view, 4> categories{
       "control flow", "statement", "expression", "function"};
 
   inline static const std::array items{
@@ -104,10 +104,10 @@ struct toolbox_model {
       },
   };
 
-  static_assert(sections.size() == items.size());
+  static_assert(categories.size() == items.size());
 
-  static const base_prototype& prototype_at(size_t section, size_t item) {
-    return *prototypes[items[section][item].index];
+  static const base_prototype& prototype_at(size_t category, size_t item) {
+    return *prototypes[items[category][item].index];
   }
 };
 

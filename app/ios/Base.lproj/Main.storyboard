@@ -178,7 +178,7 @@
                     </view>
                     <navigationItem key="navigationItem" id="X3U-hc-DDw"/>
                     <connections>
-                        <outlet property="stackView" destination="YEE-xm-fu7" id="1dA-eQ-LDw"/>
+                        <outlet property="categoryStackView" destination="YEE-xm-fu7" id="vuS-DM-e2u"/>
                         <outlet property="toolboxView" destination="8Zw-Xw-HNi" id="7s8-on-dkN"/>
                     </connections>
                 </viewController>

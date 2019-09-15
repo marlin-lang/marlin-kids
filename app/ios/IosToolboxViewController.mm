@@ -1,10 +1,7 @@
 #import "IosToolboxViewController.h"
 
-#include "toolbox_model.hpp"
-
 #import "NSData+DataView.h"
 #import "NSString+StringView.h"
-#import "Pasteboard.h"
 #import "ToolboxCell.h"
 
 @interface IosToolboxViewController () <UICollectionViewDataSource, UICollectionViewDragDelegate>
@@ -34,16 +31,15 @@
 
 - (NSInteger)collectionView:(UICollectionView *)collectionView
      numberOfItemsInSection:(NSInteger)section {
-  return marlin::control::toolbox_model::items[self.currentSection].size();
+  return self.sizeOfCurrentCategory;
 }
 
 - (UICollectionViewCell *)collectionView:(UICollectionView *)collectionView
                   cellForItemAtIndexPath:(NSIndexPath *)indexPath {
   ToolboxCell *cell = [collectionView dequeueReusableCellWithReuseIdentifier:@"ToolboxCell"
                                                                 forIndexPath:indexPath];
-  cell.textLabel.text = [NSString stringWithStringView:marlin::control::toolbox_model::prototype_at(
-                                                           self.currentSection, indexPath.item)
-                                                           .name()];
+  cell.textLabel.text =
+      [NSString stringWithStringView:[self prototypeOfCurrentCategoryItem:indexPath.item].name()];
   return cell;
 }
 
@@ -53,12 +49,10 @@
              itemsForBeginningDragSession:(id<UIDragSession>)session
                               atIndexPath:(NSIndexPath *)indexPath {
   auto item = indexPath.item;
-  auto *data = [NSData
-      dataWithDataView:marlin::control::toolbox_model::prototype_at(self.currentSection, item)
-                           .data()];
+  [self addRecentForCurrentCategoryItem:item];
+  auto *data = [NSData dataWithDataView:[self prototypeOfCurrentCategoryItem:item].data()];
   auto *itemProvider = [[NSItemProvider alloc] init];
-  auto *typeIdentifier =
-      pasteboardOfType(marlin::control::toolbox_model::items[self.currentSection][item].type);
+  auto *typeIdentifier = [self pasteboardTypeOfCurrentCategoryItem:item];
   [itemProvider
       registerDataRepresentationForTypeIdentifier:typeIdentifier
                                        visibility:NSItemProviderRepresentationVisibilityAll
