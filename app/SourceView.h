@@ -3,10 +3,9 @@
 #include <string_view>
 #include <vector>
 
-#include "expression_inserter.hpp"
-#include "line_inserter.hpp"
-#include "source_selection.hpp"
+#include "toolbox_model.hpp"
 
+#import "Document.h"
 #import "EditorViewController.h"
 
 NS_ASSUME_NONNULL_BEGIN
@@ -15,12 +14,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 @protocol SourceViewDataSource
 
-- (marlin::control::source_selection)sourceView:(SourceView *)view
-                                    selectionAt:(marlin::source_loc)loc;
-
-- (marlin::control::block_inserter)blockInserterForSourceView:(SourceView *)view;
-- (marlin::control::statement_inserter)statementInserterForSourceView:(SourceView *)view;
-- (marlin::control::expression_inserter)expressionInserterForSourceView:(SourceView *)view;
+- (Document *_Nullable)document;
 
 @end
 
@@ -71,13 +65,9 @@ NS_ASSUME_NONNULL_BEGIN
 
 - (void)clearErrors;
 
-- (BOOL)draggingBlockAtLocation:(CGPoint)location;
-- (BOOL)draggingStatementAtLocation:(CGPoint)location;
-- (BOOL)draggingExpressionAtLocation:(CGPoint)location;
+- (BOOL)draggingPasteboardOfType:(marlin::control::pasteboard_t)type toLocation:(CGPoint)location;
 
-- (BOOL)performBlockDropForData:(NSData *)data;
-- (BOOL)performStatementDropForData:(NSData *)data;
-- (BOOL)performExpressionDropForData:(NSData *)data;
+- (BOOL)dropPasteboardOfType:(marlin::control::pasteboard_t)type withData:(NSData *)data;
 
 - (void)removeDraggingSelection;
 
