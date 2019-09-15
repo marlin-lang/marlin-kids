@@ -1,6 +1,6 @@
 #import "Types.h"
 
-#include "toolbox_model.hpp"
+#include "toolbox.hpp"
 
 NS_ASSUME_NONNULL_BEGIN
 
@@ -8,11 +8,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 @property(weak) IBOutlet CollectionView *toolboxView;
 
-@property(readonly) NSInteger currentCategory;
-
-- (NSInteger)sizeOfCurrentCategory;
-- (const marlin::control::base_prototype &)prototypeOfCurrentCategoryItem:(NSInteger)item;
-- (NSString *)pasteboardTypeOfCurrentCategoryItem:(NSInteger)item;
+- (marlin::control::toolbox &)model;
 
 - (void)addRecentForCurrentCategoryItem:(NSInteger)item;
 

@@ -8,4 +8,6 @@
 
 - (instancetype)initWithStringView:(std::string_view)sv;
 
+- (std::string_view)stringView;
+
 @end

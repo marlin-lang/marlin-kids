@@ -10,4 +10,8 @@
   return [self initWithBytes:sv.data() length:sv.size() encoding:NSUTF8StringEncoding];
 }
 
+- (std::string_view)stringView {
+  return {self.UTF8String, self.length};
+}
+
 @end

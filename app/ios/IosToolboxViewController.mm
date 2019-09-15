@@ -39,7 +39,7 @@
   ToolboxCell *cell = [collectionView dequeueReusableCellWithReuseIdentifier:@"ToolboxCell"
                                                                 forIndexPath:indexPath];
   cell.textLabel.text =
-      [NSString stringWithStringView:[self prototypeOfCurrentCategoryItem:indexPath.item].name()];
+      [NSString stringWithStringView:self.model.current_category_prototype(indexPath.item).name];
   return cell;
 }
 
@@ -50,9 +50,10 @@
                               atIndexPath:(NSIndexPath *)indexPath {
   auto item = indexPath.item;
   [self addRecentForCurrentCategoryItem:item];
-  auto *data = [NSData dataWithDataView:[self prototypeOfCurrentCategoryItem:item].data()];
+  auto &prototype = self.model.current_category_prototype(item);
+  auto *data = [NSData dataWithDataView:prototype.data];
   auto *itemProvider = [[NSItemProvider alloc] init];
-  auto *typeIdentifier = [self pasteboardTypeOfCurrentCategoryItem:item];
+  auto *typeIdentifier = pasteboardOfType(prototype.type);
   [itemProvider
       registerDataRepresentationForTypeIdentifier:typeIdentifier
                                        visibility:NSItemProviderRepresentationVisibilityAll

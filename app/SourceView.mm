@@ -3,7 +3,6 @@
 #include <optional>
 #include <vector>
 
-#include "prototype_definition.hpp"
 #include "source_inserters.hpp"
 #include "source_selection.hpp"
 
@@ -192,7 +191,7 @@ struct DocumentGetter {
   [self.delegate dismissEditorViewControllerForSourceView:self];
   if (string.length > 0 && _selection.has_value()) {
     auto inserter = (*std::exchange(_selection, std::nullopt)).as_expression_inserter();
-    if (auto update = std::move(inserter).insert_literal(type, std::string{string.UTF8String})) {
+    if (auto update = std::move(inserter).insert_literal(type, string.stringView)) {
       [self updateExpressionInSourceRange:update->range
                                withSource:std::move(update->source)
                                highlights:std::move(update->highlights)];

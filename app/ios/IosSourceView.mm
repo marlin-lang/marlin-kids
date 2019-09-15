@@ -1,7 +1,5 @@
 #import "IosSourceView.h"
 
-#include "toolbox_model.hpp"
-
 #import "NSString+StringView.h"
 #import "Pasteboard.h"
 

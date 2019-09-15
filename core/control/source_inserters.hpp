@@ -5,7 +5,7 @@
 
 #include "expression_inserter.hpp"
 #include "line_inserter.hpp"
-#include "toolbox_model.hpp"
+#include "prototypes.hpp"
 
 namespace marlin::control {
 

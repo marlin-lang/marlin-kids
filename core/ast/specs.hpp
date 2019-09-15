@@ -7,7 +7,7 @@
 
 namespace marlin::ast {
 
-enum class click_state : uint8_t { begin, move, end };
+enum struct click_state : uint8_t { begin, move, end };
 
 static constexpr std::array<std::string_view, 3> click_state_name_map{
     "touch_begin" /* begin */, "touch_move" /* move */, "touch_end" /* end */
@@ -24,7 +24,7 @@ static constexpr std::array<std::string_view, 3> click_state_display_map{
   return click_state_display_map[static_cast<size_t>(proc)];
 }
 
-enum class unary_op : uint8_t { negative };
+enum struct unary_op : uint8_t { negative };
 
 static constexpr std::array<std::string_view, 1> unary_op_symbol_map{
     "-" /* negative */
@@ -37,7 +37,7 @@ static constexpr std::array<std::string_view, 1> unary_op_symbol_map{
 // Using JavaScript precedence for now
 static constexpr size_t unary_op_precedence{14UL};
 
-enum class binary_op : uint8_t {
+enum struct binary_op : uint8_t {
   add,
   subtract,
   multiply,
@@ -76,7 +76,7 @@ static constexpr std::array binary_op_precedence_map{
   return binary_op_precedence_map[static_cast<uint8_t>(op)];
 }
 
-enum class system_procedure : size_t {
+enum struct system_procedure : size_t {
   sleep,
   print,
   draw_line,
@@ -118,7 +118,7 @@ static constexpr std::array<std::string_view, 9> system_procedure_display_map{
   return system_procedure_display_map[static_cast<size_t>(proc)];
 }
 
-enum class system_function : size_t { range1, range2, range3, time, sin, cos };
+enum struct system_function : size_t { range1, range2, range3, time, sin, cos };
 
 static constexpr std::array<std::string_view, 6> system_function_name_map{
     "range1" /* range1 */, "range2" /* range2 */, "range3" /* range3 */,

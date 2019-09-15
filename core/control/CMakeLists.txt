@@ -2,12 +2,11 @@ set(HEADERS
     document.hpp
     expression_inserter.hpp
     placeholders.hpp
-    prototype_definition.hpp
     prototypes.hpp
     source_update.hpp
     source_selection.hpp
     line_inserter.hpp
-    toolbox_model.hpp)
+    toolbox.hpp)
 
 set(SOURCES expression_inserter.cpp line_inserter.cpp)
 

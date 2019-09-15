@@ -4,17 +4,16 @@
 #include "line_inserter.hpp"
 #include "source_selection.hpp"
 
-template <typename prototype>
-auto insert_prototype(marlin::control::statement_inserter &inserter) {
-  return inserter.insert(
-      marlin::control::prototypes[prototype::index()]->data());
-}
-
-template <typename prototype>
-auto insert_prototype(marlin::control::expression_inserter inserter) {
-  return std::move(inserter).insert(
-      marlin::control::prototypes[prototype::index()]->data());
-}
+const auto assignment_prototype{marlin::control::assignment_prototype()};
+const auto if_prototype{marlin::control::if_prototype()};
+const auto negative_prototype{
+    marlin::control::unary_prototype(marlin::ast::unary_op::negative)};
+const auto add_prototype{
+    marlin::control::binary_prototype(marlin::ast::binary_op::add)};
+const auto subtract_prototype{
+    marlin::control::binary_prototype(marlin::ast::binary_op::subtract)};
+const auto multiply_prototype{
+    marlin::control::binary_prototype(marlin::ast::binary_op::multiply)};
 
 TEST_CASE("control::Insert statement in empty document", "[control]") {
   auto result = marlin::control::document::make_document();
@@ -32,8 +31,7 @@ TEST_CASE("control::Insert statement in empty document", "[control]") {
 
   inserter.move_to_line(2);
   REQUIRE(inserter.can_insert());
-  auto update =
-      insert_prototype<marlin::control::assignment_prototype>(inserter);
+  auto update = inserter.insert(assignment_prototype.data);
   REQUIRE(update.has_value());
   CHECK(update->source == "  @variable = @value;\n");
 }
@@ -45,7 +43,7 @@ TEST_CASE("control::Insert number literal at placeholder", "[control]") {
   marlin::control::statement_inserter inserter{document};
   inserter.move_to_line(2);
   REQUIRE(inserter.can_insert());
-  insert_prototype<marlin::control::assignment_prototype>(inserter);
+  inserter.insert(assignment_prototype.data);
 
   marlin::control::source_selection selection{document, {2, 20}};
   REQUIRE(selection.is_literal());
@@ -73,7 +71,7 @@ TEST_CASE("control::Insert string literal at placeholder", "[control]") {
   marlin::control::statement_inserter inserter{document};
   inserter.move_to_line(2);
   REQUIRE(inserter.can_insert());
-  insert_prototype<marlin::control::assignment_prototype>(inserter);
+  inserter.insert(assignment_prototype.data);
 
   marlin::control::source_selection selection{document, {2, 20}};
   REQUIRE(selection.is_literal());
@@ -101,14 +99,12 @@ TEST_CASE("control::Insert binary expressions at placeholder", "[control]") {
   marlin::control::statement_inserter inserter{document};
   inserter.move_to_line(2);
   REQUIRE(inserter.can_insert());
-  insert_prototype<marlin::control::assignment_prototype>(inserter);
+  inserter.insert(assignment_prototype.data);
 
   marlin::control::expression_inserter expr_inserter{document};
   expr_inserter.move_to_loc({2, 20});
   REQUIRE(expr_inserter.can_insert());
-  auto update = insert_prototype<
-      marlin::control::binary_prototype<marlin::ast::binary_op::add>>(
-      std::move(expr_inserter));
+  auto update = std::move(expr_inserter).insert(add_prototype.data);
   REQUIRE(update.has_value());
   REQUIRE(update->source == "@left + @right");
   REQUIRE(update->range.begin.line == 2);
@@ -119,9 +115,7 @@ TEST_CASE("control::Insert binary expressions at placeholder", "[control]") {
   expr_inserter = {document};
   expr_inserter.move_to_loc({2, 27});
   REQUIRE(expr_inserter.can_insert());
-  auto inner_update = insert_prototype<
-      marlin::control::binary_prototype<marlin::ast::binary_op::subtract>>(
-      std::move(expr_inserter));
+  auto inner_update = std::move(expr_inserter).insert(subtract_prototype.data);
   REQUIRE(inner_update.has_value());
   REQUIRE(inner_update->source == "(@left - @right)");
   REQUIRE(inner_update->range.begin.line == 2);
@@ -141,14 +135,12 @@ TEST_CASE("control::Insert unary expressions at placeholder", "[control]") {
   marlin::control::statement_inserter inserter{document};
   inserter.move_to_line(2);
   REQUIRE(inserter.can_insert());
-  insert_prototype<marlin::control::assignment_prototype>(inserter);
+  inserter.insert(assignment_prototype.data);
 
   marlin::control::expression_inserter expr_inserter{document};
   expr_inserter.move_to_loc({2, 20});
   REQUIRE(expr_inserter.can_insert());
-  auto update = insert_prototype<
-      marlin::control::unary_prototype<marlin::ast::unary_op::negative>>(
-      std::move(expr_inserter));
+  auto update = std::move(expr_inserter).insert(negative_prototype.data);
   REQUIRE(update.has_value());
   REQUIRE(update->source == "-@argument");
   REQUIRE(update->range.begin.line == 2);
@@ -159,9 +151,7 @@ TEST_CASE("control::Insert unary expressions at placeholder", "[control]") {
   expr_inserter = {document};
   expr_inserter.move_to_loc({2, 19});
   REQUIRE(expr_inserter.can_insert());
-  auto inner_update = insert_prototype<
-      marlin::control::binary_prototype<marlin::ast::binary_op::multiply>>(
-      std::move(expr_inserter));
+  auto inner_update = std::move(expr_inserter).insert(multiply_prototype.data);
   REQUIRE(inner_update.has_value());
   REQUIRE(inner_update->source == "(@left * @right)");
   REQUIRE(inner_update->range.begin.line == 2);
@@ -181,7 +171,7 @@ TEST_CASE("control::Remove expressions", "[control]") {
   marlin::control::statement_inserter inserter{document};
   inserter.move_to_line(2);
   REQUIRE(inserter.can_insert());
-  insert_prototype<marlin::control::if_prototype>(inserter);
+  inserter.insert(if_prototype.data);
 
   marlin::control::expression_inserter expr_inserter{document};
   expr_inserter.move_to_loc({2, 7});

@@ -1,6 +1,6 @@
 #import <Foundation/Foundation.h>
 
-#include "toolbox_model.hpp"
+#include "prototypes.hpp"
 
 inline NSString* pasteboardOfType(marlin::control::pasteboard_t type) {
   switch (type) {

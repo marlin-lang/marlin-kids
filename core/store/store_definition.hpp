@@ -11,7 +11,7 @@
 
 namespace marlin::store {
 
-enum class type_expectation {
+enum struct type_expectation {
   program,
   block,
   function_signature,
@@ -21,7 +21,7 @@ enum class type_expectation {
   any
 };
 
-enum class highlight_token_type {
+enum struct highlight_token_type {
   keyword,
   op,
   boolean,

@@ -1,7 +1,6 @@
 #import "ToolboxViewController.h"
 
 #import "NSString+StringView.h"
-#import "Pasteboard.h"
 
 using ToolIndex = std::pair<NSInteger, NSInteger>;
 
@@ -12,6 +11,8 @@ using ToolIndex = std::pair<NSInteger, NSInteger>;
 @end
 
 @implementation ToolboxViewController {
+  marlin::control::toolbox _model;
+
   std::vector<ToolIndex> _recentTools;
   __weak Button *_currentCategoryButton;
 }
@@ -19,47 +20,19 @@ using ToolIndex = std::pair<NSInteger, NSInteger>;
 - (void)viewDidLoad {
   [super viewDidLoad];
 
-  [self createButtonWithTitle:@"r" tag:-1];
-  auto index = 0;
-  for (auto &section : marlin::control::toolbox_model::categories) {
-    auto title = [NSString stringWithStringView:{section.data(), 1}];
-    [self createButtonWithTitle:title tag:index++];
+  for (size_t i = 0; i < _model.categories().size(); i++) {
+    auto &category = _model.categories()[i];
+    auto title = [NSString stringWithStringView:{category.name.data(), 1}];
+    [self createButtonWithTitle:title tag:i];
   }
 }
 
-- (NSInteger)currentCategory {
-  return _currentCategoryButton.tag;
-}
-
-- (NSInteger)sizeOfCurrentCategory {
-  if (_currentCategoryButton.tag >= 0) {
-    return marlin::control::toolbox_model::items[_currentCategoryButton.tag].size();
-  } else {
-    return _recentTools.size();
-  }
-}
-
-- (const marlin::control::base_prototype &)prototypeOfCurrentCategoryItem:(NSInteger)item {
-  if (_currentCategoryButton.tag >= 0) {
-    return marlin::control::toolbox_model::prototype_at(_currentCategoryButton.tag, item);
-  } else {
-    auto [c, i] = _recentTools[item];
-    return marlin::control::toolbox_model::prototype_at(c, i);
-  }
-}
-
-- (NSString *)pasteboardTypeOfCurrentCategoryItem:(NSInteger)item {
-  if (_currentCategoryButton.tag >= 0) {
-    return pasteboardOfType(
-        marlin::control::toolbox_model::items[_currentCategoryButton.tag][item].type);
-  } else {
-    auto [c, i] = _recentTools[item];
-    return pasteboardOfType(marlin::control::toolbox_model::items[c][i].type);
-  }
+- (marlin::control::toolbox &)model {
+  return _model;
 }
 
 - (void)addRecentForCurrentCategoryItem:(NSInteger)item {
-  if (_currentCategoryButton.tag >= 0) {
+  if (_model.current_category().type != marlin::control::toolbox::category::category_type::recent) {
     auto it = std::find(_recentTools.begin(), _recentTools.end(),
                         ToolIndex{_currentCategoryButton.tag, item});
     if (it != _recentTools.end()) {
@@ -98,6 +71,7 @@ using ToolIndex = std::pair<NSInteger, NSInteger>;
 - (void)setCurrentcategoryButton:(Button *)button {
   [self setBackgroundColor:Color.whiteColor forButton:_currentCategoryButton];
   _currentCategoryButton = button;
+  _model.set_current_category(button.tag);
   [self setBackgroundColor:[Color colorWithWhite:0.92 alpha:1] forButton:_currentCategoryButton];
 }
 

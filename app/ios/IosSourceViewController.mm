@@ -1,7 +1,5 @@
 #import "IosSourceViewController.h"
 
-#include "toolbox_model.hpp"
-
 #import "IosSourceView.h"
 #import "LineNumberView.h"
 #import "NSData+DataView.h"

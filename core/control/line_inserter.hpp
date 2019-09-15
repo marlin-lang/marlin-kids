@@ -8,6 +8,8 @@
 
 namespace marlin::control {
 
+static constexpr size_t indent_space_count = 2;
+
 enum struct line_node_type : uint8_t { block = 0, statement = 1 };
 
 template <line_node_type node_type>

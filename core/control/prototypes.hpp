@@ -2,208 +2,160 @@
 #define marlin_control_prototypes_hpp
 
 #include "placeholders.hpp"
-#include "prototype_definition.hpp"
 #include "store.hpp"
 
 namespace marlin::control {
 
-struct function_prototype : base_prototype::impl<function_prototype> {
-  [[nodiscard]] std::string_view name() const override { return "function"; }
+enum struct pasteboard_t : uint8_t { block, statement, expression };
 
-  inline static const store::data_vector _data{[]() {
-    const auto node{ast::make<ast::function>(
-        ast::make<ast::function_placeholder>(
-            std::string{placeholder::get<ast::function>(0)}),
-        std::vector<ast::node>{})};
-    return store::write({node.get()});
-  }()};
+struct prototype {
+  std::string_view name;
+  pasteboard_t type;
+  store::data_vector data;
+
+  prototype(std::string_view _name, pasteboard_t _type,
+            store::data_vector _data)
+      : name{std::move(_name)}, type{_type}, data{std::move(_data)} {}
 };
 
-struct assignment_prototype : base_prototype::impl<assignment_prototype> {
-  [[nodiscard]] std::string_view name() const override { return "assign"; }
+inline prototype function_prototype() {
+  return {"function", pasteboard_t::block, []() {
+            const auto node{ast::make<ast::function>(
+                ast::make<ast::function_placeholder>(
+                    std::string{placeholder::get<ast::function>(0)}),
+                std::vector<ast::node>{})};
+            return store::write({node.get()});
+          }()};
+}
 
-  inline static const store::data_vector _data{[]() {
-    const auto node{ast::make<ast::assignment>(
-        ast::make<ast::variable_placeholder>(
-            std::string{placeholder::get<ast::assignment>(0)}),
-        ast::make<ast::expression_placeholder>(
-            std::string{placeholder::get<ast::assignment>(1)}))};
-    return store::write({node.get()});
-  }()};
-};
+inline prototype assignment_prototype() {
+  return {"assign", pasteboard_t::statement, []() {
+            const auto node{ast::make<ast::assignment>(
+                ast::make<ast::variable_placeholder>(
+                    std::string{placeholder::get<ast::assignment>(0)}),
+                ast::make<ast::expression_placeholder>(
+                    std::string{placeholder::get<ast::assignment>(1)}))};
+            return store::write({node.get()});
+          }()};
+}
 
-struct use_global_prototype : base_prototype::impl<use_global_prototype> {
-  [[nodiscard]] std::string_view name() const override { return "global"; }
+inline prototype use_global_prototype() {
+  return {"global", pasteboard_t::statement, []() {
+            const auto node{
+                ast::make<ast::use_global>(ast::make<ast::variable_placeholder>(
+                    std::string{placeholder::get<ast::use_global>(0)}))};
+            return store::write({node.get()});
+          }()};
+}
 
-  inline static const store::data_vector _data{[]() {
-    const auto node{
-        ast::make<ast::use_global>(ast::make<ast::variable_placeholder>(
-            std::string{placeholder::get<ast::use_global>(0)}))};
-    return store::write({node.get()});
-  }()};
-};
+inline prototype system_procedure_prototype(ast::system_procedure proc) {
+  return {
+      name_for(proc), pasteboard_t::statement, [&proc]() {
+        const auto& placeholders{placeholder_system_procedure_args::args(proc)};
+        std::vector<ast::node> args;
+        args.reserve(placeholders.size());
+        for (const auto& arg : placeholders) {
+          args.emplace_back(
+              ast::make<ast::expression_placeholder>(std::string{arg}));
+        }
+        const auto node{
+            ast::make<ast::system_procedure_call>(proc, std::move(args))};
+        return store::write({node.get()});
+      }()};
+}
 
-template <ast::system_procedure _proc>
-struct system_procedure_prototype
-    : base_prototype::impl<system_procedure_prototype<_proc>> {
-  [[nodiscard]] std::string_view name() const override {
-    return name_for(_proc);
-  }
+inline prototype if_prototype() {
+  return {"if", pasteboard_t::statement, []() {
+            const auto node{ast::make<ast::if_statement>(
+                ast::make<ast::expression_placeholder>(
+                    std::string{placeholder::get<ast::if_statement>(0)}),
+                std::vector<ast::node>{})};
+            return store::write({node.get()});
+          }()};
+}
 
-  inline static const store::data_vector _data{[]() {
-    const auto& placeholders{placeholder_system_procedure_args::args(_proc)};
-    std::vector<ast::node> args;
-    args.reserve(placeholders.size());
-    for (const auto& arg : placeholders) {
-      args.emplace_back(
-          ast::make<ast::expression_placeholder>(std::string{arg}));
-    }
-    const auto node{
-        ast::make<ast::system_procedure_call>(_proc, std::move(args))};
-    return store::write({node.get()});
-  }()};
-};
+inline prototype if_else_prototype() {
+  return {"if-else", pasteboard_t::statement, []() {
+            const auto node{ast::make<ast::if_else_statement>(
+                ast::make<ast::expression_placeholder>(
+                    std::string{placeholder::get<ast::if_else_statement>(0)}),
+                std::vector<ast::node>{}, std::vector<ast::node>{})};
+            return store::write({node.get()});
+          }()};
+}
 
-struct if_prototype : base_prototype::impl<if_prototype> {
-  [[nodiscard]] std::string_view name() const override { return "if"; }
+inline prototype while_prototype() {
+  return {"while", pasteboard_t::statement, []() {
+            const auto node{ast::make<ast::while_statement>(
+                ast::make<ast::expression_placeholder>(
+                    std::string{placeholder::get<ast::while_statement>(0)}),
+                std::vector<ast::node>{})};
+            return store::write({node.get()});
+          }()};
+}
 
-  inline static const store::data_vector _data{[]() {
-    const auto node{ast::make<ast::if_statement>(
-        ast::make<ast::expression_placeholder>(
-            std::string{placeholder::get<ast::if_statement>(0)}),
-        std::vector<ast::node>{})};
-    return store::write({node.get()});
-  }()};
-};
+inline prototype for_prototype() {
+  return {"for", pasteboard_t::statement, []() {
+            const auto node{ast::make<ast::for_statement>(
+                ast::make<ast::variable_placeholder>(
+                    std::string{placeholder::get<ast::for_statement>(0)}),
+                ast::make<ast::expression_placeholder>(
+                    std::string{placeholder::get<ast::for_statement>(1)}),
+                std::vector<ast::node>{})};
+            return store::write({node.get()});
+          }()};
+}
 
-struct if_else_prototype : base_prototype::impl<if_else_prototype> {
-  [[nodiscard]] std::string_view name() const override { return "if-else"; }
+inline prototype break_prototype() {
+  return {"break", pasteboard_t::statement, []() {
+            const auto node{ast::make<ast::break_statement>()};
+            return store::write({node.get()});
+          }()};
+}
 
-  inline static const store::data_vector _data{[]() {
-    const auto node{ast::make<ast::if_else_statement>(
-        ast::make<ast::expression_placeholder>(
-            std::string{placeholder::get<ast::if_else_statement>(0)}),
-        std::vector<ast::node>{}, std::vector<ast::node>{})};
-    return store::write({node.get()});
-  }()};
-};
+inline prototype continue_prototype() {
+  return {"continue", pasteboard_t::statement, []() {
+            const auto node{ast::make<ast::continue_statement>()};
+            return store::write({node.get()});
+          }()};
+}
 
-struct while_prototype : base_prototype::impl<while_prototype> {
-  [[nodiscard]] std::string_view name() const override { return "while"; }
+inline prototype unary_prototype(ast::unary_op op) {
+  return {symbol_for(op), pasteboard_t::expression, [&op]() {
+            const auto node{ast::make<ast::unary_expression>(
+                op, ast::make<ast::expression_placeholder>(std::string{
+                        placeholder::get<ast::unary_expression>(0)}))};
+            return store::write({node.get()});
+          }()};
+}
 
-  inline static const store::data_vector _data{[]() {
-    const auto node{ast::make<ast::while_statement>(
-        ast::make<ast::expression_placeholder>(
-            std::string{placeholder::get<ast::while_statement>(0)}),
-        std::vector<ast::node>{})};
-    return store::write({node.get()});
-  }()};
-};
+inline prototype binary_prototype(ast::binary_op op) {
+  return {symbol_for(op), pasteboard_t::expression, [&op]() {
+            const auto node{ast::make<ast::binary_expression>(
+                ast::make<ast::expression_placeholder>(
+                    std::string{placeholder::get<ast::binary_expression>(0)}),
+                op,
+                ast::make<ast::expression_placeholder>(
+                    std::string{placeholder::get<ast::binary_expression>(1)}))};
+            return store::write({node.get()});
+          }()};
+}
 
-struct for_prototype : base_prototype::impl<for_prototype> {
-  [[nodiscard]] std::string_view name() const override { return "for"; }
-
-  inline static const store::data_vector _data{[]() {
-    const auto node{ast::make<ast::for_statement>(
-        ast::make<ast::variable_placeholder>(
-            std::string{placeholder::get<ast::for_statement>(0)}),
-        ast::make<ast::expression_placeholder>(
-            std::string{placeholder::get<ast::for_statement>(1)}),
-        std::vector<ast::node>{})};
-    return store::write({node.get()});
-  }()};
-};
-
-struct break_prototype : base_prototype::impl<break_prototype> {
-  [[nodiscard]] std::string_view name() const override { return "break"; }
-
-  inline static const store::data_vector _data{[]() {
-    const auto node{ast::make<ast::break_statement>()};
-    return store::write({node.get()});
-  }()};
-};
-
-struct continue_prototype : base_prototype::impl<continue_prototype> {
-  [[nodiscard]] std::string_view name() const override { return "continue"; }
-
-  inline static const store::data_vector _data{[]() {
-    const auto node{ast::make<ast::continue_statement>()};
-    return store::write({node.get()});
-  }()};
-};
-
-template <ast::unary_op _op>
-struct unary_prototype : base_prototype::impl<unary_prototype<_op>> {
-  [[nodiscard]] std::string_view name() const override {
-    return symbol_for(_op);
-  }
-
-  inline static const store::data_vector _data{[]() {
-    const auto node{ast::make<ast::unary_expression>(
-        _op, ast::make<ast::expression_placeholder>(
-                 std::string{placeholder::get<ast::unary_expression>(0)}))};
-    return store::write({node.get()});
-  }()};
-};
-
-template <ast::binary_op _op>
-struct binary_prototype : base_prototype::impl<binary_prototype<_op>> {
-  [[nodiscard]] std::string_view name() const override {
-    return symbol_for(_op);
-  }
-
-  inline static const store::data_vector _data{[]() {
-    const auto node{ast::make<ast::binary_expression>(
-        ast::make<ast::expression_placeholder>(
-            std::string{placeholder::get<ast::binary_expression>(0)}),
-        _op,
-        ast::make<ast::expression_placeholder>(
-            std::string{placeholder::get<ast::binary_expression>(1)}))};
-    return store::write({node.get()});
-  }()};
-};
-
-template <ast::system_function _func>
-struct system_function_prototype
-    : base_prototype::impl<system_function_prototype<_func>> {
-  [[nodiscard]] std::string_view name() const override {
-    return name_for(_func);
-  }
-
-  inline static const store::data_vector _data{[]() {
-    const auto& placeholders{placeholder_system_function_args::args(_func)};
-    std::vector<ast::node> args;
-    args.reserve(placeholders.size());
-    for (const auto& arg : placeholders) {
-      args.emplace_back(
-          ast::make<ast::expression_placeholder>(std::string{arg}));
-    }
-    const auto node{
-        ast::make<ast::system_function_call>(_func, std::move(args))};
-    return store::write({node.get()});
-  }()};
-};
-
-struct number_prototype {
-  static store::data_vector data(std::string_view value) {
-    auto node = ast::make<ast::number_literal>(std::string{std::move(value)});
-    return store::write({node.get()});
-  }
-};
-
-struct string_prototype {
-  static store::data_vector data(std::string_view value) {
-    auto node = ast::make<ast::string_literal>(std::string{std::move(value)});
-    return store::write({node.get()});
-  }
-};
-
-struct identifier_prototype {
-  static store::data_vector data(std::string_view value) {
-    auto node = ast::make<ast::identifier>(std::string{std::move(value)});
-    return store::write({node.get()});
-  }
-};
+inline prototype system_function_prototype(ast::system_function func) {
+  return {
+      name_for(func), pasteboard_t::expression, [&func]() {
+        const auto& placeholders{placeholder_system_function_args::args(func)};
+        std::vector<ast::node> args;
+        args.reserve(placeholders.size());
+        for (const auto& arg : placeholders) {
+          args.emplace_back(
+              ast::make<ast::expression_placeholder>(std::string{arg}));
+        }
+        const auto node{
+            ast::make<ast::system_function_call>(func, std::move(args))};
+        return store::write({node.get()});
+      }()};
+}
 
 }  // namespace marlin::control
 

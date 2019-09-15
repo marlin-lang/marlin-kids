@@ -2,8 +2,6 @@
 
 #include <optional>
 
-#include "toolbox_model.hpp"
-
 #import "Document.h"
 #import "ExecuteViewController.h"
 #import "NSData+DataView.h"

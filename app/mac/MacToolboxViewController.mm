@@ -3,6 +3,7 @@
 #import "NSData+DataView.h"
 #import "NSObject+Casting.h"
 #import "NSString+StringView.h"
+#import "Pasteboard.h"
 #import "ToolboxItem.h"
 
 @interface MacToolboxViewController () <NSCollectionViewDataSource>
@@ -35,14 +36,14 @@
 
 - (NSInteger)collectionView:(CollectionView *)collectionView
      numberOfItemsInSection:(NSInteger)section {
-  return self.sizeOfCurrentCategory;
+  return self.model.current_category_size();
 }
 
 - (NSCollectionViewItem *)collectionView:(NSCollectionView *)collectionView
      itemForRepresentedObjectAtIndexPath:(NSIndexPath *)indexPath {
   ToolboxItem *item = [collectionView makeItemWithIdentifier:@"ToolboxItem" forIndexPath:indexPath];
   item.textField.stringValue =
-      [NSString stringWithStringView:[self prototypeOfCurrentCategoryItem:indexPath.item].name()];
+      [NSString stringWithStringView:self.model.current_category_prototype(indexPath.item).name];
   return item;
 }
 
@@ -59,8 +60,9 @@
               toPasteboard:(NSPasteboard *)pasteboard {
   auto item = indexPaths.anyObject.item;
   [self addRecentForCurrentCategoryItem:item];
-  NSData *data = [NSData dataWithDataView:[self prototypeOfCurrentCategoryItem:item].data()];
-  return [pasteboard setData:data forType:[self pasteboardTypeOfCurrentCategoryItem:item]];
+  auto &prototype = self.model.current_category_prototype(item);
+  NSData *data = [NSData dataWithDataView:prototype.data];
+  return [pasteboard setData:data forType:pasteboardOfType(prototype.type)];
 }
 
 @end

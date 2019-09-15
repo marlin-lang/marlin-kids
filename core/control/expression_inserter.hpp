@@ -10,7 +10,7 @@
 
 namespace marlin::control {
 
-enum class literal_data_type { variable_name, identifier, number, string };
+enum struct literal_data_type { variable_name, identifier, number, string };
 
 struct expression_inserter {
   friend struct source_selection;
@@ -35,21 +35,39 @@ struct expression_inserter {
     }
   }
 
-  template <typename... arg_type>
-  std::optional<source_update> insert_literal(literal_data_type type,
-                                              arg_type&&... args) const&& {
+ private:
+  auto insert_literal(ast::node node) const&& {
+    auto data{store::write({node.get()})};
+    return std::move(*this).insert(data);
+  }
+
+  auto insert_number(std::string_view value) const&& {
+    auto node = ast::make<ast::number_literal>(std::string{std::move(value)});
+    return std::move(*this).insert_literal(std::move(node));
+  }
+
+  auto insert_string(std::string_view value) const&& {
+    auto node = ast::make<ast::string_literal>(std::string{std::move(value)});
+    return std::move(*this).insert_literal(std::move(node));
+  }
+
+  auto insert_identifier(std::string_view value) const&& {
+    auto node = ast::make<ast::identifier>(std::string{std::move(value)});
+    return std::move(*this).insert_literal(std::move(node));
+  }
+
+ public:
+  auto insert_literal(literal_data_type type,
+                      std::string_view literal) const&& {
     switch (type) {
       case literal_data_type::variable_name:
         [[fallthrough]];
       case literal_data_type::identifier:
-        return std::move(*this).insert(
-            identifier_prototype::data(std::forward<arg_type>(args)...));
+        return std::move(*this).insert_identifier(std::move(literal));
       case literal_data_type::number:
-        return std::move(*this).insert(
-            number_prototype::data(std::forward<arg_type>(args)...));
+        return std::move(*this).insert_number(std::move(literal));
       case literal_data_type::string:
-        return std::move(*this).insert(
-            string_prototype::data(std::forward<arg_type>(args)...));
+        return std::move(*this).insert_string(std::move(literal));
     }
   }
 
@@ -63,7 +81,7 @@ struct expression_inserter {
   // Special constructor for constructing from source_selection
   expression_inserter(document& doc, source_loc loc, ast::base& selection)
       : _doc{&doc}, _loc{loc}, _selection{&selection} {}
-};  // namespace marlin::control
+};
 
 }  // namespace marlin::control
 

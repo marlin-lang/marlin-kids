@@ -3,7 +3,7 @@
 #include <string_view>
 #include <vector>
 
-#include "toolbox_model.hpp"
+#include "prototypes.hpp"
 
 #import "Document.h"
 #import "EditorViewController.h"
