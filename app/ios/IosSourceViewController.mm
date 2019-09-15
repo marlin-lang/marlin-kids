@@ -2,15 +2,13 @@
 
 #include "toolbox_model.hpp"
 
+#import "IosSourceView.h"
 #import "LineNumberView.h"
 #import "NSData+DataView.h"
 #import "NSString+StringView.h"
 #import "Pasteboard.h"
-#import "IosSourceView.h"
 
-@interface IosSourceViewController () <
-                                       UIScrollViewDelegate,
-                                       SourceViewDelegate>
+@interface IosSourceViewController () <UIScrollViewDelegate, SourceViewDelegate>
 
 @property(strong, nonatomic) IosSourceView *sourceView;
 
@@ -19,6 +17,18 @@
 @end
 
 @implementation IosSourceViewController
+
+- (void)setDocument:(IosDocument *)document {
+  _document = document;
+
+  if (auto initialData = [self.document initialize]) {
+    [self.sourceView insertStatementsBeforeLine:1
+                                     withSource:std::move(initialData->source)
+                                     highlights:std::move(initialData->highlights)
+                                   isInitialize:true];
+    [self.lineNumberView setNeedsDisplay];
+  }
+}
 
 - (void)viewDidLoad {
   [super viewDidLoad];
@@ -35,23 +45,10 @@
   lineNumberView.translatesAutoresizingMaskIntoConstraints = NO;
   self.scrollView.contentInset = UIEdgeInsetsMake(0, lineNumberView.ruleThickness, 0, 0);
   [self.view addSubview:lineNumberView];
-  [lineNumberView.topAnchor constraintEqualToAnchor:self.scrollView.topAnchor].active = YES;
-  [lineNumberView.leftAnchor constraintEqualToAnchor:self.scrollView.leftAnchor].active = YES;
+  [lineNumberView.topAnchor constraintEqualToAnchor:self.view.topAnchor].active = YES;
+  [lineNumberView.leftAnchor constraintEqualToAnchor:self.view.leftAnchor].active = YES;
   [lineNumberView.heightAnchor constraintEqualToAnchor:self.view.heightAnchor].active = YES;
   [lineNumberView.widthAnchor constraintEqualToConstant:lineNumberView.ruleThickness].active = YES;
-
-  [self.document openWithCompletionHandler:^(BOOL success) {
-    if (success) {
-      if (auto initialData = [self.document initialize]) {
-        [self.sourceView insertStatementsBeforeLine:1
-                                         withSource:std::move(initialData->source)
-                                         highlights:std::move(initialData->highlights)
-                                       isInitialize:true];
-        [self.lineNumberView setNeedsDisplay];
-      }
-    } else {
-    }
-  }];
 }
 
 - (IBAction)close:(id)sender {
@@ -61,23 +58,8 @@
                            }];
 }
 
-- (IBAction)run:(id)sender {
-  [self execute];
-}
-
 - (UIViewController *)destinationViewControllerOfSegue:(UIStoryboardSegue *)segue {
   return segue.destinationViewController;
-}
-
-#pragma mark - UICollectionViewDataSource
-
-- (NSInteger)numberOfSectionsInCollectionView:(CollectionView *)collectionView {
-  return marlin::control::toolbox_model::sections.size();
-}
-
-- (NSInteger)collectionView:(CollectionView *)collectionView
-     numberOfItemsInSection:(NSInteger)section {
-  return marlin::control::toolbox_model::items[section].size();
 }
 
 #pragma mark - UIScrollViewDelegate

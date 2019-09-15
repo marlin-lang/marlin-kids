@@ -42,6 +42,7 @@ if(IOS)
       ios/IosSourceView.h
       ios/IosSourceViewController.h
       ios/IosToolboxViewController.h
+      ios/SplitViewController.h
       ios/ToolboxCell.h)
 
   set(SOURCES
@@ -54,6 +55,7 @@ if(IOS)
       ios/IosSourceViewController.mm
       ios/IosToolboxViewController.mm
       ios/main.mm
+      ios/SplitViewController.mm
       ios/ToolboxCell.mm)
 
   set(RESOURCES ${RESOURCES} ios/Assets.xcassets ios/Base.lproj/Main.storyboard)
