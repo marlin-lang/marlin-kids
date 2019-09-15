@@ -167,7 +167,7 @@ struct source_selection {
       auto data{store::write({node.get()})};
 
       auto inserter{std::move(*this).as_expression_inserter()};
-      return inserter.insert(data);
+      return std::move(inserter).insert(data);
     } else {
       assert(false);
       return std::nullopt;

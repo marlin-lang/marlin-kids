@@ -70,10 +70,9 @@ struct store : base_store::impl<store> {
       throw read_error{"No data is read!"};
     }
 
-    reconstruction_result result{std::move(nodes), std::move(_source_buffer),
-                                 std::move(_highlights)};
-    _source_buffer = {};
-    _highlights = {};
+    reconstruction_result result{std::move(nodes),
+                                 std::exchange(_source_buffer, {}),
+                                 std::exchange(_highlights, {})};
     return result;
   }
 
@@ -81,9 +80,7 @@ struct store : base_store::impl<store> {
     _data_buffer.clear();
     write_bytes(data_prefix());
     write_vector(nodes);
-    auto result{std::move(_data_buffer)};
-    _source_buffer = {};
-    return result;
+    return std::exchange(_data_buffer, {});
   }
 
  private:
@@ -271,8 +268,7 @@ struct store : base_store::impl<store> {
             {key::number, {&store::read_number_literal, false}},
             {key::string, {&store::read_string_literal, false}}};
 
-    auto key{read_zero_terminated(iter, end)};
-    const auto it{read_node_map.find(std::move(key))};
+    const auto it{read_node_map.find(read_zero_terminated(iter, end))};
     if (it == read_node_map.end()) {
       throw read_error{"Unknown node key encountered!"};
     } else {
@@ -623,8 +619,8 @@ struct store : base_store::impl<store> {
       const auto func{it->second};
       emit_to_buffer(display_for(func));
 
-      auto args{read_arguments(iter, end, type_expectation::rvalue)};
-      return ast::make<ast::system_function_call>(func, std::move(args));
+      return ast::make<ast::system_function_call>(
+          func, read_arguments(iter, end, type_expectation::rvalue));
     }
   }
 

@@ -190,11 +190,9 @@ struct DocumentGetter {
     finishEditWithString:(NSString*)string
                   ofType:(EditorType)type {
   [self.delegate dismissEditorViewControllerForSourceView:self];
-  if (string.length > 0 && _selection) {
-    auto inserter = (*std::move(_selection)).as_expression_inserter();
-    _selection.reset();
-
-    if (auto update = inserter.insert_literal(type, std::string{string.UTF8String})) {
+  if (string.length > 0 && _selection.has_value()) {
+    auto inserter = (*std::exchange(_selection, std::nullopt)).as_expression_inserter();
+    if (auto update = std::move(inserter).insert_literal(type, std::string{string.UTF8String})) {
       [self updateExpressionInSourceRange:update->range
                                withSource:std::move(update->source)
                                highlights:std::move(update->highlights)];
@@ -213,14 +211,12 @@ struct DocumentGetter {
 - (void)removeDraggingSelection {
   if (_isDraggingFromSelection) {
     if (_selection->is_block() || _selection->is_statement()) {
-      if (auto update = (*std::move(_selection)).remove_from_document()) {
+      if (auto update = (*std::exchange(_selection, std::nullopt)).remove_from_document()) {
         [self removeStatementFromLine:update->range.begin.line toLine:update->range.end.line];
-        _selection.reset();
       }
     } else if (_selection->is_expression()) {
-      if (auto update = (*std::move(_selection)).remove_from_document()) {
+      if (auto update = (*std::exchange(_selection, std::nullopt)).remove_from_document()) {
         [self removeExpressionInSourceRange:update->range];
-        _selection.reset();
       }
     }
   }

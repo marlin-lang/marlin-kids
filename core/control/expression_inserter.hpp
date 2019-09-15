@@ -37,21 +37,23 @@ struct expression_inserter {
 
   template <typename... arg_type>
   std::optional<source_update> insert_literal(literal_data_type type,
-                                              arg_type&&... args) {
+                                              arg_type&&... args) const&& {
     switch (type) {
       case literal_data_type::variable_name:
         [[fallthrough]];
       case literal_data_type::identifier:
-        return insert(
+        return std::move(*this).insert(
             identifier_prototype::data(std::forward<arg_type>(args)...));
       case literal_data_type::number:
-        return insert(number_prototype::data(std::forward<arg_type>(args)...));
+        return std::move(*this).insert(
+            number_prototype::data(std::forward<arg_type>(args)...));
       case literal_data_type::string:
-        return insert(string_prototype::data(std::forward<arg_type>(args)...));
+        return std::move(*this).insert(
+            string_prototype::data(std::forward<arg_type>(args)...));
     }
   }
 
-  std::optional<source_update> insert(store::data_view data);
+  std::optional<source_update> insert(store::data_view data) const&&;
 
  private:
   document* _doc;
