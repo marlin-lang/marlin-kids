@@ -34,21 +34,9 @@
 }
 
 - (NSDragOperation)draggingUpdated:(id<NSDraggingInfo>)sender {
-  auto location = [self convertPoint:sender.draggingLocation fromView:nil];
-
-  auto* type = [sender.draggingPasteboard availableTypeFromArray:self.acceptableDragTypes];
-  if ([type isEqualToString:pasteboardOfType(marlin::control::pasteboard_t::block)]) {
-    if ([self draggingBlockAtLocation:location]) {
-      [self setNeedsDisplayInRect:self.bounds];
-      return NSDragOperationMove;
-    }
-  } else if ([type isEqualToString:pasteboardOfType(marlin::control::pasteboard_t::statement)]) {
-    if ([self draggingStatementAtLocation:location]) {
-      [self setNeedsDisplayInRect:self.bounds];
-      return NSDragOperationMove;
-    }
-  } else if ([type isEqualToString:pasteboardOfType(marlin::control::pasteboard_t::expression)]) {
-    if ([self draggingExpressionAtLocation:location]) {
+  if (auto type = [self pasteboardTypeFromDraggingInfo:sender]) {
+    auto location = [self convertPoint:sender.draggingLocation fromView:nil];
+    if ([self draggingPasteboardOfType:*type toLocation:location]) {
       [self setNeedsDisplayInRect:self.bounds];
       return NSDragOperationMove;
     }
@@ -58,23 +46,13 @@
 }
 
 - (BOOL)performDragOperation:(id<NSDraggingInfo>)sender {
-  auto type = [sender.draggingPasteboard availableTypeFromArray:self.acceptableDragTypes];
-
-  if (type == pasteboardOfType(marlin::control::pasteboard_t::block)) {
-    auto* data = [sender.draggingPasteboard
-        dataForType:pasteboardOfType(marlin::control::pasteboard_t::block)];
-    return [self performBlockDropForData:data];
-  } else if (type == pasteboardOfType(marlin::control::pasteboard_t::statement)) {
-    auto* data = [sender.draggingPasteboard
-        dataForType:pasteboardOfType(marlin::control::pasteboard_t::statement)];
-    return [self performStatementDropForData:data];
-  } else if (type == pasteboardOfType(marlin::control::pasteboard_t::expression)) {
-    auto* data = [sender.draggingPasteboard
-        dataForType:pasteboardOfType(marlin::control::pasteboard_t::expression)];
-    return [self performExpressionDropForData:data];
+  if (auto type = [self pasteboardTypeFromDraggingInfo:sender]) {
+    auto* data = [sender.draggingPasteboard dataForType:pasteboardOfType(*type)];
+    return [self dropPasteboardOfType:*type withData:data];
+  } else {
+    [self removeDraggingSelection];
+    return NO;
   }
-  [self removeDraggingSelection];
-  return YES;
 }
 
 - (void)draggingEnded:(id<NSDraggingInfo>)sender {
@@ -108,6 +86,22 @@
 - (NSDragOperation)draggingSession:(NSDraggingSession*)session
     sourceOperationMaskForDraggingContext:(NSDraggingContext)context {
   return NSDragOperationMove;
+}
+
+#pragma mark - Private methods
+
+- (std::optional<marlin::control::pasteboard_t>)pasteboardTypeFromDraggingInfo:
+    (id<NSDraggingInfo>)sender {
+  auto* type = [sender.draggingPasteboard availableTypeFromArray:self.acceptableDragTypes];
+  if ([type isEqualToString:pasteboardOfType(marlin::control::pasteboard_t::block)]) {
+    return marlin::control::pasteboard_t::block;
+  } else if ([type isEqualToString:pasteboardOfType(marlin::control::pasteboard_t::statement)]) {
+    return marlin::control::pasteboard_t::statement;
+  } else if ([type isEqualToString:pasteboardOfType(marlin::control::pasteboard_t::expression)]) {
+    return marlin::control::pasteboard_t::expression;
+  } else {
+    return std::nullopt;
+  }
 }
 
 @end

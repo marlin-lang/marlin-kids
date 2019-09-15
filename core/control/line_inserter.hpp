@@ -20,6 +20,8 @@ struct line_inserter {
     return {_loc->line, _loc->indent * indent_space_count + 1};
   }
 
+  void move_to_loc(source_loc loc) { move_to_line(loc.line); }
+
   void move_to_line(size_t line) {
     if (_line == 0 || line != _line) {
       _loc = find_insert_location_in_base(line, *_doc->_program, 0);

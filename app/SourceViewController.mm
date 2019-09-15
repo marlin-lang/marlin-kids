@@ -74,23 +74,4 @@
   return nil;
 }
 
-#pragma mark - SourceViewDataSource
-
-- (marlin::control::source_selection)sourceView:(SourceView *)view
-                                    selectionAt:(marlin::source_loc)loc {
-  return {self.document.content, loc};
-}
-
-- (marlin::control::block_inserter)blockInserterForSourceView:(SourceView *)view {
-  return {self.document.content};
-}
-
-- (marlin::control::statement_inserter)statementInserterForSourceView:(SourceView *)view {
-  return {self.document.content};
-}
-
-- (marlin::control::expression_inserter)expressionInserterForSourceView:(SourceView *)view {
-  return {self.document.content};
-}
-
 @end
