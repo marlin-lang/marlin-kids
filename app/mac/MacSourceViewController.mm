@@ -1,9 +1,9 @@
 #import "MacSourceViewController.h"
 
 #import "LineNumberView.h"
+#import "MacFunctionViewController.h"
 #import "NSObject+Casting.h"
 #import "NSString+StringView.h"
-#import "MacFunctionViewController.h"
 
 @interface MacSourceViewController () <SourceViewDelegate>
 
@@ -64,25 +64,24 @@
   vc.editorTextField.stringValue = [NSString stringWithStringView:data];
 }
 
-- (void)dismissEditorViewControllerForSourceView:(SourceView *)view {
-  [_popover close];
-  _popover = nil;
-}
-
 - (void)showFunctionViewControllerForSourceView:(SourceView *)view
-                                       fromRect:(CGRect)rect {
-    MacFunctionViewController *vc =
-    [self.storyboard instantiateControllerWithIdentifier:@"FunctionViewController"];
-    vc.delegate = view;
-    _popover = [[NSPopover alloc] init];
-    _popover.behavior = NSPopoverBehaviorTransient;
-    _popover.contentViewController = vc;
-    [_popover showRelativeToRect:rect ofView:view preferredEdge:NSMinYEdge];
+                                       fromRect:(CGRect)rect
+                          withFunctionSignature:
+                              (marlin::control::source_selection::function_signature)signature {
+  MacFunctionViewController *vc =
+      [self.storyboard instantiateControllerWithIdentifier:@"FunctionViewController"];
+  vc.delegate = view;
+  _popover = [[NSPopover alloc] init];
+  _popover.behavior = NSPopoverBehaviorTransient;
+  _popover.contentViewController = vc;
+  [_popover showRelativeToRect:rect ofView:view preferredEdge:NSMinYEdge];
+
+  [vc setFunctionSignature:std::move(signature)];
 }
 
 - (void)dismissPopoverViewControllerForSourceView:(SourceView *)view {
-    [_popover close];
-    _popover = nil;
+  [_popover close];
+  _popover = nil;
 }
 
 @end

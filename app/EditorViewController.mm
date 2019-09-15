@@ -1,57 +1,6 @@
 #import "EditorViewController.h"
 
-@interface NumberFormatter : NSNumberFormatter
-
-@end
-
-@implementation NumberFormatter
-
-- (instancetype)init {
-  if (self = [super init]) {
-    self.minimumFractionDigits = 0;
-    self.maximumFractionDigits = 10;
-  }
-  return self;
-}
-
-@end
-
-@interface StringFormatter : NSFormatter
-
-@end
-
-@implementation StringFormatter
-
-- (BOOL)getObjectValue:(out id _Nullable __autoreleasing *)obj
-             forString:(NSString *)string
-      errorDescription:(out NSString *__autoreleasing _Nullable *)error {
-  return YES;
-}
-
-@end
-
-@interface VariableFormatter : NSFormatter
-
-@end
-
-@implementation VariableFormatter
-
-- (BOOL)getObjectValue:(out id _Nullable __autoreleasing *)obj
-             forString:(NSString *)string
-      errorDescription:(out NSString *__autoreleasing _Nullable *)error {
-  for (auto i = 0; i < string.length; ++i) {
-    auto ch = [string characterAtIndex:i];
-    if (i == 0 && isdigit(ch)) {
-      return NO;
-    }
-    if (ch != '_' && !isalnum(ch)) {
-      return NO;
-    }
-  }
-  return YES;
-}
-
-@end
+#import "Formatter.h"
 
 @interface EditorViewController ()
 

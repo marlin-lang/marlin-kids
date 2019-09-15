@@ -3,6 +3,7 @@ set(HEADERS
     DrawHelper.h
     EditorViewController.h
     ExecuteViewController.h
+    Formatter.h
     FunctionViewController.h
     LineNumberView.h
     MessageViewController.h
@@ -20,6 +21,7 @@ set(SOURCES
     Document.mm
     EditorViewController.mm
     ExecuteViewController.mm
+    Formatter.mm
     FunctionViewController.mm
     LineNumberView.mm
     MessageViewController.mm

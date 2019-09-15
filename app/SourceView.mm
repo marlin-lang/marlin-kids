@@ -4,7 +4,6 @@
 #include <vector>
 
 #include "source_inserters.hpp"
-#include "source_selection.hpp"
 
 #import "DrawHelper.h"
 #import "LineNumberView.h"
@@ -347,7 +346,9 @@ struct DocumentGetter {
                                                 withType:type
                                                     data:data];
   } else if (_selection->is_function_signature()) {
-    [self.delegate showFunctionViewControllerForSourceView:self fromRect:rect];
+    [self.delegate showFunctionViewControllerForSourceView:self
+                                                  fromRect:rect
+                                     withFunctionSignature:_selection->get_function_signature()];
   }
 }
 
