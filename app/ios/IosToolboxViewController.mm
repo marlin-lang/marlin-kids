@@ -49,8 +49,7 @@
              itemsForBeginningDragSession:(id<UIDragSession>)session
                               atIndexPath:(NSIndexPath *)indexPath {
   auto item = indexPath.item;
-  [self addRecentForCurrentCategoryItem:item];
-  auto &prototype = self.model.current_category_prototype(item);
+  auto &prototype = self.model.use_current_category_prototype(item);
   auto *data = [NSData dataWithDataView:prototype.data];
   auto *itemProvider = [[NSItemProvider alloc] init];
   auto *typeIdentifier = pasteboardOfType(prototype.type);

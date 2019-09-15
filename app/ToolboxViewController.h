@@ -10,8 +10,6 @@ NS_ASSUME_NONNULL_BEGIN
 
 - (marlin::control::toolbox &)model;
 
-- (void)addRecentForCurrentCategoryItem:(NSInteger)item;
-
 @end
 
 NS_ASSUME_NONNULL_END
