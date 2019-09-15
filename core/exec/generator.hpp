@@ -22,9 +22,7 @@ struct generator {
     _errors.clear();
     gen.write(get_node(c));
     if (_errors.size()) {
-      auto errors{std::move(_errors)};
-      _errors = {};
-      throw collected_generation_error{std::move(errors)};
+      throw collected_generation_error{std::exchange(_errors, {})};
     } else {
       return std::move(gen).str();
     }

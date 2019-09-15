@@ -18,7 +18,7 @@ struct concrete_view {
   concrete_view(base_type& base, concrete& con) : _base{&base}, _con{&con} {}
 
   void operator=(value_type other) {
-    auto& ref = _data()[_con->index];
+    auto& ref{_data()[_con->index]};
     ref = std::move(other);
     ref->_parent = _base;
   }
@@ -31,10 +31,9 @@ struct concrete_view {
   }
 
   value_type replace(value_type other) const {
-    auto ref = _data()[_con->index];
-    auto item = std::move(ref);
+    auto& ref{_data()[_con->index]};
+    auto item{std::exchange(ref, std::move(other))};
     item->_parent = nullptr;
-    ref = std::move(other);
     ref->_parent = _base;
     return item;
   }
@@ -115,8 +114,8 @@ struct vector_view {
   }
 
   value_type pop(size_type pos) const {
-    auto it = _data().begin() + _vec->index + pos;
-    auto item = std::move(*it);
+    auto it{_data().begin() + _vec->index + pos};
+    auto item{std::move(*it)};
     item->_parent = nullptr;
     _data().erase(it);
     _vec->size--;
@@ -125,10 +124,9 @@ struct vector_view {
   }
 
   value_type replace(size_type pos, value_type other) const {
-    auto ref = _data()[_vec->index + pos];
-    auto item = std::move(ref);
+    auto& ref{_data()[_vec->index + pos]};
+    auto item{std::exchange(ref, std::move(other))};
     item->_parent = nullptr;
-    ref = std::move(other);
     ref->_parent = _base;
     return item;
   }

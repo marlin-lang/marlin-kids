@@ -5,7 +5,7 @@
 namespace marlin::control {
 
 std::optional<source_update> expression_inserter::insert(
-    store::data_view data) {
+    store::data_view data) const&& {
   assert(_selection != nullptr);
 
   std::optional<store::reconstruction_result> try_result;

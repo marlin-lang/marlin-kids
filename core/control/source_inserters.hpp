@@ -26,8 +26,8 @@ struct source_inserters {
   auto insert(pasteboard_t type, store::data_view data) {
     return perform_on_inserter(type, [&data](auto& inserter) {
       if (inserter.has_value() && inserter->can_insert()) {
-        if (auto update{inserter->insert(data)}) {
-          inserter.reset();
+        if (auto update{
+                (*std::exchange(inserter, std::nullopt)).insert(data)}) {
           return update;
         }
       }

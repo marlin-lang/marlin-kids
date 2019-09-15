@@ -88,10 +88,9 @@ struct base {
       i++;
     }
     if (i < _children.size()) {
-      auto result{std::move(_children[i])};
-      result->_parent = nullptr;
       replacement->_parent = this;
-      _children[i] = std::move(replacement);
+      auto result{std::exchange(_children[i], std::move(replacement))};
+      result->_parent = nullptr;
       return result;
     } else {
       /* should not occur */
