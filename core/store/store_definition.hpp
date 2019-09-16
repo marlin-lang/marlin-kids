@@ -6,11 +6,21 @@
 
 #include "byte_span.hpp"
 #include "formatter.hpp"
+#include "function_definition.hpp"
 #include "node.hpp"
 #include "store_errors.hpp"
 #include "utils.hpp"
 
 namespace marlin::store {
+
+struct user_function_table_interface {
+  [[nodiscard]] virtual const bool has_function(
+      const std::string& name) const = 0;
+  [[nodiscard]] virtual const function_definition& get_function(
+      const std::string& name) const = 0;
+
+  virtual void add_function(function_definition signature) = 0;
+};
 
 enum struct type_expectation {
   program,
@@ -46,8 +56,8 @@ struct base_store {
   virtual ~base_store() noexcept = default;
 
   virtual bool recognize(data_view data) = 0;
-  virtual std::vector<ast::node> read(data_view data,
-                                      type_expectation type) = 0;
+  virtual std::vector<ast::node> read(data_view data, type_expectation type,
+                                      user_function_table_interface& table) = 0;
 
   // The latest version also needs to implement
   // data_vector write(std::vector<const ast::base*> node);

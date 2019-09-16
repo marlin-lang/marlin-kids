@@ -4,6 +4,7 @@
 #include <string>
 
 #include "base.impl.hpp"
+#include "function_definition.hpp"
 #include "specs.hpp"
 
 namespace marlin::ast {
@@ -202,6 +203,20 @@ struct system_function_call : base::impl<system_function_call, subnode::vector>,
 
   explicit system_function_call(system_function _func, std::vector<node> _args)
       : base_type{std::move(_args)}, func{_func} {}
+};
+
+struct user_function_call : base::impl<user_function_call, subnode::vector>,
+                            expression {
+  std::string name;
+  const function_definition* func;
+
+  [[nodiscard]] decltype(auto) arguments() { return get_subnode<0>(); }
+  [[nodiscard]] decltype(auto) arguments() const { return get_subnode<0>(); }
+
+  explicit user_function_call(std::string name,
+                              const function_definition* _func,
+                              std::vector<node> _args)
+      : base_type{std::move(_args)}, name{std::move(name)}, func{_func} {}
 };
 
 struct identifier : base::impl<identifier>, expression {

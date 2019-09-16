@@ -65,7 +65,7 @@
                        if (success) {
                          auto splitViewController =
                              [SplitViewController cast:navigationController.topViewController];
-                         splitViewController.sourceViewController.document = document;
+                         splitViewController.document = document;
                        } else {
                          NSAssert(NO, @"todo");
                        }

@@ -207,6 +207,24 @@ inline std::string_view placeholder::get<ast::system_function_call>(
   return placeholder_system_function_args::args(parent.func)[node_index];
 }
 
+template <>
+inline std::string_view placeholder::get<ast::user_function_call>(
+    const ast::user_function_call& parent, size_t subnode_index,
+    size_t node_index) {
+  assert(subnode_index == 0);
+  if (parent.func != nullptr) {
+    auto& definition = *parent.func;
+    if (node_index < definition.parameters.size()) {
+      return definition.parameters[node_index];
+    } else {
+      return "";
+    }
+  } else {
+    // Unknown user function
+    return placeholder::default_text;
+  }
+}
+
 }  // namespace marlin::control
 
 #endif  // marlin_control_placeholders_hpp

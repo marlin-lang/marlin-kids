@@ -2,20 +2,25 @@
 
 #include "ast.hpp"
 #include "store.hpp"
+#include "user_function.hpp"
 
 TEST_CASE("store::Read unrecognized data", "[store]") {
+  marlin::control::user_function_table table;
+
   marlin::store::data_vector data;
-  REQUIRE_THROWS(marlin::store::read(data));
+  REQUIRE_THROWS(marlin::store::read(data, table));
 }
 
 TEST_CASE("store::Write and read expressions", "[store]") {
+  marlin::control::user_function_table table;
+
   auto node{marlin::ast::make<marlin::ast::binary_expression>(
       marlin::ast::make<marlin::ast::expression_placeholder>("left"),
       marlin::ast::binary_op::multiply,
       marlin::ast::make<marlin::ast::expression_placeholder>("right"))};
   auto data{marlin::store::write({node.get()})};
 
-  auto result{marlin::store::read(data)};
+  auto result{marlin::store::read(data, table)};
   REQUIRE(result.nodes.size() == 1);
   REQUIRE(result.display.source == "@left * @right");
 
@@ -27,12 +32,14 @@ TEST_CASE("store::Write and read expressions", "[store]") {
       marlin::ast::make<marlin::ast::expression_placeholder>("right"))};
   auto inner_data{marlin::store::write({inner_node.get()})};
 
-  auto inner_result{marlin::store::read(inner_data, left)};
+  auto inner_result{marlin::store::read(inner_data, left, table)};
   REQUIRE(inner_result.nodes.size() == 1);
   REQUIRE(inner_result.display.source == "(@left + @right)");
 }
 
 TEST_CASE("store::Write and read statements", "[store]") {
+  marlin::control::user_function_table table;
+
   auto outer_if{marlin::ast::make<marlin::ast::if_statement>(
       marlin::ast::make<marlin::ast::expression_placeholder>("condition"),
       std::vector<marlin::ast::node>{})};
@@ -61,7 +68,7 @@ TEST_CASE("store::Write and read statements", "[store]") {
       std::move(inner_if_statements), std::vector<marlin::ast::node>{})};
 
   auto data{marlin::store::write({assignment.get(), inner_if.get()})};
-  auto result{marlin::store::read(data, 3, outer_if_ref)};
+  auto result{marlin::store::read(data, 3, outer_if_ref, table)};
   REQUIRE(result.nodes.size() == 2);
   REQUIRE(result.display.source ==
           "    needs_print = 0;\n"
@@ -72,13 +79,15 @@ TEST_CASE("store::Write and read statements", "[store]") {
 }
 
 TEST_CASE("store::Report type error", "[store]") {
+  marlin::control::user_function_table table;
+
   auto node{marlin::ast::make<marlin::ast::binary_expression>(
       marlin::ast::make<marlin::ast::expression_placeholder>("left"),
       marlin::ast::binary_op::multiply,
       marlin::ast::make<marlin::ast::expression_placeholder>("right"))};
   auto data{marlin::store::write({node.get()})};
 
-  auto result{marlin::store::read(data)};
+  auto result{marlin::store::read(data, table)};
   REQUIRE(result.nodes.size() == 1);
   REQUIRE(result.display.source == "@left * @right");
 
@@ -89,5 +98,5 @@ TEST_CASE("store::Report type error", "[store]") {
       std::vector<marlin::ast::node>{})};
   auto inner_data{marlin::store::write({inner_node.get()})};
 
-  REQUIRE_THROWS(marlin::store::read(inner_data, left));
+  REQUIRE_THROWS(marlin::store::read(inner_data, left, table));
 }

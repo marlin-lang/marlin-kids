@@ -1,5 +1,7 @@
 #import "SplitViewController.h"
 
+#import "IosSourceViewController.h"
+#import "IosToolboxViewController.h"
 #import "NSObject+Casting.h"
 
 @interface SplitViewController ()
@@ -29,6 +31,29 @@
   [vc didMoveToParentViewController:self];
 }
 
+- (IBAction)close:(id)sender {
+  [self.navigationController dismissViewControllerAnimated:YES completion:nil];
+}
+
+- (IBAction)run:(id)sender {
+  [self.sourceViewController execute];
+}
+
+- (void)setDocument:(IosDocument *)document {
+  self.sourceViewController.document = document;
+  [self.toolboxViewController registerModelToDocument:document.content];
+}
+
+- (IosToolboxViewController *)toolboxViewController {
+  for (id vc in self.childViewControllers) {
+    if (auto sourceVC = [IosToolboxViewController cast:vc]) {
+      return sourceVC;
+    }
+  }
+  NSAssert(NO, @"Should has toolbox view controller");
+  return nil;
+}
+
 - (IosSourceViewController *)sourceViewController {
   for (id vc in self.childViewControllers) {
     if (auto sourceVC = [IosSourceViewController cast:vc]) {
@@ -37,14 +62,6 @@
   }
   NSAssert(NO, @"Should has source view controller");
   return nil;
-}
-
-- (IBAction)close:(id)sender {
-  [self.navigationController dismissViewControllerAnimated:YES completion:nil];
-}
-
-- (IBAction)run:(id)sender {
-  [self.sourceViewController execute];
 }
 
 @end

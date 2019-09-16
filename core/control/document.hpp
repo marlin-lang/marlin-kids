@@ -11,6 +11,8 @@
 #include "prototypes.hpp"
 #include "source_update.hpp"
 #include "store.hpp"
+#include "toolbox.hpp"
+#include "user_function.hpp"
 
 namespace marlin::control {
 
@@ -40,18 +42,23 @@ struct document {
   static std::optional<std::pair<document, source_update>> make_document(
       store::data_view data = default_data()) {
     try {
-      auto result{store::read(data, store::type_expectation::program)};
+      user_function_table table;
+      auto result{store::read(data, table, store::type_expectation::program)};
       assert(result.nodes.size() == 1);
       return std::make_pair(
-          document{std::move(result.nodes[0])},
+          document{std::move(result.nodes[0]), std::move(table)},
           source_update{{{1, 1}, {1, 1}}, std::move(result.display)});
     } catch (const store::read_error&) {
       return std::nullopt;
     }
   }
 
-  explicit document(ast::node program) noexcept
-      : _program(std::move(program)) {}
+  explicit document(ast::node program, user_function_table table) noexcept
+      : _program(std::move(program)), _functions{std::move(table)} {}
+
+  void register_toolbox(std::weak_ptr<toolbox> model) {
+    _functions.set_toolbox(std::move(model));
+  }
 
   [[nodiscard]] ast::base& locate(source_loc loc) {
     return _program->locate(loc);
@@ -67,8 +74,11 @@ struct document {
 
   store::data_vector write() const { return store::write({_program.get()}); }
 
+  auto& functions() { return _functions.map(); }
+
  private:
   ast::node _program;
+  user_function_table _functions;
 
   // Convenient functions to modify _program
   // Implemented for use of friend structs
@@ -248,6 +258,25 @@ struct document {
     for (auto& child : vector) {
       update_source_line(*child, line_offset);
     }
+  }
+
+  void add_function(function_definition signature) {
+    _functions.add_function(std::move(signature));
+    // Adding functions must not have any side effect on the document
+    // This is required so that the store module can read functions properly
+  }
+
+  void replace_function(const std::string& name,
+                        function_definition new_signature) {
+    _functions.replace_function(name, std::move(new_signature));
+
+    // TODO: Change corresponding call signatures
+  }
+
+  void remove_function(const std::string& name) {
+    _functions.remove_function(name);
+
+    // TODO: Change corresponding call signatures
   }
 };
 

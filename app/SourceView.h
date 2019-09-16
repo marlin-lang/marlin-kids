@@ -3,8 +3,8 @@
 #include <string_view>
 #include <vector>
 
+#include "function_definition.hpp"
 #include "prototypes.hpp"
-#include "source_selection.hpp"
 
 #import "Document.h"
 #import "EditorViewController.h"
@@ -31,14 +31,13 @@ NS_ASSUME_NONNULL_BEGIN
 
 - (void)showFunctionViewControllerForSourceView:(SourceView *)view
                                        fromRect:(CGRect)rect
-                          withFunctionSignature:
-                              (marlin::control::source_selection::function_signature)signature;
+                          withFunctionSignature:(marlin::function_definition)signature;
 
 - (void)dismissPopoverViewControllerForSourceView:(SourceView *)view;
 
 @end
 
-@interface SourceView : View<EditorViewControllerDelegate, FunctionViewControllerDelegate>
+@interface SourceView : View <EditorViewControllerDelegate, FunctionViewControllerDelegate>
 
 @property(weak) id<SourceViewDataSource> dataSource;
 @property(weak) id<SourceViewDelegate> delegate;

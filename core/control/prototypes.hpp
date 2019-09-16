@@ -157,6 +157,19 @@ inline prototype system_function_prototype(ast::system_function func) {
       }()};
 }
 
+inline prototype user_function_prototype(const function_definition& func) {
+  return {func.name, pasteboard_t::expression, [&func]() {
+            std::vector<ast::node> args;
+            args.reserve(func.parameters.size());
+            for (const auto& param : func.parameters) {
+              args.emplace_back(ast::make<ast::expression_placeholder>(param));
+            }
+            const auto node{ast::make<ast::user_function_call>(
+                func.name, &func, std::move(args))};
+            return store::write({node.get()});
+          }()};
+}
+
 }  // namespace marlin::control
 
 #endif  // marlin_control_prototypes_hpp

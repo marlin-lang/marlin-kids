@@ -10,7 +10,7 @@ std::optional<source_update> expression_inserter::insert(
 
   std::optional<store::reconstruction_result> try_result;
   try {
-    try_result = store::read(data, *_selection);
+    try_result = store::read(data, *_selection, _doc->_functions);
   } catch (const store::read_error&) {
     // Leave try_result as std::nullopt
   }

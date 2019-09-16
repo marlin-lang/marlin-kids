@@ -1,6 +1,7 @@
 #ifndef marlin_control_toolbox_hpp
 #define marlin_control_toolbox_hpp
 
+#include <algorithm>
 #include <array>
 #include <string>
 #include <string_view>
@@ -74,6 +75,8 @@ struct toolbox {
       _categories.emplace_back(std::string{_default_names[i]},
                                _default_prototypes[i]);
     }
+    // TODO: show this only when there are user functions
+    _categories.emplace_back("user functions", category::category_type::local);
   }
 
   const std::vector<category>& categories() const { return _categories; }
@@ -96,7 +99,7 @@ struct toolbox {
       case category::category_type::shared:
         return category.prototypes->size();
       case category::category_type::local:
-        return 0;
+        return _user_functions.size();
     }
   }
 
@@ -111,17 +114,33 @@ struct toolbox {
       case category::category_type::shared:
         return (*category.prototypes)[index];
       case category::category_type::local:
-        // TODO: to be implemented
-        assert(false);
-        throw std::exception{};
+        return *_user_functions[index];
     }
   }
 
   const prototype& use_current_category_prototype(size_t index);
 
+  void add_user_functions(std::vector<const prototype*> functions) {
+    std::move(functions.begin(), functions.end(),
+              std::back_inserter(_user_functions));
+  }
+
+  void replace_user_function(const prototype* original,
+                             const prototype* replacement) {
+    std::replace(_user_functions.begin(), _user_functions.end(), original,
+                 replacement);
+    std::replace(_recent.begin(), _recent.end(), original, replacement);
+  }
+
+  void remove_user_function(const prototype* function) {
+    std::remove(_user_functions.begin(), _user_functions.end(), function);
+    std::remove(_recent.begin(), _recent.end(), function);
+  }
+
  private:
   std::vector<category> _categories;
   std::vector<const prototype*> _recent;
+  std::vector<const prototype*> _user_functions;
 
   // Default value: the first category that is not recent
   size_t _current_category{1};

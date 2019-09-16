@@ -4,6 +4,7 @@
 #include <vector>
 
 #include "source_inserters.hpp"
+#include "source_selection.hpp"
 
 #import "DrawHelper.h"
 #import "LineNumberView.h"
@@ -199,8 +200,7 @@ struct DocumentGetter {
                parameters:(NSArray<NSString*>*)parameters {
   [self.delegate dismissPopoverViewControllerForSourceView:self];
   if (name.length > 0 && _selection.has_value()) {
-    marlin::control::source_selection::function_signature signature;
-    signature.name = name.stringView;
+    marlin::function_definition signature{std::string{name.stringView}};
     for (NSString* parameter in parameters) {
       if (parameter.length > 0) {
         signature.parameters.emplace_back(parameter.stringView);

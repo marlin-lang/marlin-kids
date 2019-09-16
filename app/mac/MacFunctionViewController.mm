@@ -32,7 +32,7 @@
   _parameters = [[NSMutableArray alloc] init];
 }
 
-- (void)setFunctionSignature:(marlin::control::source_selection::function_signature)signature {
+- (void)setFunctionSignature:(marlin::function_definition)signature {
   _nameTextField.stringValue = [NSString stringWithStringView:signature.name];
   _isNameValidated = true;
   for (auto &parameter : signature.parameters) {

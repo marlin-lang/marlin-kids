@@ -35,12 +35,8 @@ struct generator {
   std::unordered_set<std::string> _global_identifiers;
   std::vector<generation_error> _errors;
 
-  static jsast::ast::node scoped_callee_with_name(std::string name) {
-    return jsast::ast::member_expression{
-        jsast::ast::object_expression{
-            {jsast::ast::property{jsast::ast::member_identifier{"__thefunc__"},
-                                  jsast::ast::identifier{std::move(name)}}}},
-        jsast::ast::member_identifier{"__thefunc__"}};
+  static std::string user_function_name(std::string name) {
+    return "__func_" + std::move(name);
   }
 
   static jsast::ast::node system_callee(std::string module, std::string name) {
@@ -145,14 +141,13 @@ struct generator {
   auto get_jsast(ast::function& function, wrapper_type&& wrapper) {
     if (function.signature()->is<ast::function_signature>()) {
       auto& signature{function.signature()->as<ast::function_signature>()};
-      auto name{"__func_" + signature.name};
       jsast::utils::move_vector<jsast::ast::node> params;
       for (auto& param : signature.parameters()) {
         params.emplace_back(get_node(*param));
       }
       _global_identifiers.clear();
       return wrapper(jsast::ast::function_declaration{
-          std::move(name), std::move(params),
+          user_function_name(signature.name), std::move(params),
           jsast::ast::block_statement{get_block(function.statements())}, true});
     } else if (function.signature()->is<ast::function_placeholder>()) {
       _errors.emplace_back("Unexpected placeholder!", *function.signature());
@@ -354,6 +349,28 @@ struct generator {
     }
     return wrapper(jsast::ast::call_expression{
         callee_map[static_cast<size_t>(call.func)](), std::move(args)});
+  }
+
+  template <typename wrapper_type>
+  auto get_jsast(ast::user_function_call& call, wrapper_type&& wrapper) {
+    if (call.func != nullptr) {
+      auto arguments = call.arguments();
+      if (arguments.size() == call.func->parameters.size()) {
+        jsast::utils::move_vector<jsast::ast::node> args;
+        for (auto& arg : call.arguments()) {
+          args.emplace_back(get_node(*arg));
+        }
+        return wrapper(jsast::ast::await_expression{jsast::ast::call_expression{
+            jsast::ast::identifier{user_function_name(call.func->name)},
+            std::move(args)}});
+      } else {
+        _errors.emplace_back("Incorrect number of arguments!", call);
+        return wrapper(jsast::ast::identifier{"__error__"});
+      }
+    } else {
+      _errors.emplace_back("Call to unknown user function!", call);
+      return wrapper(jsast::ast::identifier{"__error__"});
+    }
   }
 
   template <typename wrapper_type>

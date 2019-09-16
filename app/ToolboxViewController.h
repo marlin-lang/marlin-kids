@@ -1,5 +1,6 @@
 #import "Types.h"
 
+#include "document.hpp"
 #include "toolbox.hpp"
 
 NS_ASSUME_NONNULL_BEGIN
@@ -9,6 +10,8 @@ NS_ASSUME_NONNULL_BEGIN
 @property(weak) IBOutlet CollectionView *toolboxView;
 
 - (marlin::control::toolbox &)model;
+
+- (void)registerModelToDocument:(marlin::control::document &)document;
 
 @end
 

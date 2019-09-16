@@ -11,7 +11,7 @@ std::optional<source_update> line_inserter<node_type>::insert(
 
   std::optional<store::reconstruction_result> try_result;
   try {
-    try_result = store::read(data, _loc->line, *_loc->parent);
+    try_result = store::read(data, _loc->line, *_loc->parent, _doc->_functions);
   } catch (const store::read_error&) {
     // Leave try_result as std::nullopt
   }

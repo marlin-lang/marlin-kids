@@ -24,7 +24,7 @@
       function execute(func) {
         async function _exec() {
           // TODO: catch exceptions
-          await { __thefunc__: func }.__thefunc__();
+          await func();
         }
         _exec();
       }

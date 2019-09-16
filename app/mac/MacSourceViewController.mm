@@ -66,8 +66,7 @@
 
 - (void)showFunctionViewControllerForSourceView:(SourceView *)view
                                        fromRect:(CGRect)rect
-                          withFunctionSignature:
-                              (marlin::control::source_selection::function_signature)signature {
+                          withFunctionSignature:(marlin::function_definition)signature {
   MacFunctionViewController *vc =
       [self.storyboard instantiateControllerWithIdentifier:@"FunctionViewController"];
   vc.delegate = view;

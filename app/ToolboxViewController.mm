@@ -1,5 +1,7 @@
 #import "ToolboxViewController.h"
 
+#include <memory>
+
 #import "NSString+StringView.h"
 
 using ToolIndex = std::pair<NSInteger, NSInteger>;
@@ -11,7 +13,7 @@ using ToolIndex = std::pair<NSInteger, NSInteger>;
 @end
 
 @implementation ToolboxViewController {
-  marlin::control::toolbox _model;
+  std::shared_ptr<marlin::control::toolbox> _model;
 
   __weak Button *_currentCategoryButton;
 }
@@ -19,15 +21,21 @@ using ToolIndex = std::pair<NSInteger, NSInteger>;
 - (void)viewDidLoad {
   [super viewDidLoad];
 
-  for (size_t i = 0; i < _model.categories().size(); i++) {
-    auto &category = _model.categories()[i];
+  _model = std::make_shared<marlin::control::toolbox>();
+
+  for (size_t i = 0; i < self.model.categories().size(); i++) {
+    auto &category = self.model.categories()[i];
     auto title = [NSString stringWithStringView:{category.name.data(), 1}];
     [self createButtonWithTitle:title tag:i];
   }
 }
 
 - (marlin::control::toolbox &)model {
-  return _model;
+  return *_model;
+}
+
+- (void)registerModelToDocument:(marlin::control::document &)document {
+  document.register_toolbox(_model);
 }
 
 - (void)sectionButtonPressed:(Button *)sender {
@@ -38,7 +46,7 @@ using ToolIndex = std::pair<NSInteger, NSInteger>;
 - (void)createButtonWithTitle:(NSString *)title tag:(NSInteger)tag {
   auto button = [self buttonWithTitle:title action:@selector(sectionButtonPressed:)];
   button.tag = tag;
-  if (tag == _model.current_category_index()) {
+  if (tag == self.model.current_category_index()) {
     [self setCurrentcategoryButton:button];
   }
   button.translatesAutoresizingMaskIntoConstraints = NO;
@@ -55,7 +63,7 @@ using ToolIndex = std::pair<NSInteger, NSInteger>;
 - (void)setCurrentcategoryButton:(Button *)button {
   [self setBackgroundColor:Color.whiteColor forButton:_currentCategoryButton];
   _currentCategoryButton = button;
-  _model.set_current_category(button.tag);
+  self.model.set_current_category(button.tag);
   [self setBackgroundColor:[Color colorWithWhite:0.92 alpha:1] forButton:_currentCategoryButton];
 }
 

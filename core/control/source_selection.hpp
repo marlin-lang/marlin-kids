@@ -8,6 +8,7 @@
 #include "document.hpp"
 #include "expression_inserter.hpp"
 #include "formatter.hpp"
+#include "function_definition.hpp"
 #include "placeholders.hpp"
 #include "store.hpp"
 
@@ -64,11 +65,6 @@ struct source_selection {
         : type{_type}, content{std::move(_content)} {}
   };
 
-  struct function_signature {
-    std::string name;
-    std::vector<std::string> parameters;
-  };
-
   source_selection(document& doc, source_loc loc,
                    selection_promotion_rule rule = default_rule)
       : source_selection{doc, loc, doc.locate(loc), rule} {}
@@ -87,10 +83,10 @@ struct source_selection {
         [this](const auto& n) { return get_literal_content(n); });
   }
 
-  [[nodiscard]] function_signature get_function_signature() const {
+  [[nodiscard]] function_definition get_function_signature() const {
     assert(is_function_signature());
 
-    function_signature signature;
+    function_definition signature;
     if (_selection->is<ast::function_signature>()) {
       auto& signature_node{_selection->as<ast::function_signature>()};
       signature.name = signature_node.name;
@@ -140,33 +136,52 @@ struct source_selection {
   }
 
   std::optional<source_update> remove_from_document() const&& {
-    if (is_statement()) {
-      return remove_statement();
+    if (is_block()) {
+      if (_selection->is<ast::function>()) {
+        auto& signature = *_selection->as<ast::function>().signature();
+        if (signature.is<ast::function_signature>()) {
+          _doc->remove_function(signature.as<ast::function_signature>().name);
+        }
+      }
+
+      return remove_line();
+    } else if (is_statement()) {
+      return remove_line();
     } else if (is_expression()) {
       return remove_expression();
     } else {
-      // For now we are not dragging blocks
+      // These things are not draggable
       assert(false);
       return std::nullopt;
     }
   }
 
   std::optional<source_update> replace_function_signature(
-      function_signature signature) const&& {
+      function_definition signature) const&& {
     if (is_function_signature()) {
-      // TODO: change all corresponding function calls
+      auto original_range{_selection->source_code_range};
 
       assert(signature.name.length() > 0);
       std::vector<ast::node> params;
       for (auto& param : signature.parameters) {
-        params.emplace_back(ast::make<ast::variable_name>(std::move(param)));
+        params.emplace_back(ast::make<ast::variable_name>(param));
       }
-      auto node{ast::make<ast::function_signature>(std::move(signature.name),
+      auto node{ast::make<ast::function_signature>(signature.name,
                                                    std::move(params))};
-      auto data{store::write({node.get()})};
 
-      auto inserter{std::move(*this).as_expression_inserter()};
-      return std::move(inserter).insert(data);
+      format::formatter formatter;
+      auto display{formatter.format(node, *_selection)};
+
+      if (_selection->is<ast::function_signature>()) {
+        const auto& previous_name{
+            _selection->as<ast::function_signature>().name};
+        _doc->replace_function(previous_name, std::move(signature));
+      } else {
+        _doc->add_function(std::move(signature));
+      }
+
+      _doc->replace_expression(*_selection, std::move(node));
+      return source_update{original_range, std::move(display)};
     } else {
       assert(false);
       return std::nullopt;
@@ -190,17 +205,16 @@ struct source_selection {
     return {literal_data_type::number, ""};
   }
 
-  source_update remove_statement() const {
+  source_update remove_line() const {
     assert(_selection->has_parent());
 
-    source_range statement_range{
-        {_selection->source_code_range.begin.line, 1},
-        {_selection->source_code_range.end.line + 1, 1}};
-    auto line_offset{static_cast<ptrdiff_t>(statement_range.begin.line) -
-                     static_cast<ptrdiff_t>(statement_range.end.line)};
+    source_range line_range{{_selection->source_code_range.begin.line, 1},
+                            {_selection->source_code_range.end.line + 1, 1}};
+    auto line_offset{static_cast<ptrdiff_t>(line_range.begin.line) -
+                     static_cast<ptrdiff_t>(line_range.end.line)};
     _doc->update_source_line_after_node(*_selection, line_offset);
     _doc->remove_line(*_selection);
-    return source_update{statement_range, {"", {}}};
+    return source_update{line_range, {"", {}}};
   }
 
   source_update remove_expression() const {

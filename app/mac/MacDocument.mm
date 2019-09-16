@@ -3,6 +3,7 @@
 #import "MacSourceViewController.h"
 #import "NSData+DataView.h"
 #import "NSObject+Casting.h"
+#import "ToolboxViewController.h"
 
 @implementation MacDocument
 
@@ -18,6 +19,10 @@
     if (auto *vc =
             [MacSourceViewController cast:splitViewController.splitViewItems[1].viewController]) {
       vc.document = self;
+    }
+    if (auto *toolbox =
+            [ToolboxViewController cast:splitViewController.splitViewItems[0].viewController]) {
+      [toolbox registerModelToDocument:self.content];
     }
   }
 }

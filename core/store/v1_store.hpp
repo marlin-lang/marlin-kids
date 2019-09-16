@@ -42,6 +42,7 @@ inline const std::string_view unary{"unary"};
 inline const std::string_view binary{"binary"};
 
 inline const std::string_view system_function{"sys_func"};
+inline const std::string_view user_function{"user_func"};
 
 inline const std::string_view number{"number"};
 inline const std::string_view string{"string"};
@@ -55,14 +56,27 @@ struct store : base_store::impl<store> {
                       data_prefix().begin(), data_prefix().end());
   }
 
-  std::vector<ast::node> read(data_view data, type_expectation type) override {
+  std::vector<ast::node> read(data_view data, type_expectation type,
+                              user_function_table_interface& table) override {
     assert(recognize(data));
 
-    auto current{data.begin() + data_prefix().size()};
-    auto nodes{read_vector(current, data.end(), type)};
+    _iter = data.begin() + data_prefix().size();
+    _end = data.end();
+    _functions = &table;
+    _unknown_calls.clear();
+
+    auto nodes{read_vector(type)};
     if (nodes.size() == 0) {
       throw read_error{"No data is read!"};
     }
+
+    for (auto* call : _unknown_calls) {
+      if (_functions->has_function(call->name)) {
+        call->func = &_functions->get_function(call->name);
+      }
+    }
+    _unknown_calls.clear();
+
     return nodes;
   }
 
@@ -74,9 +88,7 @@ struct store : base_store::impl<store> {
   }
 
  private:
-  using read_node_entry = ast::node (store::*)(data_view::pointer&,
-                                               data_view::pointer,
-                                               type_expectation);
+  using read_node_entry = ast::node (store::*)(type_expectation);
 
   static data_view data_prefix() {
     static const data_vector _data{std::byte{'M'}, std::byte{'K'},
@@ -86,6 +98,11 @@ struct store : base_store::impl<store> {
 
   data_vector _data_buffer;
 
+  data_view::pointer _iter;
+  data_view::pointer _end;
+  user_function_table_interface* _functions;
+  std::vector<ast::user_function_call*> _unknown_calls;
+
   template <type_expectation... expect_types>
   void assert_type(type_expectation type, std::string message) {
     if (type != type_expectation::any && ((type != expect_types) && ...)) {
@@ -93,35 +110,34 @@ struct store : base_store::impl<store> {
     }
   }
 
-  std::string_view read_zero_terminated(data_view::pointer& iter,
-                                        data_view::pointer end) {
-    auto begin{iter};
-    while (iter < end) {
-      if (*iter == std::byte{0}) {
-        data_view result{begin, iter};
-        iter++;
+  std::string_view read_zero_terminated() {
+    auto begin{_iter};
+    while (_iter < _end) {
+      if (*_iter == std::byte{0}) {
+        data_view result{begin, _iter};
+        _iter++;
         return result;
       } else {
-        iter++;
+        _iter++;
       }
     }
     throw read_error{"Unterminating character sequence!"};
   }
 
-  bool read_bool(data_view::pointer& iter, data_view::pointer end) {
-    if (iter < end) {
-      return static_cast<uint8_t>(*iter++);
+  bool read_bool() {
+    if (_iter < _end) {
+      return static_cast<uint8_t>(*_iter++);
     } else {
       throw read_error{"End of file when expecting boolean!"};
     }
   }
 
-  uint32_t read_int(data_view::pointer& iter, data_view::pointer end) {
-    if (iter + 4 <= end) {
-      uint32_t result{static_cast<uint8_t>(*iter++)};
+  uint32_t read_int() {
+    if (_iter + 4 <= _end) {
+      uint32_t result{static_cast<uint8_t>(*_iter++)};
       for (size_t i{0}; i < 3; i++) {
         result <<= 8;
-        result |= static_cast<uint8_t>(*iter++);
+        result |= static_cast<uint8_t>(*_iter++);
       }
       return result;
     } else {
@@ -129,32 +145,28 @@ struct store : base_store::impl<store> {
     }
   }
 
-  std::string_view read_string(data_view::pointer& iter,
-                               data_view::pointer end) {
-    auto length{read_int(iter, end)};
-    if (iter + length <= end) {
-      data_view result{iter, length};
-      iter += length;
+  std::string_view read_string() {
+    auto length{read_int()};
+    if (_iter + length <= _end) {
+      data_view result{_iter, length};
+      _iter += length;
       return result;
     } else {
       throw read_error{"End of file when expecting string!"};
     }
   }
 
-  std::vector<ast::node> read_vector(data_view::pointer& iter,
-                                     data_view::pointer end,
-                                     type_expectation type) {
-    auto length{read_int(iter, end)};
+  std::vector<ast::node> read_vector(type_expectation type) {
+    auto length{read_int()};
     std::vector<ast::node> result;
     result.reserve(length);
     for (size_t i{0}; i < length; i++) {
-      result.emplace_back(read_node(iter, end, type));
+      result.emplace_back(read_node(type));
     }
     return result;
   }
 
-  ast::node read_node(data_view::pointer& iter, data_view::pointer end,
-                      type_expectation type) {
+  ast::node read_node(type_expectation type) {
     static const std::unordered_map<std::string_view, read_node_entry>
         read_node_map{
             {key::program, &store::read_program},
@@ -174,75 +186,81 @@ struct store : base_store::impl<store> {
             {key::unary, &store::read_unary_expression},
             {key::binary, &store::read_binary_expression},
             {key::system_function, &store::read_system_function},
+            {key::user_function, &store::read_user_function},
             {key::number, &store::read_number_literal},
             {key::string, &store::read_string_literal}};
 
-    const auto it{read_node_map.find(read_zero_terminated(iter, end))};
+    const auto it{read_node_map.find(read_zero_terminated())};
     if (it == read_node_map.end()) {
       throw read_error{"Unknown node key encountered!"};
     } else {
-      auto node{(this->*(it->second))(iter, end, type)};
+      auto node{(this->*(it->second))(type)};
       return node;
     }
   }
 
-  ast::node read_program(data_view::pointer& iter, data_view::pointer end,
-                         type_expectation type) {
+  ast::node read_program(type_expectation type) {
     assert_type<type_expectation::program>(type, "Unexpected program!");
 
-    auto blocks{read_vector(iter, end, type_expectation::block)};
+    auto blocks{read_vector(type_expectation::block)};
     return ast::make<ast::program>(std::move(blocks));
   }
 
-  ast::node read_on_start(data_view::pointer& iter, data_view::pointer end,
-                          type_expectation type) {
+  ast::node read_on_start(type_expectation type) {
     assert_type<type_expectation::block>(type, "Unexpected block!");
-    auto statements{read_vector(iter, end, type_expectation::statement)};
+    auto statements{read_vector(type_expectation::statement)};
     return ast::make<ast::on_start>(std::move(statements));
   }
 
-  ast::node read_function_signature(data_view::pointer& iter,
-                                    data_view::pointer end,
-                                    type_expectation type) {
+  ast::node read_function_signature(type_expectation type) {
     assert_type<type_expectation::function_signature>(type,
                                                       "Unexpected function!");
 
-    auto name{read_string(iter, end)};
-    auto args{read_vector(iter, end, type_expectation::lvalue)};
-    return ast::make<ast::function_signature>(std::string{std::move(name)},
-                                              std::move(args));
+    std::string name{read_string()};
+    auto params{read_vector(type_expectation::lvalue)};
+
+    if (_functions->has_function(name)) {
+      throw read_error{"Repeated function name encountered!"};
+    } else {
+      std::vector<std::string> param_names;
+      for (auto& param : params) {
+        if (param->is<ast::variable_name>()) {
+          param_names.emplace_back(param->as<ast::variable_name>().name);
+        } else {
+          throw read_error{"Unexpected node, expecting function parameter!"};
+        }
+      }
+      _functions->add_function({name, std::move(param_names)});
+      return ast::make<ast::function_signature>(std::string{std::move(name)},
+                                                std::move(params));
+    }
   }
 
-  ast::node read_function(data_view::pointer& iter, data_view::pointer end,
-                          type_expectation type) {
+  ast::node read_function(type_expectation type) {
     assert_type<type_expectation::block>(type, "Unexpected function!");
 
-    auto signature{read_node(iter, end, type_expectation::function_signature)};
-    auto statements{read_vector(iter, end, type_expectation::statement)};
+    auto signature{read_node(type_expectation::function_signature)};
+    auto statements{read_vector(type_expectation::statement)};
     return ast::make<ast::function>(std::move(signature),
                                     std::move(statements));
   }
 
-  ast::node read_assignment(data_view::pointer& iter, data_view::pointer end,
-                            type_expectation type) {
+  ast::node read_assignment(type_expectation type) {
     assert_type<type_expectation::statement>(type, "Unexpected statement!");
 
-    auto variable{read_node(iter, end, type_expectation::lvalue)};
-    auto value{read_node(iter, end, type_expectation::rvalue)};
+    auto variable{read_node(type_expectation::lvalue)};
+    auto value{read_node(type_expectation::rvalue)};
     return ast::make<ast::assignment>(std::move(variable), std::move(value));
   }
 
-  ast::node read_use_global(data_view::pointer& iter, data_view::pointer end,
-                            type_expectation type) {
+  ast::node read_use_global(type_expectation type) {
     assert_type<type_expectation::statement>(type, "Unexpected statement!");
 
-    auto variable{read_node(iter, end, type_expectation::lvalue)};
+    auto variable{read_node(type_expectation::lvalue)};
     return ast::make<ast::use_global>(std::move(variable));
   }
 
-  ast::node read_system_procedure(data_view::pointer& iter,
-                                  data_view::pointer end,
-                                  type_expectation type) {
+  ast::node read_system_procedure(type_expectation type) {
     assert_type<type_expectation::statement>(type, "Unexpected statement!");
 
     static const auto system_procedure_inverse_name_map{[]() {
@@ -253,27 +271,25 @@ struct store : base_store::impl<store> {
       return map;
     }()};
 
-    auto name{read_zero_terminated(iter, end)};
+    auto name{read_zero_terminated()};
     auto it{system_procedure_inverse_name_map.find(name)};
     if (it == system_procedure_inverse_name_map.end()) {
       throw read_error{"Unknown system function encountered!"};
     } else {
       const auto proc{it->second};
-      auto args{read_vector(iter, end, type_expectation::rvalue)};
+      auto args{read_vector(type_expectation::rvalue)};
       return ast::make<ast::system_procedure_call>(proc, std::move(args));
     }
   }
 
-  ast::node read_if_else_statement(data_view::pointer& iter,
-                                   data_view::pointer end,
-                                   type_expectation type) {
+  ast::node read_if_else_statement(type_expectation type) {
     assert_type<type_expectation::statement>(type, "Unexpected statement!");
 
-    const bool has_else{read_bool(iter, end)};
-    auto condition{read_node(iter, end, type_expectation::rvalue)};
-    auto consequence{read_vector(iter, end, type_expectation::statement)};
+    const bool has_else{read_bool()};
+    auto condition{read_node(type_expectation::rvalue)};
+    auto consequence{read_vector(type_expectation::statement)};
     if (has_else) {
-      auto alternate{read_vector(iter, end, type_expectation::statement)};
+      auto alternate{read_vector(type_expectation::statement)};
       return ast::make<ast::if_else_statement>(
           std::move(condition), std::move(consequence), std::move(alternate));
     } else {
@@ -282,46 +298,40 @@ struct store : base_store::impl<store> {
     }
   }
 
-  ast::node read_while_statement(data_view::pointer& iter,
-                                 data_view::pointer end,
-                                 type_expectation type) {
+  ast::node read_while_statement(type_expectation type) {
     assert_type<type_expectation::statement>(type, "Unexpected statement!");
 
-    auto condition{read_node(iter, end, type_expectation::rvalue)};
-    auto statements{read_vector(iter, end, type_expectation::statement)};
+    auto condition{read_node(type_expectation::rvalue)};
+    auto statements{read_vector(type_expectation::statement)};
     return ast::make<ast::while_statement>(std::move(condition),
                                            std::move(statements));
   }
 
-  ast::node read_for_statement(data_view::pointer& iter, data_view::pointer end,
-                               type_expectation type) {
+  ast::node read_for_statement(type_expectation type) {
     assert_type<type_expectation::statement>(type, "Unexpected statement!");
 
-    auto variable{read_node(iter, end, type_expectation::lvalue)};
-    auto list{read_node(iter, end, type_expectation::rvalue)};
-    auto statements{read_vector(iter, end, type_expectation::statement)};
+    auto variable{read_node(type_expectation::lvalue)};
+    auto list{read_node(type_expectation::rvalue)};
+    auto statements{read_vector(type_expectation::statement)};
     return ast::make<ast::for_statement>(std::move(variable), std::move(list),
                                          std::move(statements));
   }
 
-  ast::node read_break(data_view::pointer& iter, data_view::pointer end,
-                       type_expectation type) {
+  ast::node read_break(type_expectation type) {
     assert_type<type_expectation::statement>(type, "Unexpected statement!");
     return ast::make<ast::break_statement>();
   }
 
-  ast::node read_continue(data_view::pointer& iter, data_view::pointer end,
-                          type_expectation type) {
+  ast::node read_continue(type_expectation type) {
     assert_type<type_expectation::statement>(type, "Unexpected statement!");
     return ast::make<ast::continue_statement>();
   }
 
-  ast::node read_placeholder(data_view::pointer& iter, data_view::pointer end,
-                             type_expectation type) {
+  ast::node read_placeholder(type_expectation type) {
     assert_type<type_expectation::lvalue, type_expectation::function_signature,
                 type_expectation::rvalue>(type, "Unexpected placeholder!");
 
-    auto string{read_string(iter, end)};
+    auto string{read_string()};
     if (type == type_expectation::lvalue) {
       return ast::make<ast::variable_placeholder>(
           std::string{std::move(string)});
@@ -334,12 +344,11 @@ struct store : base_store::impl<store> {
     }
   }
 
-  ast::node read_identifier(data_view::pointer& iter, data_view::pointer end,
-                            type_expectation type) {
+  ast::node read_identifier(type_expectation type) {
     assert_type<type_expectation::lvalue, type_expectation::rvalue>(
         type, "Unexpected identifier!");
 
-    auto string{read_string(iter, end)};
+    auto string{read_string()};
     if (type == type_expectation::lvalue) {
       return ast::make<ast::variable_name>(std::string{std::move(string)});
     } else {
@@ -347,9 +356,7 @@ struct store : base_store::impl<store> {
     }
   }
 
-  ast::node read_unary_expression(data_view::pointer& iter,
-                                  data_view::pointer end,
-                                  type_expectation type) {
+  ast::node read_unary_expression(type_expectation type) {
     assert_type<type_expectation::rvalue>(type, "Unexpected expression!");
 
     static const auto unary_inverse_op_symbol_map{[]() {
@@ -360,20 +367,18 @@ struct store : base_store::impl<store> {
       return map;
     }()};
 
-    auto op_symbol{read_zero_terminated(iter, end)};
+    auto op_symbol{read_zero_terminated()};
     auto it{unary_inverse_op_symbol_map.find(op_symbol)};
     if (it == unary_inverse_op_symbol_map.end()) {
       throw read_error{"Unknown unary operator encountered!"};
     } else {
       const auto op{it->second};
-      auto argument{read_node(iter, end, type_expectation::rvalue)};
+      auto argument{read_node(type_expectation::rvalue)};
       return ast::make<ast::unary_expression>(op, std::move(argument));
     }
   }
 
-  ast::node read_binary_expression(data_view::pointer& iter,
-                                   data_view::pointer end,
-                                   type_expectation type) {
+  ast::node read_binary_expression(type_expectation type) {
     assert_type<type_expectation::rvalue>(type, "Unexpected expression!");
 
     static const auto binary_inverse_op_symbol_map{[]() {
@@ -384,22 +389,20 @@ struct store : base_store::impl<store> {
       return map;
     }()};
 
-    auto op_symbol{read_zero_terminated(iter, end)};
+    auto op_symbol{read_zero_terminated()};
     auto it{binary_inverse_op_symbol_map.find(op_symbol)};
     if (it == binary_inverse_op_symbol_map.end()) {
       throw read_error{"Unknown binary operator encountered!"};
     } else {
       const auto op{it->second};
-      auto left{read_node(iter, end, type_expectation::rvalue)};
-      auto right{read_node(iter, end, type_expectation::rvalue)};
+      auto left{read_node(type_expectation::rvalue)};
+      auto right{read_node(type_expectation::rvalue)};
       return ast::make<ast::binary_expression>(std::move(left), op,
                                                std::move(right));
     }
   }
 
-  ast::node read_system_function(data_view::pointer& iter,
-                                 data_view::pointer end,
-                                 type_expectation type) {
+  ast::node read_system_function(type_expectation type) {
     assert_type<type_expectation::rvalue>(type, "Unexpected expression!");
 
     static const auto system_function_inverse_name_map{[]() {
@@ -410,29 +413,44 @@ struct store : base_store::impl<store> {
       return map;
     }()};
 
-    auto name{read_zero_terminated(iter, end)};
+    auto name{read_zero_terminated()};
     auto it{system_function_inverse_name_map.find(name)};
     if (it == system_function_inverse_name_map.end()) {
       throw read_error{"Unknown system function encountered!"};
     } else {
       const auto func{it->second};
-      auto args{read_vector(iter, end, type_expectation::rvalue)};
+      auto args{read_vector(type_expectation::rvalue)};
       return ast::make<ast::system_function_call>(func, std::move(args));
     }
   }
 
-  ast::node read_number_literal(data_view::pointer& iter,
-                                data_view::pointer end, type_expectation type) {
-    assert_type<type_expectation::rvalue>(type, "Unexpected literal!");
+  ast::node read_user_function(type_expectation type) {
+    assert_type<type_expectation::rvalue>(type, "Unexpected expression!");
 
-    return ast::make<ast::number_literal>(std::string{read_string(iter, end)});
+    std::string name{read_string()};
+    auto args{read_vector(type_expectation::rvalue)};
+    if (_functions->has_function(name)) {
+      auto* definition{&_functions->get_function(name)};
+      return ast::make<ast::user_function_call>(std::move(name), definition,
+                                                std::move(args));
+    } else {
+      auto node{ast::make<ast::user_function_call>(std::move(name), nullptr,
+                                                   std::move(args))};
+      _unknown_calls.emplace_back(&node->as<ast::user_function_call>());
+      return node;
+    }
   }
 
-  ast::node read_string_literal(data_view::pointer& iter,
-                                data_view::pointer end, type_expectation type) {
+  ast::node read_number_literal(type_expectation type) {
     assert_type<type_expectation::rvalue>(type, "Unexpected literal!");
 
-    return ast::make<ast::string_literal>(std::string{read_string(iter, end)});
+    return ast::make<ast::number_literal>(std::string{read_string()});
+  }
+
+  ast::node read_string_literal(type_expectation type) {
+    assert_type<type_expectation::rvalue>(type, "Unexpected literal!");
+
+    return ast::make<ast::string_literal>(std::string{read_string()});
   }
 
   void write_byte(uint8_t byte) { _data_buffer.emplace_back(std::byte{byte}); }
@@ -602,6 +620,12 @@ struct store : base_store::impl<store> {
   void write_node(const ast::system_function_call& call) {
     write_key(key::system_function);
     write_symbol(ast::name_for(call.func));
+    write_vector(call.arguments());
+  }
+
+  void write_node(const ast::user_function_call& call) {
+    write_key(key::user_function);
+    write_string(call.name);
     write_vector(call.arguments());
   }
 

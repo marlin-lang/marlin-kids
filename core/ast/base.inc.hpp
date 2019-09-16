@@ -47,6 +47,7 @@ struct type_map {
   X(unary_expression)       \
   X(binary_expression)      \
   X(system_function_call)   \
+  X(user_function_call)     \
   X(identifier)             \
   X(number_literal)         \
   X(string_literal)

@@ -6,6 +6,7 @@ set(HEADERS
     base.hpp
     base.impl.hpp
     base.inc.hpp
+    function_definition.hpp
     node.hpp
     specs.hpp
     subnode_views.hpp

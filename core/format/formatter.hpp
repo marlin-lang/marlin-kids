@@ -344,6 +344,11 @@ struct formatter {
     emit_arguments(call.arguments());
   }
 
+  void emit_node(ast::user_function_call& call, size_t) {
+    emit_string(call.name);
+    emit_arguments(call.arguments());
+  }
+
   void emit_node(ast::identifier& identifier, size_t) {
     emit_string(identifier.name);
   }
