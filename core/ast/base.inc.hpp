@@ -26,30 +26,33 @@ struct type_map {
 
 }  // namespace utils
 
-#define ASTS(X)             \
-  X(program)                \
-  X(on_start)               \
-  X(function_placeholder)   \
-  X(function_signature)     \
-  X(function)               \
-  X(assignment)             \
-  X(use_global)             \
-  X(system_procedure_call)  \
-  X(if_statement)           \
-  X(if_else_statement)      \
-  X(while_statement)        \
-  X(for_statement)          \
-  X(break_statement)        \
-  X(continue_statement)     \
-  X(variable_placeholder)   \
-  X(variable_name)          \
-  X(expression_placeholder) \
-  X(unary_expression)       \
-  X(binary_expression)      \
-  X(system_function_call)   \
-  X(user_function_call)     \
-  X(identifier)             \
-  X(number_literal)         \
+#define ASTS(X)              \
+  X(program)                 \
+  X(on_start)                \
+  X(function_placeholder)    \
+  X(function_signature)      \
+  X(function)                \
+  X(eval_statement)          \
+  X(assignment)              \
+  X(use_global)              \
+  X(system_procedure_call)   \
+  X(if_statement)            \
+  X(if_else_statement)       \
+  X(while_statement)         \
+  X(for_statement)           \
+  X(break_statement)         \
+  X(continue_statement)      \
+  X(return_statement)        \
+  X(return_result_statement) \
+  X(variable_placeholder)    \
+  X(variable_name)           \
+  X(expression_placeholder)  \
+  X(unary_expression)        \
+  X(binary_expression)       \
+  X(system_function_call)    \
+  X(user_function_call)      \
+  X(identifier)              \
+  X(number_literal)          \
   X(string_literal)
 
 #define _LIST_TEMPLATE(NAME) NAME,

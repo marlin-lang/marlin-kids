@@ -7,11 +7,6 @@ struct concrete {
   size_t index;
 };
 
-struct optional {
-  size_t index;
-  bool has_value;
-};
-
 struct vector {
   size_t index;
   size_t size;

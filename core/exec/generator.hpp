@@ -160,6 +160,12 @@ struct generator {
   }
 
   template <typename wrapper_type>
+  auto get_jsast(ast::eval_statement& eval, wrapper_type&& wrapper) {
+    return wrapper(
+        jsast::ast::expression_statement{get_node(*eval.expression())});
+  }
+
+  template <typename wrapper_type>
   auto get_jsast(ast::assignment& assignment, wrapper_type&& wrapper) {
     if (is_local_identifier(*assignment.variable())) {
       return wrapper(jsast::ast::variable_declaration{
@@ -273,6 +279,17 @@ struct generator {
   template <typename wrapper_type>
   auto get_jsast(ast::continue_statement&, wrapper_type&& wrapper) {
     return wrapper(jsast::ast::continue_statement{});
+  }
+
+  template <typename wrapper_type>
+  auto get_jsast(ast::return_statement&, wrapper_type&& wrapper) {
+    return wrapper(jsast::ast::return_statement{});
+  }
+
+  template <typename wrapper_type>
+  auto get_jsast(ast::return_result_statement& statement,
+                 wrapper_type&& wrapper) {
+    return wrapper(jsast::ast::return_statement{get_node(*statement.result())});
   }
 
   template <typename wrapper_type>

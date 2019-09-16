@@ -203,6 +203,13 @@ struct formatter {
     emit_string("}");
   }
 
+  void emit_node(ast::eval_statement& eval, size_t) {
+    emit_highlight("eval", highlight_token_type::keyword);
+    emit_string(" ");
+    emit_node(*eval.expression());
+    emit_string(";");
+  }
+
   void emit_node(ast::assignment& assignment, size_t) {
     emit_node(*assignment.variable());
     emit_string(" = ");
@@ -293,6 +300,18 @@ struct formatter {
 
   void emit_node(ast::continue_statement&, size_t) {
     emit_highlight("continue", highlight_token_type::keyword);
+    emit_string(";");
+  }
+
+  void emit_node(ast::return_statement&, size_t) {
+    emit_highlight("return", highlight_token_type::keyword);
+    emit_string(";");
+  }
+
+  void emit_node(ast::return_result_statement& statement, size_t) {
+    emit_highlight("return", highlight_token_type::keyword);
+    emit_string(" ");
+    emit_node(*statement.result());
     emit_string(";");
   }
 

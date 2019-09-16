@@ -24,8 +24,10 @@ inline const std::string_view on_start{"on_start"};
 inline const std::string_view function{"function"};
 inline const std::string_view function_signature{"signature"};
 
+inline const std::string_view eval_statement{"eval"};
 inline const std::string_view assignment{"assign"};
 inline const std::string_view use_global{"global"};
+
 inline const std::string_view system_procedure{"sys_proc"};
 
 inline const std::string_view if_else{"if"};
@@ -34,6 +36,7 @@ inline const std::string_view for_loop{"for"};
 
 inline const std::string_view break_statement{"break"};
 inline const std::string_view continue_statement{"continue"};
+inline const std::string_view return_statement{"return"};
 
 inline const std::string_view placeholder{"placeholder"};
 inline const std::string_view identifier{"id"};
@@ -173,14 +176,16 @@ struct store : base_store::impl<store> {
             {key::on_start, &store::read_on_start},
             {key::function, &store::read_function},
             {key::function_signature, &store::read_function_signature},
+            {key::eval_statement, &store::read_eval},
             {key::assignment, &store::read_assignment},
             {key::use_global, &store::read_use_global},
             {key::system_procedure, &store::read_system_procedure},
-            {key::if_else, &store::read_if_else_statement},
-            {key::while_loop, &store::read_while_statement},
-            {key::for_loop, &store::read_for_statement},
+            {key::if_else, &store::read_if_else},
+            {key::while_loop, &store::read_while},
+            {key::for_loop, &store::read_for},
             {key::break_statement, &store::read_break},
             {key::continue_statement, &store::read_continue},
+            {key::return_statement, &store::read_return},
             {key::placeholder, &store::read_placeholder},
             {key::identifier, &store::read_identifier},
             {key::unary, &store::read_unary_expression},
@@ -245,6 +250,13 @@ struct store : base_store::impl<store> {
                                     std::move(statements));
   }
 
+  ast::node read_eval(type_expectation type) {
+    assert_type<type_expectation::statement>(type, "Unexpected statement!");
+
+    auto expression{read_node(type_expectation::rvalue)};
+    return ast::make<ast::eval_statement>(std::move(expression));
+  }
+
   ast::node read_assignment(type_expectation type) {
     assert_type<type_expectation::statement>(type, "Unexpected statement!");
 
@@ -282,7 +294,7 @@ struct store : base_store::impl<store> {
     }
   }
 
-  ast::node read_if_else_statement(type_expectation type) {
+  ast::node read_if_else(type_expectation type) {
     assert_type<type_expectation::statement>(type, "Unexpected statement!");
 
     const bool has_else{read_bool()};
@@ -298,7 +310,7 @@ struct store : base_store::impl<store> {
     }
   }
 
-  ast::node read_while_statement(type_expectation type) {
+  ast::node read_while(type_expectation type) {
     assert_type<type_expectation::statement>(type, "Unexpected statement!");
 
     auto condition{read_node(type_expectation::rvalue)};
@@ -307,7 +319,7 @@ struct store : base_store::impl<store> {
                                            std::move(statements));
   }
 
-  ast::node read_for_statement(type_expectation type) {
+  ast::node read_for(type_expectation type) {
     assert_type<type_expectation::statement>(type, "Unexpected statement!");
 
     auto variable{read_node(type_expectation::lvalue)};
@@ -325,6 +337,18 @@ struct store : base_store::impl<store> {
   ast::node read_continue(type_expectation type) {
     assert_type<type_expectation::statement>(type, "Unexpected statement!");
     return ast::make<ast::continue_statement>();
+  }
+
+  ast::node read_return(type_expectation type) {
+    assert_type<type_expectation::statement>(type, "Unexpected statement!");
+
+    const bool has_result{read_bool()};
+    if (has_result) {
+      auto result{read_node(type_expectation::rvalue)};
+      return ast::make<ast::return_result_statement>(std::move(result));
+    } else {
+      return ast::make<ast::return_statement>();
+    }
   }
 
   ast::node read_placeholder(type_expectation type) {
@@ -536,6 +560,11 @@ struct store : base_store::impl<store> {
     write_vector(function.statements());
   }
 
+  void write_node(const ast::eval_statement& eval) {
+    write_key(key::eval_statement);
+    write_base(*eval.expression());
+  }
+
   void write_node(const ast::assignment& assignment) {
     write_key(key::assignment);
     write_base(*assignment.variable());
@@ -587,6 +616,17 @@ struct store : base_store::impl<store> {
 
   void write_node(const ast::continue_statement& statement) {
     write_key(key::continue_statement);
+  }
+
+  void write_node(const ast::return_statement&) {
+    write_key(key::return_statement);
+    write_bool(false);
+  }
+
+  void write_node(const ast::return_result_statement& statement) {
+    write_key(key::return_statement);
+    write_bool(true);
+    write_base(*statement.result());
   }
 
   void write_node(const ast::variable_placeholder& placeholder) {

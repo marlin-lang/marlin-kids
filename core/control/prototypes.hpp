@@ -28,6 +28,15 @@ inline prototype function_prototype() {
           }()};
 }
 
+inline prototype eval_prototype() {
+  return {"eval", pasteboard_t::statement, []() {
+            const auto node{ast::make<ast::eval_statement>(
+                ast::make<ast::expression_placeholder>(
+                    std::string{placeholder::get<ast::eval_statement>(0)}))};
+            return store::write({node.get()});
+          }()};
+}
+
 inline prototype assignment_prototype() {
   return {"assign", pasteboard_t::statement, []() {
             const auto node{ast::make<ast::assignment>(
@@ -116,6 +125,22 @@ inline prototype break_prototype() {
 inline prototype continue_prototype() {
   return {"continue", pasteboard_t::statement, []() {
             const auto node{ast::make<ast::continue_statement>()};
+            return store::write({node.get()});
+          }()};
+}
+
+inline prototype return_prototype() {
+  return {"return", pasteboard_t::statement, []() {
+            const auto node{ast::make<ast::return_statement>()};
+            return store::write({node.get()});
+          }()};
+}
+
+inline prototype return_result_prototype() {
+  return {"return1", pasteboard_t::statement, []() {
+            const auto node{ast::make<ast::return_result_statement>(
+                ast::make<ast::expression_placeholder>(std::string{
+                    placeholder::get<ast::return_result_statement>(0)}))};
             return store::write({node.get()});
           }()};
 }

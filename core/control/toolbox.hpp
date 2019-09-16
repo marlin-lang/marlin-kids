@@ -36,10 +36,11 @@ struct toolbox {
     static const std::array _default_prototypes{
         std::vector{function_prototype(), if_prototype(), if_else_prototype(),
                     while_prototype(), for_prototype(), break_prototype(),
-                    continue_prototype(),
+                    continue_prototype(), return_prototype(),
+                    return_result_prototype(),
                     system_procedure_prototype(ast::system_procedure::sleep)},
         std::vector{
-            assignment_prototype(), use_global_prototype(),
+            eval_prototype(), assignment_prototype(), use_global_prototype(),
             system_procedure_prototype(ast::system_procedure::print),
             system_procedure_prototype(ast::system_procedure::draw_line),
             system_procedure_prototype(ast::system_procedure::logo_forward),

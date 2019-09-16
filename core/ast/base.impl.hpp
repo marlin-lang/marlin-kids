@@ -145,11 +145,6 @@ struct type_config<subnode::concrete> {
 };
 
 template <>
-struct type_config<subnode::optional> {
-  using store = std::optional<node>;
-};
-
-template <>
 struct type_config<subnode::vector> {
   using store = std::vector<node>;
 };
@@ -162,11 +157,6 @@ struct update_checker {
 template <typename... types>
 struct update_checker<subnode::concrete, types...> {
   static constexpr bool needs_update = update_checker<types...>::needs_update;
-};
-
-template <typename t0, typename... types>
-struct update_checker<subnode::optional, t0, types...> {
-  static constexpr bool needs_update = true;
 };
 
 template <typename t0, typename... types>
@@ -263,14 +253,6 @@ struct base::impl : base {
   size_t update_subnode(subnode::concrete &var, size_t target) noexcept {
     var.index = target;
     return target + 1;
-  }
-  size_t update_subnode(subnode::optional &var, size_t target) noexcept {
-    var.index = target;
-    if (var.has_value) {
-      return target + 1;
-    } else {
-      return target;
-    }
   }
   size_t update_subnode(subnode::vector &var, size_t target) noexcept {
     var.index = target;

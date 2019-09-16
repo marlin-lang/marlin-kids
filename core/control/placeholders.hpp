@@ -82,8 +82,15 @@ inline std::string_view placeholder::get<ast::function>(size_t subnode_index,
   if (subnode_index == 0) {
     return "name";
   } else {
+    assert(false);
     return placeholder::default_text;
   }
+}
+
+template <>
+inline std::string_view placeholder::get<ast::eval_statement>(
+    size_t subnode_index, size_t node_index) {
+  return "expression";
 }
 
 template <>
@@ -104,6 +111,7 @@ inline std::string_view _get_if_placeholder(size_t subnode_index) {
   if (subnode_index == 0) {
     return "condition";
   } else {
+    assert(false);
     return placeholder::default_text;
   }
 }
@@ -124,6 +132,7 @@ inline std::string_view placeholder::get<ast::while_statement>(
   if (subnode_index == 0) {
     return "condition";
   } else {
+    assert(false);
     return default_text;
   }
 }
@@ -133,7 +142,15 @@ inline std::string_view placeholder::get<ast::for_statement>(
     size_t subnode_index, size_t node_index) {
   static constexpr std::array<std::string_view, 3> subnodes{"variable", "list",
                                                             default_text};
+
+  assert(subnode_index < 2);
   return subnodes[subnode_index];
+}
+
+template <>
+inline std::string_view placeholder::get<ast::return_result_statement>(
+    size_t subnode_index, size_t node_index) {
+  return "result";
 }
 
 template <>

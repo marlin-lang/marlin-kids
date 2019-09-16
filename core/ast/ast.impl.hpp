@@ -54,6 +54,14 @@ struct function : base::impl<function, subnode::concrete, subnode::vector>,
   using base_type::impl;
 };
 
+struct eval_statement : base::impl<eval_statement, subnode::concrete>,
+                        statement {
+  [[nodiscard]] decltype(auto) expression() { return get_subnode<0>(); }
+  [[nodiscard]] decltype(auto) expression() const { return get_subnode<0>(); }
+
+  using base_type::impl;
+};
+
 struct assignment
     : base::impl<assignment, subnode::concrete, subnode::concrete>,
       statement {
@@ -147,6 +155,19 @@ struct break_statement : base::impl<break_statement>, statement {
 };
 
 struct continue_statement : base::impl<continue_statement>, statement {
+  using base_type::impl;
+};
+
+struct return_statement : base::impl<return_statement>, statement {
+  using base_type::impl;
+};
+
+struct return_result_statement
+    : base::impl<return_result_statement, subnode::concrete>,
+      statement {
+  [[nodiscard]] decltype(auto) result() { return get_subnode<0>(); }
+  [[nodiscard]] decltype(auto) result() const { return get_subnode<0>(); }
+
   using base_type::impl;
 };
 
