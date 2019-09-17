@@ -1,4 +1,4 @@
-name: C/C++ CI
+name: marlin-kids
 
 on: [push]
 
@@ -16,4 +16,6 @@ jobs:
         cmake -GXcode ..
         cmake --build .
     - name: test
-      run: ctest
+      run: |
+        cd build
+        ctest
