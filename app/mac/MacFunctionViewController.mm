@@ -64,16 +64,24 @@
     } else {
       _isNameValidated = true;
     }
+    self.okButton.enabled =
+        _isNameValidated && std::find(_isParametersValidated.begin(), _isParametersValidated.end(),
+                                      false) == _isParametersValidated.end();
   } else {
     if (index >= 0) {
       _isParametersValidated[index] = false;
     } else {
       _isNameValidated = false;
     }
+    self.okButton.enabled = NO;
   }
-  self.okButton.enabled =
-      _isNameValidated && std::find(_isParametersValidated.begin(), _isParametersValidated.end(),
-                                    false) == _isParametersValidated.end();
+}
+
+- (void)removeButtonPressed:(NSButton *)sender {
+  auto index = sender.tag;
+  NSAssert(index >= 0 && index < _parameters.count, @"");
+  [_parameters removeObjectAtIndex:index];
+  [self.parametersCollectionView reloadData];
 }
 
 #pragma mark - NSCollectionViewDataSource
@@ -91,6 +99,9 @@
   item.nameTextField.stringValue = [_parameters objectAtIndex:indexPath.item];
   item.nameTextField.tag = indexPath.item;
   item.nameTextField.delegate = self;
+  item.removeButton.tag = indexPath.item;
+  item.removeButton.target = self;
+  item.removeButton.action = @selector(removeButtonPressed:);
   return item;
 }
 

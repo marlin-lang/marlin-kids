@@ -6,6 +6,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 @property(weak) IBOutlet NSTextField *indexLabel;
 @property(weak) IBOutlet NSTextField *nameTextField;
+@property(weak) IBOutlet NSButton *removeButton;
 
 @end
 

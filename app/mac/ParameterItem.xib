@@ -9,6 +9,7 @@
             <connections>
                 <outlet property="indexLabel" destination="qgJ-5A-MvU" id="1gP-et-m2f"/>
                 <outlet property="nameTextField" destination="1Ih-Qp-wWb" id="OAq-RF-u6I"/>
+                <outlet property="removeButton" destination="M0X-oO-3RD" id="1j1-lf-AnY"/>
                 <outlet property="view" destination="Hz6-mo-xeY" id="0bl-1N-x8E"/>
             </connections>
         </customObject>
@@ -52,7 +53,7 @@
                 <constraint firstItem="qgJ-5A-MvU" firstAttribute="centerY" secondItem="1Ih-Qp-wWb" secondAttribute="centerY" id="gyy-55-nhH"/>
                 <constraint firstItem="M0X-oO-3RD" firstAttribute="leading" secondItem="1Ih-Qp-wWb" secondAttribute="trailing" constant="8" symbolic="YES" id="qQH-hg-wme"/>
             </constraints>
-            <point key="canvasLocation" x="-400" y="93"/>
+            <point key="canvasLocation" x="-331" y="-24"/>
         </customView>
     </objects>
 </document>
