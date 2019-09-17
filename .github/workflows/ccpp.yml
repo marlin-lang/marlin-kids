@@ -12,6 +12,7 @@ jobs:
     - name: build
       run: |
         mkdir build
+        cd build
         cmake -GXcode ..
         cmake --build .
     - name: test
