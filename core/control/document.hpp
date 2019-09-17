@@ -6,9 +6,12 @@
 #include <string_view>
 #include <utility>
 
+// Testing
+#include <iostream>
+
 #include "base.hpp"
+#include "formatter.hpp"
 #include "generator.hpp"
-#include "prototypes.hpp"
 #include "source_update.hpp"
 #include "store.hpp"
 #include "toolbox.hpp"
@@ -262,21 +265,62 @@ struct document {
 
   void add_function(function_definition signature) {
     _functions.add_function(std::move(signature));
-    // Adding functions must not have any side effect on the document
+
+    // For now, adding functions must not have any side effect on the document
     // This is required so that the store module can read functions properly
+
+    // TODO: this shall to changed to link existing calls to a newly-added
+    // function
   }
 
-  void replace_function(const std::string& name,
-                        function_definition new_signature) {
-    _functions.replace_function(name, std::move(new_signature));
-
-    // TODO: Change corresponding call signatures
+  std::vector<source_update> replace_function(
+      const std::string& name, function_definition new_signature) {
+    auto definition{
+        _functions.replace_function(name, std::move(new_signature))};
+    return assign_user_call_definition(name, definition);
   }
 
   void remove_function(const std::string& name) {
     _functions.remove_function(name);
+    auto updates{assign_user_call_definition(name, nullptr)};
+    assert(updates.size() == 0);
+  }
 
-    // TODO: Change corresponding call signatures
+  std::vector<source_update> assign_user_call_definition(
+      const std::string& name, const function_definition* definition) {
+    std::vector<source_update> updates;
+    format::formatter formatter;
+    assign_user_call_definition(*_program, name, definition, updates, formatter,
+                                true);
+    return updates;
+  }
+
+  void assign_user_call_definition(ast::base& node, const std::string& name,
+                                   const function_definition* definition,
+                                   std::vector<source_update>& updates,
+                                   format::formatter& formatter,
+                                   bool needs_update) {
+    std::optional<source_range> update_original{std::nullopt};
+    if (node.is<ast::user_function_call>()) {
+      auto& call{node.as<ast::user_function_call>()};
+      if (call.name == name) {
+        auto original{call.source_code_range};
+        if (call.assign_definition(definition) && needs_update) {
+          needs_update = false;
+          update_original = original;
+        }
+      }
+    }
+
+    for (auto& child : node.children()) {
+      assign_user_call_definition(*child, name, definition, updates, formatter,
+                                  needs_update);
+    }
+
+    if (update_original.has_value()) {
+      auto display{formatter.format(node, node)};
+      updates.emplace_back(*update_original, std::move(display));
+    }
   }
 };
 

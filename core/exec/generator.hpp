@@ -461,9 +461,9 @@ struct generator {
 
   template <typename wrapper_type>
   auto get_jsast(ast::user_function_call& call, wrapper_type&& wrapper) {
-    if (call.func != nullptr) {
+    if (call.func() != nullptr) {
       auto arguments = call.arguments();
-      if (arguments.size() == call.func->parameters.size()) {
+      if (arguments.size() == call.func()->parameters.size()) {
         jsast::utils::move_vector<jsast::ast::node> args;
         for (auto& arg : call.arguments()) {
           args.emplace_back(get_node(*arg));

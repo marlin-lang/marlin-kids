@@ -13,9 +13,9 @@ set(HEADERS
     subnodes.hpp
     utils.hpp)
 
-set(SOURCES base.cpp node.cpp)
+set(SOURCES ast.cpp base.cpp node.cpp)
 
-add_library(${PROJECT_NAME}.core.ast base.cpp node.cpp)
+add_library(${PROJECT_NAME}.core.ast ${SOURCES})
 target_sources(${PROJECT_NAME}.core.ast PRIVATE ${HEADERS})
 target_compile_features(${PROJECT_NAME}.core.ast PUBLIC cxx_std_17)
 target_link_libraries(${PROJECT_NAME}.core.ast jscutils.jsast)

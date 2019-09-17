@@ -189,8 +189,9 @@ inline prototype user_function_prototype(const function_definition& func) {
             for (const auto& param : func.parameters) {
               args.emplace_back(ast::make<ast::expression_placeholder>(param));
             }
-            const auto node{ast::make<ast::user_function_call>(
-                func.name, &func, std::move(args))};
+            const auto node{
+                ast::make<ast::user_function_call>(func.name, std::move(args))};
+            // No need to assign a function definition for node here
             return store::write({node.get()});
           }()};
 }

@@ -100,12 +100,14 @@ struct vector_view {
   [[nodiscard]] size_type size() const noexcept { return _vec->size; }
 
   template <class... arg_type>
-  void emplace(size_type pos, arg_type&&... args) const {
+  reference emplace(size_type pos, arg_type&&... args) const {
     _data().emplace(_data().begin() + _vec->index + pos,
                     std::forward<arg_type>(args)...);
+
     (*this)[pos]->_parent = _base;
     _vec->size++;
     _base->apply_update_subnode_refs();
+    return (*this)[pos];
   }
 
   template <class... arg_type>

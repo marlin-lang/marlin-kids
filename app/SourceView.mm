@@ -206,9 +206,9 @@ struct DocumentGetter {
         signature.parameters.emplace_back(parameter.stringView);
       }
     }
-    if (auto update =
-            (*std::exchange(_selection, std::nullopt)).replace_function_signature(signature)) {
-      [self updateExpressionInSourceRange:update->range withDisplay:std::move(update->display)];
+    auto updates = (*std::exchange(_selection, std::nullopt)).replace_function_signature(signature);
+    for (auto& update : updates) {
+      [self updateExpressionInSourceRange:update.range withDisplay:std::move(update.display)];
     }
   } else {
     _selection.reset();

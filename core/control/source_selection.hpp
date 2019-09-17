@@ -156,7 +156,7 @@ struct source_selection {
     }
   }
 
-  std::optional<source_update> replace_function_signature(
+  std::vector<source_update> replace_function_signature(
       function_definition signature) const&& {
     if (is_function_signature()) {
       auto original_range{_selection->source_code_range};
@@ -175,16 +175,21 @@ struct source_selection {
       if (_selection->is<ast::function_signature>()) {
         const auto& previous_name{
             _selection->as<ast::function_signature>().name};
-        _doc->replace_function(previous_name, std::move(signature));
+        auto updates{
+            _doc->replace_function(previous_name, std::move(signature))};
+        _doc->replace_expression(*_selection, std::move(node));
+        updates.emplace_back(original_range, std::move(display));
+        return updates;
       } else {
         _doc->add_function(std::move(signature));
+        _doc->replace_expression(*_selection, std::move(node));
+        std::vector<source_update> updates;
+        updates.emplace_back(original_range, std::move(display));
+        return updates;
       }
-
-      _doc->replace_expression(*_selection, std::move(node));
-      return source_update{original_range, std::move(display)};
     } else {
       assert(false);
-      return std::nullopt;
+      return {};
     }
   }
 
@@ -225,6 +230,9 @@ struct source_selection {
     auto placeholder_name{placeholder::get_replacing_node(*_selection)};
     auto placeholder{ast::make<ast::expression_placeholder>(
         std::string{std::move(placeholder_name)})};
+
+    // TODO: for functions, actually remove expression when there are excess
+    // arguments originally
 
     format::formatter formatter;
     auto display{formatter.format(placeholder, *_selection)};

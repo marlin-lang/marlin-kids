@@ -229,15 +229,20 @@ struct system_function_call : base::impl<system_function_call, subnode::vector>,
 struct user_function_call : base::impl<user_function_call, subnode::vector>,
                             expression {
   std::string name;
-  const function_definition* func;
 
   [[nodiscard]] decltype(auto) arguments() { return get_subnode<0>(); }
   [[nodiscard]] decltype(auto) arguments() const { return get_subnode<0>(); }
 
-  explicit user_function_call(std::string name,
-                              const function_definition* _func,
-                              std::vector<node> _args)
-      : base_type{std::move(_args)}, name{std::move(name)}, func{_func} {}
+  explicit user_function_call(std::string name, std::vector<node> _args)
+      : base_type{std::move(_args)}, name{std::move(name)} {}
+
+  const function_definition* func() const { return _func; }
+
+  // returns true if changed
+  bool assign_definition(const function_definition* func);
+
+ private:
+  const function_definition* _func;
 };
 
 struct identifier : base::impl<identifier>, expression {

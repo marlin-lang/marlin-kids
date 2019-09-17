@@ -3,6 +3,7 @@
 
 #include <memory>
 #include <unordered_map>
+#include <utility>
 
 #include "function_definition.hpp"
 #include "prototypes.hpp"
@@ -44,25 +45,28 @@ struct user_function_table : store::user_function_table_interface {
     }
   }
 
-  void replace_function(const std::string& name,
-                        function_definition new_signature) {
+  const function_definition* replace_function(
+      const std::string& name, function_definition new_signature) {
     assert(_map.find(name) != _map.end());
-    auto& ref{_map[name]};
-    auto original{&ref->ptype};
+    auto original{std::move(_map[name])};
+    _map.erase(name);
+    auto& ref{_map[new_signature.name]};
     ref = std::make_unique<entry>(std::move(new_signature));
 
     if (auto ptr{_toolbox.lock()}) {
-      ptr->replace_user_function(original, &ref->ptype);
+      ptr->replace_user_function(&original->ptype, &ref->ptype);
     }
+
+    return &ref->definition;
   }
 
   void remove_function(const std::string& name) {
     assert(_map.find(name) != _map.end());
-    auto original{&_map[name]->ptype};
+    auto original{std::move(_map[name])};
     _map.erase(name);
 
     if (auto ptr{_toolbox.lock()}) {
-      ptr->remove_user_function(original);
+      ptr->remove_user_function(&original->ptype);
     }
   }
 

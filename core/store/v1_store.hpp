@@ -75,7 +75,7 @@ struct store : base_store::impl<store> {
 
     for (auto* call : _unknown_calls) {
       if (_functions->has_function(call->name)) {
-        call->func = &_functions->get_function(call->name);
+        call->assign_definition(&_functions->get_function(call->name));
       }
     }
     _unknown_calls.clear();
@@ -453,14 +453,14 @@ struct store : base_store::impl<store> {
 
     std::string name{read_string()};
     auto args{read_vector(type_expectation::rvalue)};
+    auto node{
+        ast::make<ast::user_function_call>(std::move(name), std::move(args))};
+    auto& call{node->as<ast::user_function_call>()};
     if (_functions->has_function(name)) {
-      auto* definition{&_functions->get_function(name)};
-      return ast::make<ast::user_function_call>(std::move(name), definition,
-                                                std::move(args));
+      call.assign_definition(&_functions->get_function(name));
+      return node;
     } else {
-      auto node{ast::make<ast::user_function_call>(std::move(name), nullptr,
-                                                   std::move(args))};
-      _unknown_calls.emplace_back(&node->as<ast::user_function_call>());
+      _unknown_calls.emplace_back(&call);
       return node;
     }
   }
