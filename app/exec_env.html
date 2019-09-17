@@ -35,6 +35,10 @@
         });
       }
 
+      function time() {
+        return Date.now() / 1000;
+      }
+
       function* range(first, second = undefined, third = undefined) {
         var begin = 0,
           end,

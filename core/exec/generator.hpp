@@ -1,10 +1,13 @@
 #ifndef marlin_exec_generator_hpp
 #define marlin_exec_generator_hpp
 
+#include <algorithm>
 #include <array>
+#include <deque>
 #include <type_traits>
 #include <unordered_set>
 #include <utility>
+#include <vector>
 
 #include <jsast/jsast.hpp>
 
@@ -17,10 +20,55 @@ struct generator {
   generator(bool is_async = false) : _is_async{is_async} {}
 
   std::string generate(ast::base& c) {
+    assert(c.is<ast::program>());
     jsast::generator gen;
+
+    // Mark async blocks
+    _async_blocks.clear();
+    _user_functions.clear();
+    _user_function_callees.clear();
+    for (auto& block : c.children()) {
+      record_calls(*block, *block);
+
+      if (block->is<ast::function>()) {
+        auto signature{block->as<ast::function>().signature()};
+        if (signature->is<ast::function_signature>()) {
+          _user_functions[signature->as<ast::function_signature>().name] =
+              &*block;
+        }
+      }
+    }
+    std::deque<ast::base*> queue;
+    std::copy(_async_blocks.begin(), _async_blocks.end(),
+              std::back_inserter(queue));
+    while (!queue.empty()) {
+      auto block{queue.front()};
+      queue.pop_front();
+
+      if (block->is<ast::function>()) {
+        auto signature{block->as<ast::function>().signature()};
+        if (signature->is<ast::function_signature>()) {
+          auto it{_user_function_callees.find(
+              signature->as<ast::function_signature>().name)};
+          if (it != _user_function_callees.end()) {
+            for (auto block : it->second) {
+              if (_async_blocks.find(block) == _async_blocks.end()) {
+                _async_blocks.emplace(block);
+                queue.emplace_back(block);
+              }
+            }
+          }
+        }
+      }
+    }
 
     _errors.clear();
     gen.write(get_node(c));
+
+    _async_blocks.clear();
+    _user_functions.clear();
+    _user_function_callees.clear();
+
     if (_errors.size()) {
       throw collected_generation_error{std::exchange(_errors, {})};
     } else {
@@ -30,10 +78,6 @@ struct generator {
 
  private:
   static constexpr const char* main_name{"__main__"};
-
-  bool _is_async;
-  std::unordered_set<std::string> _global_identifiers;
-  std::vector<generation_error> _errors;
 
   static std::string user_function_name(std::string name) {
     return "__func_" + std::move(name);
@@ -51,6 +95,95 @@ struct generator {
             jsast::ast::identifier{"global_clock"},
             jsast::ast::member_identifier{"check_termination"}},
         {}}};
+  }
+
+  using callee_entry = std::pair<jsast::ast::node (*)(), bool>;
+  static constexpr std::array<callee_entry, 9> system_procedure_callee_map{
+      std::pair{
+          []() { return jsast::ast::node{jsast::ast::identifier{"sleep"}}; },
+          true} /* sleep */,
+      std::pair{
+          []() { return jsast::ast::node{jsast::ast::identifier{"print"}}; },
+          false} /* print */,
+      std::pair{[]() { return system_callee("graphics", "drawLine"); },
+                true} /* draw_line */,
+      std::pair{[]() { return system_callee("logo", "forward"); },
+                true} /* logo_forward */,
+      std::pair{[]() { return system_callee("logo", "backward"); },
+                true} /* logo_backward */,
+      std::pair{[]() { return system_callee("logo", "turnLeft"); },
+                false} /* logo_turn_left */,
+      std::pair{[]() { return system_callee("logo", "turnRight"); },
+                false} /* logo_turn_right */,
+      std::pair{[]() { return system_callee("logo", "penUp"); },
+                false} /* logo_pen_up */,
+      std::pair{[]() { return system_callee("logo", "penDown"); },
+                false} /* logo_pen_down */
+  };
+  static constexpr std::array<callee_entry, 6> system_function_callee_map{
+      std::pair{
+          []() { return jsast::ast::node{jsast::ast::identifier{"range"}}; },
+          false} /* range1 */
+      ,
+      std::pair{
+          []() { return jsast::ast::node{jsast::ast::identifier{"range"}}; },
+          false} /* range2 */,
+      std::pair{
+          []() { return jsast::ast::node{jsast::ast::identifier{"range"}}; },
+          false} /* range3 */,
+      std::pair{
+          []() { return jsast::ast::node{jsast::ast::identifier{"time"}}; },
+          false} /* time */,
+      std::pair{[]() {
+                  return jsast::ast::node{jsast::ast::member_expression{
+                      jsast::ast::identifier{"math_extra"},
+                      jsast::ast::member_identifier{"sin"}}};
+                },
+                false} /* sin */,
+      std::pair{[]() {
+                  return jsast::ast::node{jsast::ast::member_expression{
+                      jsast::ast::identifier{"math_extra"},
+                      jsast::ast::member_identifier{"cos"}}};
+                },
+                false} /* cos */
+  };
+
+  bool _is_async;
+
+  std::unordered_set<ast::base*> _async_blocks;
+  std::unordered_map<std::string_view, ast::base*> _user_functions;
+  std::unordered_map<std::string_view, std::unordered_set<ast::base*>>
+      _user_function_callees;
+
+  std::unordered_set<std::string_view> _global_identifiers;
+  std::vector<generation_error> _errors;
+
+  void record_calls(ast::base& node, ast::base& block) {
+    node.apply<void>([this, &block](auto& n) { record_if_is_call(n, block); });
+    for (auto& child : node.children()) {
+      record_calls(*child, block);
+    }
+  }
+
+  template <typename node_type>
+  void record_if_is_call(node_type&, ast::base&) {}
+
+  void record_if_is_call(ast::system_procedure_call& call, ast::base& block) {
+    auto [node_maker,
+          async]{system_procedure_callee_map[static_cast<size_t>(call.proc)]};
+    if (async) {
+      _async_blocks.emplace(&block);
+    }
+  }
+  void record_if_is_call(ast::system_function_call& call, ast::base& block) {
+    auto [node_maker,
+          async]{system_function_callee_map[static_cast<size_t>(call.func)]};
+    if (async) {
+      _async_blocks.emplace(&block);
+    }
+  }
+  void record_if_is_call(ast::user_function_call& call, ast::base& block) {
+    _user_function_callees[call.name].emplace(&block);
   }
 
   bool is_local_identifier(ast::base& node) {
@@ -130,11 +263,11 @@ struct generator {
   template <typename wrapper_type>
   auto get_jsast(ast::on_start& start, wrapper_type&& wrapper) {
     _global_identifiers.clear();
+    auto block{get_block(start.statements())};
+
+    auto async{_async_blocks.find(&start) != _async_blocks.end()};
     return wrapper(jsast::ast::function_declaration{
-        main_name,
-        {},
-        jsast::ast::block_statement{get_block(start.statements())},
-        true});
+        main_name, {}, jsast::ast::block_statement{std::move(block)}, async});
   }
 
   template <typename wrapper_type>
@@ -145,10 +278,14 @@ struct generator {
       for (auto& param : signature.parameters()) {
         params.emplace_back(get_node(*param));
       }
+
       _global_identifiers.clear();
+      auto block{get_block(function.statements())};
+
+      auto async{_async_blocks.find(&function) != _async_blocks.end()};
       return wrapper(jsast::ast::function_declaration{
           user_function_name(signature.name), std::move(params),
-          jsast::ast::block_statement{get_block(function.statements())}, true});
+          jsast::ast::block_statement{std::move(block)}, async});
     } else if (function.signature()->is<ast::function_placeholder>()) {
       _errors.emplace_back("Unexpected placeholder!", *function.signature());
       return wrapper(jsast::ast::empty_statement{});
@@ -183,8 +320,8 @@ struct generator {
   template <typename wrapper_type>
   auto get_jsast(ast::use_global& use_global, wrapper_type&& wrapper) {
     if (use_global.variable()->is<ast::variable_name>()) {
-      auto name = use_global.variable()->as<ast::variable_name>().name;
-      _global_identifiers.emplace(std::move(name));
+      auto& name = use_global.variable()->as<ast::variable_name>().name;
+      _global_identifiers.emplace(name);
     } else {
       _errors.emplace_back("Unexpected node, expecting variable name!",
                            use_global);
@@ -194,38 +331,12 @@ struct generator {
 
   template <typename wrapper_type>
   auto get_jsast(ast::system_procedure_call& call, wrapper_type&& wrapper) {
-    static constexpr std::array<std::pair<jsast::ast::node (*)(), bool>, 9>
-        callee_map{
-            std::pair{[]() {
-                        return jsast::ast::node{
-                            jsast::ast::identifier{"sleep"}};
-                      },
-                      true} /* sleep */,
-            std::pair{[]() {
-                        return jsast::ast::node{
-                            jsast::ast::identifier{"print"}};
-                      },
-                      false} /* print */,
-            std::pair{[]() { return system_callee("graphics", "drawLine"); },
-                      true} /* draw_line */,
-            std::pair{[]() { return system_callee("logo", "forward"); },
-                      true} /* logo_forward */,
-            std::pair{[]() { return system_callee("logo", "backward"); },
-                      true} /* logo_backward */,
-            std::pair{[]() { return system_callee("logo", "turnLeft"); },
-                      false} /* logo_turn_left */,
-            std::pair{[]() { return system_callee("logo", "turnRight"); },
-                      false} /* logo_turn_right */,
-            std::pair{[]() { return system_callee("logo", "penUp"); },
-                      false} /* logo_pen_up */,
-            std::pair{[]() { return system_callee("logo", "penDown"); },
-                      false} /* logo_pen_down */
-        };
     jsast::utils::move_vector<jsast::ast::node> args;
     for (auto& arg : call.arguments()) {
       args.emplace_back(get_node(*arg));
     }
-    auto [node_maker, async] = callee_map[static_cast<size_t>(call.proc)];
+    auto [node_maker,
+          async]{system_procedure_callee_map[static_cast<size_t>(call.proc)]};
     if (async) {
       return wrapper(
           jsast::ast::expression_statement{jsast::ast::await_expression{
@@ -333,39 +444,19 @@ struct generator {
 
   template <typename wrapper_type>
   auto get_jsast(ast::system_function_call& call, wrapper_type&& wrapper) {
-    static constexpr std::array<jsast::ast::node (*)(), 6> callee_map{
-        []() {
-          return jsast::ast::node{jsast::ast::identifier{"range"}};
-        } /* range1 */
-        ,
-        []() {
-          return jsast::ast::node{jsast::ast::identifier{"range"}};
-        } /* range2 */,
-        []() {
-          return jsast::ast::node{jsast::ast::identifier{"range"}};
-        } /* range3 */,
-        []() {
-          return jsast::ast::node{jsast::ast::member_expression{
-              jsast::ast::identifier{"Date"},
-              jsast::ast::member_identifier{"now"}}};
-        } /* time */,
-        []() {
-          return jsast::ast::node{jsast::ast::member_expression{
-              jsast::ast::identifier{"math_extra"},
-              jsast::ast::member_identifier{"sin"}}};
-        } /* sin */,
-        []() {
-          return jsast::ast::node{jsast::ast::member_expression{
-              jsast::ast::identifier{"math_extra"},
-              jsast::ast::member_identifier{"cos"}}};
-        } /* cos */
-    };
     jsast::utils::move_vector<jsast::ast::node> args;
     for (auto& arg : call.arguments()) {
       args.emplace_back(get_node(*arg));
     }
-    return wrapper(jsast::ast::call_expression{
-        callee_map[static_cast<size_t>(call.func)](), std::move(args)});
+    auto [node_maker,
+          async]{system_function_callee_map[static_cast<size_t>(call.func)]};
+    if (async) {
+      return wrapper(jsast::ast::await_expression{
+          jsast::ast::call_expression{node_maker(), std::move(args)}});
+    } else {
+      return wrapper(
+          jsast::ast::call_expression{node_maker(), std::move(args)});
+    }
   }
 
   template <typename wrapper_type>
@@ -377,9 +468,19 @@ struct generator {
         for (auto& arg : call.arguments()) {
           args.emplace_back(get_node(*arg));
         }
-        return wrapper(jsast::ast::await_expression{jsast::ast::call_expression{
-            jsast::ast::identifier{user_function_name(call.func->name)},
-            std::move(args)}});
+
+        assert(_user_functions.find(call.name) != _user_functions.end());
+        if (_async_blocks.find(_user_functions[call.name]) ==
+            _async_blocks.end()) {
+          return wrapper(jsast::ast::call_expression{
+              jsast::ast::identifier{user_function_name(call.name)},
+              std::move(args)});
+        } else {
+          return wrapper(
+              jsast::ast::await_expression{jsast::ast::call_expression{
+                  jsast::ast::identifier{user_function_name(call.name)},
+                  std::move(args)}});
+        }
       } else {
         _errors.emplace_back("Incorrect number of arguments!", call);
         return wrapper(jsast::ast::identifier{"__error__"});
@@ -420,8 +521,7 @@ struct generator {
   auto get_jsast(ast::string_literal& literal, wrapper_type&& wrapper) {
     return wrapper(jsast::ast::string_literal{literal.value});
   }
-
-};  // namespace marlin::exec
+};
 
 }  // namespace marlin::exec
 
