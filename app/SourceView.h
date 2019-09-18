@@ -1,6 +1,8 @@
 #import <Types.h>
 
+#include <optional>
 #include <string_view>
+#include <utility>
 #include <vector>
 
 #include "function_definition.hpp"
@@ -13,6 +15,13 @@
 NS_ASSUME_NONNULL_BEGIN
 
 @class SourceView;
+
+struct DraggingData {
+  marlin::control::pasteboard_t type;
+  NSData *data;
+
+  DraggingData(marlin::control::pasteboard_t _type, NSData *_data) : type{_type}, data{_data} {}
+};
 
 @protocol SourceViewDataSource
 
@@ -55,6 +64,8 @@ NS_ASSUME_NONNULL_BEGIN
 - (void)addErrorInSourceRange:(marlin::source_range)range;
 
 - (void)clearErrors;
+
+- (std::optional<DraggingData>)draggingDataFromLocation:(CGPoint)location;
 
 - (BOOL)draggingPasteboardOfType:(marlin::control::pasteboard_t)type toLocation:(CGPoint)location;
 

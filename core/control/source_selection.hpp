@@ -132,7 +132,7 @@ struct source_selection {
     return is_block() || is_statement() || is_expression();
   }
 
-  [[nodiscard]] source_selection as_dragging_range() const&& {
+  [[nodiscard]] source_selection as_dragging_selection() const&& {
     return {*_doc, _loc, *_selection, dragging_rule};
   }
 

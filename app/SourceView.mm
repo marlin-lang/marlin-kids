@@ -1,8 +1,5 @@
 #import "SourceView.h"
 
-#include <optional>
-#include <vector>
-
 #include "source_inserters.hpp"
 #include "source_selection.hpp"
 
@@ -34,7 +31,7 @@ struct DocumentGetter {
   std::optional<marlin::control::source_inserters<DocumentGetter>> _inserter;
 
   std::optional<marlin::control::source_selection> _selection;
-  BOOL _isDraggingFromSelection;
+  std::optional<marlin::control::source_selection> _draggingSelection;
 
   std::vector<marlin::source_range> _errors;
 }
@@ -57,7 +54,6 @@ struct DocumentGetter {
   self.frame = CGRectZero;
   _strings = [NSMutableArray new];
   _insets = EdgeInsetsMake(5, 5, 5, 5);
-  _isDraggingFromSelection = NO;
 
   _inserter = {{self}};
 }
@@ -232,11 +228,15 @@ struct DocumentGetter {
 }
 
 - (void)removeDraggingSelection {
-  if (_isDraggingFromSelection && _selection->is_removable()) {
-    auto updates = (*std::exchange(_selection, std::nullopt)).remove_from_document();
-    [self performUpdates:std::move(updates)];
+  if (_draggingSelection.has_value()) {
+    if (_draggingSelection->is_removable()) {
+      auto updates = (*std::exchange(_draggingSelection, std::nullopt)).remove_from_document();
+      [self performUpdates:std::move(updates)];
+    } else {
+      assert(false);
+      _draggingSelection.reset();
+    }
   }
-  _isDraggingFromSelection = NO;
 }
 
 - (void)drawRect:(CGRect)dirtyRect {
@@ -257,10 +257,23 @@ struct DocumentGetter {
 
 - (void)drawBackgroundInRect:(CGRect)rect {
   [self drawSelectionInRect:rect];
+  [self drawDraggingSelectionInRect:rect];
   [self drawBlockInsertionPointInRect:rect];
   [self drawStatementInsertionPointInRect:rect];
   [self drawExpressionInsertionInRect:rect];
   [self drawErrorMessage];
+}
+
+- (void)drawSelectionInRect:(CGRect)rect {
+  if (_selection.has_value()) {
+    [self drawSourceRange:_selection->get_range() inRect:rect forSelection:YES];
+  }
+}
+
+- (void)drawDraggingSelectionInRect:(CGRect)rect {
+  if (_draggingSelection.has_value()) {
+    [self drawSourceRange:_draggingSelection->get_range() inRect:rect forSelection:YES];
+  }
 }
 
 - (void)drawBlockInsertionPointInRect:(CGRect)rect {
@@ -281,12 +294,6 @@ struct DocumentGetter {
   NSAssert(_inserter.has_value(), @"");
   if (auto range = _inserter->expression_insert_range()) {
     [self drawSourceRange:*range inRect:rect forSelection:NO];
-  }
-}
-
-- (void)drawSelectionInRect:(CGRect)rect {
-  if (_selection.has_value()) {
-    [self drawSourceRange:_selection->get_range() inRect:rect forSelection:YES];
   }
 }
 
@@ -355,28 +362,39 @@ struct DocumentGetter {
   }
 }
 
+/*
 #ifndef IOS
 - (void)mouseDragged:(NSEvent*)event {
   [super mouseDragged:event];
 
-  /*if (!_isDraggingFromSelection && _selection) {
-    _isDraggingFromSelection = YES;
+  if (_selection.has_value()) {
+    NSAssert(!_draggingSelection.has_value(), @"");
+
+    _draggingSelection = (*std::exchange(_selection, std::nullopt)).as_dragging_selection();
+
     auto* pasteboardItem = [NSPasteboardItem new];
-    if (_selection->is_statement()) {
+    if (_draggingSelection->is_block()) {
+      [pasteboardItem setDataProvider:self
+                             forTypes:@[ pasteboardOfType(marlin::control::pasteboard_t::block) ]];
+    } else if (_draggingSelection->is_statement()) {
       [pasteboardItem
           setDataProvider:self
                  forTypes:@[ pasteboardOfType(marlin::control::pasteboard_t::statement) ]];
-    } else if (_selection->is_expression()) {
+    } else if (_draggingSelection->is_expression()) {
       [pasteboardItem
           setDataProvider:self
                  forTypes:@[ pasteboardOfType(marlin::control::pasteboard_t::expression) ]];
+    } else {
+      _draggingSelection.reset();
+      return;
     }
     auto* draggingItem = [[NSDraggingItem alloc] initWithPasteboardWriter:pasteboardItem];
     [draggingItem setDraggingFrame:NSMakeRect(0, 0, 100, 100)];
     [self beginDraggingSessionWithItems:@[ draggingItem ] event:event source:self];
-  }*/
+  }
 }
 #endif
+*/
 
 - (CGRect)rectOfSourceRange:(marlin::source_range)range {
   NSAssert(range.end.line >= range.begin.line, @"Range should be valid");
@@ -405,6 +423,34 @@ struct DocumentGetter {
 
 #pragma mark - Drag and drop
 
+- (std::optional<DraggingData>)draggingDataFromLocation:(CGPoint)location {
+  NSAssert(!_draggingSelection.has_value(), @"");
+
+  if (_selection.has_value()) {
+    // TODO: Test location
+
+    _draggingSelection = (*std::exchange(_selection, std::nullopt)).as_dragging_selection();
+  }
+
+  if (!_draggingSelection.has_value()) {
+    _draggingSelection = {self.dataSource.document.content, [self sourceLocationOfPoint:location]};
+  }
+
+  if (_draggingSelection->is_block()) {
+    return DraggingData(marlin::control::pasteboard_t::block,
+                        [NSData dataWithDataView:_draggingSelection->get_data()]);
+  } else if (_draggingSelection->is_statement()) {
+    return DraggingData(marlin::control::pasteboard_t::statement,
+                        [NSData dataWithDataView:_draggingSelection->get_data()]);
+  } else if (_draggingSelection->is_expression()) {
+    return DraggingData(marlin::control::pasteboard_t::expression,
+                        [NSData dataWithDataView:_draggingSelection->get_data()]);
+  } else {
+    _draggingSelection.reset();
+    return std::nullopt;
+  }
+}
+
 - (BOOL)draggingPasteboardOfType:(marlin::control::pasteboard_t)type toLocation:(CGPoint)location {
   if (_selection.has_value()) {
     [self.delegate dismissPopoverViewControllerForSourceView:self];
@@ -426,7 +472,7 @@ struct DocumentGetter {
 
 - (void)resetAll {
   _inserter->reset_all();
-  _isDraggingFromSelection = NO;
+  _draggingSelection.reset();
   [self setNeedsDisplayInRect:self.bounds];
 }
 
