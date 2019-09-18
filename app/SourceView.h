@@ -65,7 +65,7 @@ struct DraggingData {
 
 - (void)clearErrors;
 
-- (std::optional<DraggingData>)draggingDataFromLocation:(CGPoint)location;
+- (std::optional<DraggingData>)currentDraggingData;
 
 - (BOOL)draggingPasteboardOfType:(marlin::control::pasteboard_t)type toLocation:(CGPoint)location;
 

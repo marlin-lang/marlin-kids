@@ -73,6 +73,9 @@ struct DocumentGetter {
   //  - Insert statements/blocks
   //  - Replace/remove expressions
   //  - Remove statements/blocks
+  NSLog(@"%ld, %ld, %ld, %ld, %@", update.range.begin.line, update.range.begin.column,
+        update.range.end.line, update.range.end.column,
+        [NSString stringWithStringView:update.display.source]);
   if (update.range.begin == update.range.end) {
     [self insertLinesBeforeLine:update.range.begin.line
                     withDisplay:std::move(update.display)
@@ -147,7 +150,7 @@ struct DocumentGetter {
   NSAssert(to > 0 && to <= _strings.count, @"");
   NSAssert(from <= to, @"");
   auto indexSet = [NSMutableIndexSet new];
-  [indexSet addIndexesInRange:NSMakeRange(from - 1, to - from + 1)];
+  [indexSet addIndexesInRange:NSMakeRange(from - 1, to - from)];
   [_strings removeObjectsAtIndexes:indexSet];
   [self setNeedsDisplayInRect:self.bounds];
   [self.delegate sourceViewChanged:self];
@@ -362,40 +365,6 @@ struct DocumentGetter {
   }
 }
 
-/*
-#ifndef IOS
-- (void)mouseDragged:(NSEvent*)event {
-  [super mouseDragged:event];
-
-  if (_selection.has_value()) {
-    NSAssert(!_draggingSelection.has_value(), @"");
-
-    _draggingSelection = (*std::exchange(_selection, std::nullopt)).as_dragging_selection();
-
-    auto* pasteboardItem = [NSPasteboardItem new];
-    if (_draggingSelection->is_block()) {
-      [pasteboardItem setDataProvider:self
-                             forTypes:@[ pasteboardOfType(marlin::control::pasteboard_t::block) ]];
-    } else if (_draggingSelection->is_statement()) {
-      [pasteboardItem
-          setDataProvider:self
-                 forTypes:@[ pasteboardOfType(marlin::control::pasteboard_t::statement) ]];
-    } else if (_draggingSelection->is_expression()) {
-      [pasteboardItem
-          setDataProvider:self
-                 forTypes:@[ pasteboardOfType(marlin::control::pasteboard_t::expression) ]];
-    } else {
-      _draggingSelection.reset();
-      return;
-    }
-    auto* draggingItem = [[NSDraggingItem alloc] initWithPasteboardWriter:pasteboardItem];
-    [draggingItem setDraggingFrame:NSMakeRect(0, 0, 100, 100)];
-    [self beginDraggingSessionWithItems:@[ draggingItem ] event:event source:self];
-  }
-}
-#endif
-*/
-
 - (CGRect)rectOfSourceRange:(marlin::source_range)range {
   NSAssert(range.end.line >= range.begin.line, @"Range should be valid");
   const CGFloat inset = 0.25;
@@ -423,30 +392,26 @@ struct DocumentGetter {
 
 #pragma mark - Drag and drop
 
-- (std::optional<DraggingData>)draggingDataFromLocation:(CGPoint)location {
+- (std::optional<DraggingData>)currentDraggingData {
   NSAssert(!_draggingSelection.has_value(), @"");
 
   if (_selection.has_value()) {
-    // TODO: Test location
-
     _draggingSelection = (*std::exchange(_selection, std::nullopt)).as_dragging_selection();
-  }
 
-  if (!_draggingSelection.has_value()) {
-    _draggingSelection = {self.dataSource.document.content, [self sourceLocationOfPoint:location]};
-  }
-
-  if (_draggingSelection->is_block()) {
-    return DraggingData(marlin::control::pasteboard_t::block,
-                        [NSData dataWithDataView:_draggingSelection->get_data()]);
-  } else if (_draggingSelection->is_statement()) {
-    return DraggingData(marlin::control::pasteboard_t::statement,
-                        [NSData dataWithDataView:_draggingSelection->get_data()]);
-  } else if (_draggingSelection->is_expression()) {
-    return DraggingData(marlin::control::pasteboard_t::expression,
-                        [NSData dataWithDataView:_draggingSelection->get_data()]);
+    if (_draggingSelection->is_block()) {
+      return DraggingData(marlin::control::pasteboard_t::block,
+                          [NSData dataWithDataView:_draggingSelection->get_data()]);
+    } else if (_draggingSelection->is_statement()) {
+      return DraggingData(marlin::control::pasteboard_t::statement,
+                          [NSData dataWithDataView:_draggingSelection->get_data()]);
+    } else if (_draggingSelection->is_expression()) {
+      return DraggingData(marlin::control::pasteboard_t::expression,
+                          [NSData dataWithDataView:_draggingSelection->get_data()]);
+    } else {
+      _draggingSelection.reset();
+      return std::nullopt;
+    }
   } else {
-    _draggingSelection.reset();
     return std::nullopt;
   }
 }

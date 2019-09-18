@@ -162,18 +162,18 @@ struct formatter {
     }
     node.source_code_range.begin = _current_loc;
     node.apply<void>(
-        [this, &paren_precedence](auto& n) { emit_node(n, paren_precedence); });
+        [this, &paren_precedence](auto& n) { emit_ast(n, paren_precedence); });
     node.source_code_range.end = _current_loc;
     if (is_line) {
       emit_new_line();
     }
   }
 
-  void emit_node(ast::program& program, size_t) {
+  void emit_ast(ast::program& program, size_t) {
     emit_vector(program.blocks());
   }
 
-  void emit_node(ast::on_start& on_start, size_t) {
+  void emit_ast(ast::on_start& on_start, size_t) {
     emit_highlight("on start", highlight_token_type::keyword);
     emit_string(" {");
     emit_new_line();
@@ -184,17 +184,17 @@ struct formatter {
     emit_string("}");
   }
 
-  void emit_node(ast::function_placeholder& placeholder, size_t) {
+  void emit_ast(ast::function_placeholder& placeholder, size_t) {
     emit_placeholder(placeholder.name);
     emit_string("()");
   }
 
-  void emit_node(ast::function_signature& signature, size_t) {
+  void emit_ast(ast::function_signature& signature, size_t) {
     emit_string(signature.name);
     emit_arguments(signature.parameters());
   }
 
-  void emit_node(ast::function& function, size_t) {
+  void emit_ast(ast::function& function, size_t) {
     emit_highlight("func", highlight_token_type::keyword);
     emit_string(" ");
     emit_node(*function.signature());
@@ -207,34 +207,34 @@ struct formatter {
     emit_string("}");
   }
 
-  void emit_node(ast::eval_statement& eval, size_t) {
+  void emit_ast(ast::eval_statement& eval, size_t) {
     emit_highlight("eval", highlight_token_type::keyword);
     emit_string(" ");
     emit_node(*eval.expression());
     emit_string(";");
   }
 
-  void emit_node(ast::assignment& assignment, size_t) {
+  void emit_ast(ast::assignment& assignment, size_t) {
     emit_node(*assignment.variable());
     emit_string(" = ");
     emit_node(*assignment.value());
     emit_string(";");
   }
 
-  void emit_node(ast::use_global& use_global, size_t) {
+  void emit_ast(ast::use_global& use_global, size_t) {
     emit_highlight("use global", highlight_token_type::keyword);
     emit_string(" ");
     emit_node(*use_global.variable());
     emit_string(";");
   }
 
-  void emit_node(ast::system_procedure_call& call, size_t) {
+  void emit_ast(ast::system_procedure_call& call, size_t) {
     emit_string(display_for(call.proc));
     emit_arguments(call.arguments());
     emit_string(";");
   }
 
-  void emit_node(ast::if_statement& statement, size_t) {
+  void emit_ast(ast::if_statement& statement, size_t) {
     emit_highlight("if", highlight_token_type::keyword);
     emit_string(" (");
     emit_node(*statement.condition());
@@ -247,7 +247,7 @@ struct formatter {
     emit_string("}");
   }
 
-  void emit_node(ast::if_else_statement& statement, size_t) {
+  void emit_ast(ast::if_else_statement& statement, size_t) {
     emit_highlight("if", highlight_token_type::keyword);
     emit_string(" (");
     emit_node(*statement.condition());
@@ -269,7 +269,7 @@ struct formatter {
     emit_string("}");
   }
 
-  void emit_code(ast::while_statement& statement, size_t) {
+  void emit_ast(ast::while_statement& statement, size_t) {
     emit_highlight("while", highlight_token_type::keyword);
     emit_string(" (");
     emit_node(*statement.condition());
@@ -282,7 +282,7 @@ struct formatter {
     emit_string("}");
   }
 
-  void emit_node(ast::for_statement& statement, size_t) {
+  void emit_ast(ast::for_statement& statement, size_t) {
     emit_highlight("for", highlight_token_type::keyword);
     emit_string(" (");
     emit_node(*statement.variable());
@@ -297,41 +297,41 @@ struct formatter {
     emit_string("}");
   }
 
-  void emit_node(ast::break_statement&, size_t) {
+  void emit_ast(ast::break_statement&, size_t) {
     emit_highlight("break", highlight_token_type::keyword);
     emit_string(";");
   }
 
-  void emit_node(ast::continue_statement&, size_t) {
+  void emit_ast(ast::continue_statement&, size_t) {
     emit_highlight("continue", highlight_token_type::keyword);
     emit_string(";");
   }
 
-  void emit_node(ast::return_statement&, size_t) {
+  void emit_ast(ast::return_statement&, size_t) {
     emit_highlight("return", highlight_token_type::keyword);
     emit_string(";");
   }
 
-  void emit_node(ast::return_result_statement& statement, size_t) {
+  void emit_ast(ast::return_result_statement& statement, size_t) {
     emit_highlight("return", highlight_token_type::keyword);
     emit_string(" ");
     emit_node(*statement.result());
     emit_string(";");
   }
 
-  void emit_node(ast::variable_placeholder& placeholder, size_t) {
+  void emit_ast(ast::variable_placeholder& placeholder, size_t) {
     emit_placeholder(placeholder.name);
   }
 
-  void emit_node(ast::variable_name& variable, size_t) {
+  void emit_ast(ast::variable_name& variable, size_t) {
     emit_string(variable.name);
   }
 
-  void emit_node(ast::expression_placeholder& placeholder, size_t) {
+  void emit_ast(ast::expression_placeholder& placeholder, size_t) {
     emit_placeholder(placeholder.name);
   }
 
-  void emit_node(ast::unary_expression& unary, size_t paren_precedence) {
+  void emit_ast(ast::unary_expression& unary, size_t paren_precedence) {
     if (ast::unary_op_precedence <= paren_precedence) {
       emit_string("(");
     }
@@ -342,7 +342,7 @@ struct formatter {
     }
   }
 
-  void emit_node(ast::binary_expression& binary, size_t paren_precedence) {
+  void emit_ast(ast::binary_expression& binary, size_t paren_precedence) {
     const size_t op_precedence{ast::precedence_for(binary.op)};
     if (op_precedence <= paren_precedence) {
       emit_string("(");
@@ -362,25 +362,25 @@ struct formatter {
     }
   }
 
-  void emit_node(ast::system_function_call& call, size_t) {
+  void emit_ast(ast::system_function_call& call, size_t) {
     emit_string(display_for(call.func));
     emit_arguments(call.arguments());
   }
 
-  void emit_node(ast::user_function_call& call, size_t) {
+  void emit_ast(ast::user_function_call& call, size_t) {
     emit_string(call.name);
     emit_arguments(call.arguments());
   }
 
-  void emit_node(ast::identifier& identifier, size_t) {
+  void emit_ast(ast::identifier& identifier, size_t) {
     emit_string(identifier.name);
   }
 
-  void emit_node(ast::number_literal& literal, size_t) {
+  void emit_ast(ast::number_literal& literal, size_t) {
     emit_highlight(literal.value, highlight_token_type::number);
   }
 
-  void emit_node(ast::string_literal& literal, size_t) {
+  void emit_ast(ast::string_literal& literal, size_t) {
     emit_highlight(quoted(literal.value), highlight_token_type::string);
   }
 };

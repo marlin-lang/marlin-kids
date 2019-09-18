@@ -3,7 +3,7 @@
 #import "NSString+StringView.h"
 #import "Pasteboard.h"
 
-@interface MacSourceView () <NSPasteboardItemDataProvider, NSDraggingSource>
+@interface MacSourceView () <NSDraggingSource>
 
 @end
 
@@ -21,6 +21,17 @@
 
   auto location = [self convertPoint:event.locationInWindow fromView:nil];
   [self touchAtLocation:location];
+}
+
+- (void)mouseDragged:(NSEvent*)event {
+  [super mouseDragged:event];
+  if (auto draggingData = self.currentDraggingData) {
+    auto* pasteboardItem = [[NSPasteboardItem alloc] init];
+    [pasteboardItem setData:draggingData->data forType:pasteboardOfType(draggingData->type)];
+    auto draggingItem = [[NSDraggingItem alloc] initWithPasteboardWriter:pasteboardItem];
+    [draggingItem setDraggingFrame:NSMakeRect(0, 0, 100, 100)];
+    [self beginDraggingSessionWithItems:@[ draggingItem ] event:event source:self];
+  }
 }
 
 - (NSArray<NSPasteboardType>*)acceptableDragTypes {
@@ -61,29 +72,16 @@
   [self resetAll];
 }
 
-#pragma mark - NSPasteboardItemDataProvider
-
-- (void)pasteboard:(NSPasteboard*)pasteboard
-                  item:(NSPasteboardItem*)item
-    provideDataForType:(NSPasteboardType)type {
-  /*NSAssert(_isDraggingFromSelection, @"Should be in dragging");
-  if (_selection->is_block()) {
-      [pasteboard setData:[NSData dataWithDataView:_selection->get_data()]
-                  forType:pasteboardOfType(marlin::control::pasteboard_t::block)];
-  } else if (_selection->is_statement()) {
-      [pasteboard setData:[NSData dataWithDataView:_selection->get_data()]
-                  forType:pasteboardOfType(marlin::control::pasteboard_t::statement)];
-  } else if (_selection->is_expression()) {
-      [pasteboard setData:[NSData dataWithDataView:_selection->get_data()]
-                  forType:pasteboardOfType(marlin::control::pasteboard_t::expression)];
-  }*/
-}
-
 #pragma mark - NSDraggingSource implementation
 
 - (NSDragOperation)draggingSession:(NSDraggingSession*)session
     sourceOperationMaskForDraggingContext:(NSDraggingContext)context {
-  return NSDragOperationMove;
+  switch (context) {
+    case NSDraggingContextWithinApplication:
+      return NSDragOperationCopy;
+    case NSDraggingContextOutsideApplication:
+      return NSDragOperationMove;
+  }
 }
 
 #pragma mark - Private methods
