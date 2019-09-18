@@ -85,9 +85,13 @@ struct formatter {
     _highlights.clear();
     _current_loc = start;
     _indent = indent;
-    if constexpr (std::is_same_v<std::decay_t<input_type>, ast::base>) {
+    if constexpr (std::is_base_of_v<ast::base, std::decay_t<input_type>>) {
       emit_node(nodes);
-    } else if constexpr (std::is_same_v<std::decay_t<input_type>, ast::node>) {
+    } else if constexpr ((std::is_pointer_v<std::decay_t<input_type>> &&
+                          std::is_base_of_v<ast::base,
+                                            std::remove_pointer_t<
+                                                std::decay_t<input_type>>>) ||
+                         std::is_same_v<std::decay_t<input_type>, ast::node>) {
       emit_node(*nodes);
     } else {
       // nodes is vector

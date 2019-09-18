@@ -11,6 +11,7 @@
 namespace marlin::control {
 
 struct placeholder {
+  inline static constexpr std::string_view empty{""};
   inline static constexpr std::string_view default_text{"value"};
 
   template <typename node_type>
@@ -234,7 +235,7 @@ inline std::string_view placeholder::get<ast::user_function_call>(
     if (node_index < definition.parameters.size()) {
       return definition.parameters[node_index];
     } else {
-      return "";
+      return placeholder::empty;
     }
   } else {
     // Unknown user function

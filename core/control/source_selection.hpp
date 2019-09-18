@@ -177,14 +177,29 @@ struct source_selection {
   source_update remove_expression() const&& {
     assert(_selection->has_parent());
 
-    auto original_range{_selection->source_code_range};
-
     auto placeholder_name{placeholder::get_replacing_node(*_selection)};
+    if (_selection->parent().is<ast::user_function_call>() &&
+        placeholder_name == placeholder::empty) {
+      auto& call{_selection->parent().as<ast::user_function_call>()};
+      auto original_range{call.source_code_range};
+
+      auto args{call.arguments()};
+      for (auto i{0}; i < args.size(); i++) {
+        if (args[i].get() == _selection) {
+          args.pop(i);
+
+          format::formatter formatter;
+          auto display{formatter.format(call, call)};
+          return source_update{original_range, std::move(display)};
+        }
+      }
+      // _selection not found, this is unexpected
+      assert(false);
+    }
+
+    auto original_range{_selection->source_code_range};
     auto placeholder{ast::make<ast::expression_placeholder>(
         std::string{std::move(placeholder_name)})};
-
-    // TODO: for functions, actually remove expression when there are excess
-    // arguments originally
 
     format::formatter formatter;
     auto display{formatter.format(placeholder, *_selection)};
