@@ -1,8 +1,9 @@
 #ifndef marlin_control_source_selection_hpp
 #define marlin_control_source_selection_hpp
 
-#include <optional>
+#include <algorithm>
 #include <utility>
+#include <vector>
 
 #include "ast.hpp"
 #include "document.hpp"
@@ -127,6 +128,10 @@ struct source_selection {
            _selection->is<marlin::ast::identifier>();
   }
 
+  [[nodiscard]] bool is_removable() const {
+    return is_block() || is_statement() || is_expression();
+  }
+
   [[nodiscard]] source_selection as_dragging_range() const&& {
     return {*_doc, _loc, *_selection, dragging_rule};
   }
@@ -135,63 +140,10 @@ struct source_selection {
     return {*_doc, _loc, *_selection};
   }
 
-  std::optional<source_update> remove_from_document() const&& {
-    if (is_block()) {
-      if (_selection->is<ast::function>()) {
-        auto& signature = *_selection->as<ast::function>().signature();
-        if (signature.is<ast::function_signature>()) {
-          _doc->remove_function(signature.as<ast::function_signature>().name);
-        }
-      }
-
-      return remove_line();
-    } else if (is_statement()) {
-      return remove_line();
-    } else if (is_expression()) {
-      return remove_expression();
-    } else {
-      // These things are not draggable
-      assert(false);
-      return std::nullopt;
-    }
-  }
+  std::vector<source_update> remove_from_document() const&&;
 
   std::vector<source_update> replace_function_signature(
-      function_definition signature) const&& {
-    if (is_function_signature()) {
-      auto original_range{_selection->source_code_range};
-
-      assert(signature.name.length() > 0);
-      std::vector<ast::node> params;
-      for (auto& param : signature.parameters) {
-        params.emplace_back(ast::make<ast::variable_name>(param));
-      }
-      auto node{ast::make<ast::function_signature>(signature.name,
-                                                   std::move(params))};
-
-      format::formatter formatter;
-      auto display{formatter.format(node, *_selection)};
-
-      if (_selection->is<ast::function_signature>()) {
-        const auto& previous_name{
-            _selection->as<ast::function_signature>().name};
-        auto updates{
-            _doc->replace_function(previous_name, std::move(signature))};
-        _doc->replace_expression(*_selection, std::move(node));
-        updates.emplace_back(original_range, std::move(display));
-        return updates;
-      } else {
-        _doc->add_function(std::move(signature));
-        _doc->replace_expression(*_selection, std::move(node));
-        std::vector<source_update> updates;
-        updates.emplace_back(original_range, std::move(display));
-        return updates;
-      }
-    } else {
-      assert(false);
-      return {};
-    }
-  }
+      function_definition signature) const&&;
 
  private:
   document* _doc;
@@ -210,7 +162,7 @@ struct source_selection {
     return {literal_data_type::number, ""};
   }
 
-  source_update remove_line() const {
+  source_update remove_line() const&& {
     assert(_selection->has_parent());
 
     source_range line_range{{_selection->source_code_range.begin.line, 1},
@@ -222,7 +174,7 @@ struct source_selection {
     return source_update{line_range, {"", {}}};
   }
 
-  source_update remove_expression() const {
+  source_update remove_expression() const&& {
     assert(_selection->has_parent());
 
     auto original_range{_selection->source_code_range};

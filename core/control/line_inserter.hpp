@@ -2,6 +2,7 @@
 #define marlin_control_statement_inserter_hpp
 
 #include <optional>
+#include <vector>
 
 #include "document.hpp"
 #include "prototypes.hpp"
@@ -31,7 +32,7 @@ struct line_inserter {
     }
   }
 
-  std::optional<source_update> insert(store::data_view data);
+  std::vector<source_update> insert(store::data_view data);
 
  private:
   struct location {

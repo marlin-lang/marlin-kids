@@ -62,13 +62,36 @@ struct DocumentGetter {
   _inserter = {{self}};
 }
 
-- (void)insertStatementsBeforeLine:(NSUInteger)line withDisplay:(marlin::format::display)display {
-  [self insertStatementsBeforeLine:line withDisplay:std::move(display) isInitialize:false];
+- (void)initializeWithDisplay:(marlin::format::display)display {
+  [self insertLinesBeforeLine:1 withDisplay:std::move(display) isInitialize:true];
 }
 
-- (void)insertStatementsBeforeLine:(NSUInteger)line
-                       withDisplay:(marlin::format::display)display
-                      isInitialize:(bool)isInitialize {
+- (void)performUpdates:(std::vector<marlin::control::source_update>)updates {
+  for (auto& update : updates) {
+    [self performUpdate:std::move(update)];
+  }
+}
+
+- (void)performUpdate:(marlin::control::source_update)update {
+  // For now, we assume that there are only 3 types of updates:
+  //  - Insert statements/blocks
+  //  - Replace/remove expressions
+  //  - Remove statements/blocks
+  if (update.range.begin == update.range.end) {
+    [self insertLinesBeforeLine:update.range.begin.line
+                    withDisplay:std::move(update.display)
+                   isInitialize:false];
+  } else if (update.range.begin.line == update.range.end.line) {
+    [self updateExpressionInSourceRange:update.range withDisplay:std::move(update.display)];
+  } else {
+    assert(update.display.source.length() == 0);
+    [self removeLinesFromLine:update.range.begin.line toLine:update.range.end.line];
+  }
+}
+
+- (void)insertLinesBeforeLine:(NSUInteger)line
+                  withDisplay:(marlin::format::display)display
+                 isInitialize:(bool)isInitialize {
   auto lineIndex = line - 1;
   if (lineIndex > _strings.count) {
     lineIndex = _strings.count;
@@ -123,24 +146,13 @@ struct DocumentGetter {
   [self.delegate sourceViewChanged:self];
 }
 
-- (void)removeStatementFromLine:(NSUInteger)from toLine:(NSUInteger)to {
+- (void)removeLinesFromLine:(NSUInteger)from toLine:(NSUInteger)to {
   NSAssert(from > 0 && from <= _strings.count, @"%lu out of range", from);
   NSAssert(to > 0 && to <= _strings.count, @"");
   NSAssert(from <= to, @"");
   auto indexSet = [NSMutableIndexSet new];
   [indexSet addIndexesInRange:NSMakeRange(from - 1, to - from + 1)];
   [_strings removeObjectsAtIndexes:indexSet];
-  [self setNeedsDisplayInRect:self.bounds];
-  [self.delegate sourceViewChanged:self];
-}
-
-- (void)removeExpressionInSourceRange:(marlin::source_range)sourceRange {
-  NSAssert(sourceRange.begin.line == sourceRange.end.line, @"Only support one line expression");
-  NSAssert(sourceRange.begin.line > 0 && sourceRange.begin.line <= _strings.count, @"");
-  NSMutableAttributedString* str = [_strings objectAtIndex:sourceRange.begin.line - 1];
-  auto range =
-      NSMakeRange(sourceRange.begin.column - 1, sourceRange.end.column - sourceRange.begin.column);
-  [str replaceCharactersInRange:range withString:@""];
   [self setNeedsDisplayInRect:self.bounds];
   [self.delegate sourceViewChanged:self];
 }
@@ -187,7 +199,7 @@ struct DocumentGetter {
     auto update = (*std::exchange(_selection, std::nullopt))
                       .as_expression_inserter()
                       .insert_literal(type, string.stringView);
-    [self updateExpressionInSourceRange:update.range withDisplay:std::move(update.display)];
+    [self performUpdate:std::move(update)];
   } else {
     _selection.reset();
   }
@@ -207,9 +219,7 @@ struct DocumentGetter {
       }
     }
     auto updates = (*std::exchange(_selection, std::nullopt)).replace_function_signature(signature);
-    for (auto& update : updates) {
-      [self updateExpressionInSourceRange:update.range withDisplay:std::move(update.display)];
-    }
+    [self performUpdates:std::move(updates)];
   } else {
     _selection.reset();
   }
@@ -222,16 +232,9 @@ struct DocumentGetter {
 }
 
 - (void)removeDraggingSelection {
-  if (_isDraggingFromSelection) {
-    if (_selection->is_block() || _selection->is_statement()) {
-      if (auto update = (*std::exchange(_selection, std::nullopt)).remove_from_document()) {
-        [self removeStatementFromLine:update->range.begin.line toLine:update->range.end.line];
-      }
-    } else if (_selection->is_expression()) {
-      if (auto update = (*std::exchange(_selection, std::nullopt)).remove_from_document()) {
-        [self removeExpressionInSourceRange:update->range];
-      }
-    }
+  if (_isDraggingFromSelection && _selection->is_removable()) {
+    auto updates = (*std::exchange(_selection, std::nullopt)).remove_from_document();
+    [self performUpdates:std::move(updates)];
   }
   _isDraggingFromSelection = NO;
 }
@@ -414,19 +417,11 @@ struct DocumentGetter {
 
 - (BOOL)dropPasteboardOfType:(marlin::control::pasteboard_t)type withData:(NSData*)data {
   NSAssert(_inserter.has_value(), @"");
-  if (auto update = _inserter->insert(type, data.dataView)) {
-    if (type == marlin::control::pasteboard_t::expression) {
-      [self updateExpressionInSourceRange:update->range withDisplay:std::move(update->display)];
-    } else {
-      [self insertStatementsBeforeLine:update->range.begin.line
-                           withDisplay:std::move(update->display)];
-    }
-    [self removeDraggingSelection];
-    return YES;
-  } else {
-    [self removeDraggingSelection];
-    return NO;
-  }
+  auto update = _inserter->insert(type, data.dataView);
+  const bool result = update.size() > 0;
+  [self performUpdates:std::move(update)];
+  [self removeDraggingSelection];
+  return result;
 }
 
 - (void)resetAll {

@@ -1,7 +1,7 @@
 #ifndef marlin_control_expression_inserter_hpp
 #define marlin_control_expression_inserter_hpp
 
-#include <optional>
+#include <vector>
 
 #include "ast.hpp"
 #include "byte_span.hpp"
@@ -50,7 +50,7 @@ struct expression_inserter {
     }
   }
 
-  std::optional<source_update> insert(store::data_view data) const&&;
+  std::vector<source_update> insert(store::data_view data) const&&;
 
  private:
   document* _doc;

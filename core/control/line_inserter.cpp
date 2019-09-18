@@ -5,13 +5,16 @@
 namespace marlin::control {
 
 template <line_node_type node_type>
-std::optional<source_update> line_inserter<node_type>::insert(
+std::vector<source_update> line_inserter<node_type>::insert(
     store::data_view data) {
   assert(_loc.has_value());
 
+  std::vector<source_update> updates;
+  _doc->start_recording_side_effects();
+
   std::optional<store::reconstruction_result> try_result;
   try {
-    try_result = store::read(data, _loc->line, *_loc->parent, _doc->_functions);
+    try_result = store::read(data, _loc->line, *_loc->parent, *_doc);
   } catch (const store::read_error&) {
     // Leave try_result as std::nullopt
   }
@@ -28,16 +31,17 @@ std::optional<source_update> line_inserter<node_type>::insert(
     }
     _doc->update_source_line_after_node(*_loc->block[_loc->index], line_offset);
 
-    return source_update{{{_loc->line, 1}, {_loc->line, 1}},
-                         std::move(result.display)};
-  } else {
-    return std::nullopt;
+    updates.emplace_back(source_range{{_loc->line, 1}, {_loc->line, 1}},
+                         std::move(result.display));
   }
+
+  _doc->gather_side_effects(updates);
+  return updates;
 }
 
-template std::optional<source_update> block_inserter::insert(
+template std::vector<source_update> block_inserter::insert(
     store::data_view data);
-template std::optional<source_update> statement_inserter::insert(
+template std::vector<source_update> statement_inserter::insert(
     store::data_view data);
 
 template <line_node_type node_type>

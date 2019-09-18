@@ -5,14 +5,14 @@
 #include "user_function.hpp"
 
 TEST_CASE("store::Read unrecognized data", "[store]") {
-  marlin::control::user_function_table table;
+  marlin::control::temporary_user_function_table_holder table;
 
   marlin::store::data_vector data;
   REQUIRE_THROWS(marlin::store::read(data, table));
 }
 
 TEST_CASE("store::Write and read expressions", "[store]") {
-  marlin::control::user_function_table table;
+  marlin::control::temporary_user_function_table_holder table;
 
   auto node{marlin::ast::make<marlin::ast::binary_expression>(
       marlin::ast::make<marlin::ast::expression_placeholder>("left"),
@@ -38,7 +38,7 @@ TEST_CASE("store::Write and read expressions", "[store]") {
 }
 
 TEST_CASE("store::Write and read statements", "[store]") {
-  marlin::control::user_function_table table;
+  marlin::control::temporary_user_function_table_holder table;
 
   auto outer_if{marlin::ast::make<marlin::ast::if_statement>(
       marlin::ast::make<marlin::ast::expression_placeholder>("condition"),
@@ -79,7 +79,7 @@ TEST_CASE("store::Write and read statements", "[store]") {
 }
 
 TEST_CASE("store::Report type error", "[store]") {
-  marlin::control::user_function_table table;
+  marlin::control::temporary_user_function_table_holder table;
 
   auto node{marlin::ast::make<marlin::ast::binary_expression>(
       marlin::ast::make<marlin::ast::expression_placeholder>("left"),

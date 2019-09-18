@@ -8,7 +8,11 @@ set(HEADERS
     line_inserter.hpp
     toolbox.hpp)
 
-set(SOURCES expression_inserter.cpp line_inserter.cpp toolbox.cpp)
+set(SOURCES
+    expression_inserter.cpp
+    line_inserter.cpp
+    source_selection.cpp
+    toolbox.cpp)
 
 add_library(${PROJECT_NAME}.core.control ${SOURCES})
 target_sources(${PROJECT_NAME}.core.control PRIVATE ${HEADERS})

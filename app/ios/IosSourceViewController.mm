@@ -20,9 +20,7 @@
   _document = document;
 
   if (auto initialData = [self.document initialize]) {
-    [self.sourceView insertStatementsBeforeLine:1
-                                    withDisplay:std::move(initialData->display)
-                                   isInitialize:true];
+    [self.sourceView initializeWithDisplay:std::move(initialData->display)];
     [self.lineNumberView setNeedsDisplay];
   }
 }

@@ -32,8 +32,8 @@ TEST_CASE("control::Insert statement in empty document", "[control]") {
   inserter.move_to_line(2);
   REQUIRE(inserter.can_insert());
   auto update = inserter.insert(assignment_prototype.data);
-  REQUIRE(update.has_value());
-  CHECK(update->display.source == "  @variable = @value;\n");
+  REQUIRE(update.size() == 1);
+  CHECK(update[0].display.source == "  @variable = @value;\n");
 }
 
 TEST_CASE("control::Insert number literal at placeholder", "[control]") {
@@ -103,23 +103,23 @@ TEST_CASE("control::Insert binary expressions at placeholder", "[control]") {
   expr_inserter.move_to_loc({2, 20});
   REQUIRE(expr_inserter.can_insert());
   auto update = std::move(expr_inserter).insert(add_prototype.data);
-  REQUIRE(update.has_value());
-  REQUIRE(update->display.source == "@left + @right");
-  REQUIRE(update->range.begin.line == 2);
-  REQUIRE(update->range.begin.column == 15);
-  REQUIRE(update->range.end.line == 2);
-  REQUIRE(update->range.end.column == 21);
+  REQUIRE(update.size() == 1);
+  REQUIRE(update[0].display.source == "@left + @right");
+  REQUIRE(update[0].range.begin.line == 2);
+  REQUIRE(update[0].range.begin.column == 15);
+  REQUIRE(update[0].range.end.line == 2);
+  REQUIRE(update[0].range.end.column == 21);
 
   expr_inserter = {document};
   expr_inserter.move_to_loc({2, 27});
   REQUIRE(expr_inserter.can_insert());
   auto inner_update = std::move(expr_inserter).insert(subtract_prototype.data);
-  REQUIRE(inner_update.has_value());
-  REQUIRE(inner_update->display.source == "(@left - @right)");
-  REQUIRE(inner_update->range.begin.line == 2);
-  REQUIRE(inner_update->range.begin.column == 23);
-  REQUIRE(inner_update->range.end.line == 2);
-  REQUIRE(inner_update->range.end.column == 29);
+  REQUIRE(inner_update.size() == 1);
+  REQUIRE(inner_update[0].display.source == "(@left - @right)");
+  REQUIRE(inner_update[0].range.begin.line == 2);
+  REQUIRE(inner_update[0].range.begin.column == 23);
+  REQUIRE(inner_update[0].range.end.line == 2);
+  REQUIRE(inner_update[0].range.end.column == 29);
 
   auto &declaration = document.locate({2, 13});
   REQUIRE(declaration.is<marlin::ast::assignment>());
@@ -139,23 +139,23 @@ TEST_CASE("control::Insert unary expressions at placeholder", "[control]") {
   expr_inserter.move_to_loc({2, 20});
   REQUIRE(expr_inserter.can_insert());
   auto update = std::move(expr_inserter).insert(negative_prototype.data);
-  REQUIRE(update.has_value());
-  REQUIRE(update->display.source == "-@argument");
-  REQUIRE(update->range.begin.line == 2);
-  REQUIRE(update->range.begin.column == 15);
-  REQUIRE(update->range.end.line == 2);
-  REQUIRE(update->range.end.column == 21);
+  REQUIRE(update.size() == 1);
+  REQUIRE(update[0].display.source == "-@argument");
+  REQUIRE(update[0].range.begin.line == 2);
+  REQUIRE(update[0].range.begin.column == 15);
+  REQUIRE(update[0].range.end.line == 2);
+  REQUIRE(update[0].range.end.column == 21);
 
   expr_inserter = {document};
   expr_inserter.move_to_loc({2, 19});
   REQUIRE(expr_inserter.can_insert());
   auto inner_update = std::move(expr_inserter).insert(multiply_prototype.data);
-  REQUIRE(inner_update.has_value());
-  REQUIRE(inner_update->display.source == "(@left * @right)");
-  REQUIRE(inner_update->range.begin.line == 2);
-  REQUIRE(inner_update->range.begin.column == 16);
-  REQUIRE(inner_update->range.end.line == 2);
-  REQUIRE(inner_update->range.end.column == 25);
+  REQUIRE(inner_update.size() == 1);
+  REQUIRE(inner_update[0].display.source == "(@left * @right)");
+  REQUIRE(inner_update[0].range.begin.line == 2);
+  REQUIRE(inner_update[0].range.begin.column == 16);
+  REQUIRE(inner_update[0].range.end.line == 2);
+  REQUIRE(inner_update[0].range.end.column == 25);
 
   auto &declaration = document.locate({2, 13});
   REQUIRE(declaration.is<marlin::ast::assignment>());
@@ -180,8 +180,8 @@ TEST_CASE("control::Remove expressions", "[control]") {
   marlin::control::source_selection literal_selection{document, {2, 7}};
   REQUIRE(literal_selection.is_literal());
   auto removal = std::move(literal_selection).remove_from_document();
-  REQUIRE(removal.has_value());
-  auto remove_update = *std::move(removal);
+  REQUIRE(removal.size() == 1);
+  auto remove_update = std::move(removal[0]);
   REQUIRE(remove_update.display.source == "@condition");
   REQUIRE(remove_update.range.begin.line == 2);
   REQUIRE(remove_update.range.begin.column == 7);

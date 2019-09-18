@@ -26,12 +26,10 @@ struct source_inserters {
   auto insert(pasteboard_t type, store::data_view data) {
     return perform_on_inserter(type, [&data](auto& inserter) {
       if (inserter.has_value() && inserter->can_insert()) {
-        if (auto update{
-                (*std::exchange(inserter, std::nullopt)).insert(data)}) {
-          return update;
-        }
+        return (*std::exchange(inserter, std::nullopt)).insert(data);
+      } else {
+        return std::vector<source_update>{};
       }
-      return static_cast<std::optional<source_update>>(std::nullopt);
     });
   }
 

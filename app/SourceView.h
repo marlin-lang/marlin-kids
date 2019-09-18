@@ -44,18 +44,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 @property(readonly) CGFloat lineHeight;
 
-- (void)insertStatementsBeforeLine:(NSUInteger)line withDisplay:(marlin::format::display)display;
-
-- (void)insertStatementsBeforeLine:(NSUInteger)line
-                       withDisplay:(marlin::format::display)display
-                      isInitialize:(bool)isInitialize;
-
-- (void)updateExpressionInSourceRange:(marlin::source_range)sourceRange
-                          withDisplay:(marlin::format::display)display;
-
-- (void)removeStatementFromLine:(NSUInteger)from toLine:(NSUInteger)to;
-
-- (void)removeExpressionInSourceRange:(marlin::source_range)sourceRange;
+- (void)initializeWithDisplay:(marlin::format::display)display;
 
 - (marlin::source_loc)sourceLocationOfPoint:(CGPoint)point;
 

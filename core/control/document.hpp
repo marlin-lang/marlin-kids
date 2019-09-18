@@ -26,7 +26,7 @@ using enable_if_ast_t =
 
 enum struct line_node_type : uint8_t;
 
-struct document {
+struct document final : store::user_function_table_interface {
   template <line_node_type node_type>
   friend struct line_inserter;
   friend struct expression_inserter;
@@ -45,11 +45,11 @@ struct document {
   static std::optional<std::pair<document, source_update>> make_document(
       store::data_view data = default_data()) {
     try {
-      user_function_table table;
+      temporary_user_function_table_holder table;
       auto result{store::read(data, table, store::type_expectation::program)};
       assert(result.nodes.size() == 1);
       return std::make_pair(
-          document{std::move(result.nodes[0]), std::move(table)},
+          document{std::move(result.nodes[0]), std::move(table).get()},
           source_update{{{1, 1}, {1, 1}}, std::move(result.display)});
     } catch (const store::read_error&) {
       return std::nullopt;
@@ -58,10 +58,6 @@ struct document {
 
   explicit document(ast::node program, user_function_table table) noexcept
       : _program(std::move(program)), _functions{std::move(table)} {}
-
-  void register_toolbox(std::weak_ptr<toolbox> model) {
-    _functions.set_toolbox(std::move(model));
-  }
 
   [[nodiscard]] ast::base& locate(source_loc loc) {
     return _program->locate(loc);
@@ -75,13 +71,37 @@ struct document {
     return gen.generate(*_program);
   }
 
+  auto& functions() { return _functions.map(); }
+
   store::data_vector write() const { return store::write({_program.get()}); }
 
-  auto& functions() { return _functions.map(); }
+  void register_toolbox(std::weak_ptr<toolbox> model) {
+    _functions.set_toolbox(std::move(model));
+  }
+
+  void start_recording_side_effects() { _side_effects.clear(); }
+  void gather_side_effects(std::vector<source_update>& updates) {
+    format::formatter formatter;
+    for (auto node : _side_effects) {
+      auto original{node->source_code_range};
+      auto display{formatter.format(*node, *node)};
+      updates.emplace_back(original, std::move(display));
+
+      const auto offset{
+          static_cast<ptrdiff_t>(node->source_code_range.end.column) -
+          static_cast<ptrdiff_t>(original.end.column)};
+      if (offset != 0) {
+        update_source_column_after_node(*node, offset);
+      }
+    }
+    _side_effects.clear();
+  }
 
  private:
   ast::node _program;
   user_function_table _functions;
+
+  std::vector<ast::base*> _side_effects;
 
   // Convenient functions to modify _program
   // Implemented for use of friend structs
@@ -93,7 +113,7 @@ struct document {
     assert(existing.source_code_range.end.line ==
            replacement->source_code_range.end.line);
 
-    auto offset{
+    const auto offset{
         static_cast<ptrdiff_t>(replacement->source_code_range.end.column) -
         static_cast<ptrdiff_t>(existing.source_code_range.end.column)};
     auto& placed{*replacement};
@@ -263,63 +283,54 @@ struct document {
     }
   }
 
-  void add_function(function_definition signature) {
-    _functions.add_function(std::move(signature));
-
-    // For now, adding functions must not have any side effect on the document
-    // This is required so that the store module can read functions properly
-
-    // TODO: this shall to changed to link existing calls to a newly-added
-    // function
+  [[nodiscard]] const bool has_function(
+      const std::string& name) const override {
+    return _functions.has_function(name);
   }
 
-  std::vector<source_update> replace_function(
-      const std::string& name, function_definition new_signature) {
-    auto definition{
+  [[nodiscard]] const function_definition& get_function(
+      const std::string& name) const override {
+    assert(has_function(name));
+    return _functions.map().at(name)->definition;
+  }
+
+  void add_function(function_definition signature) override {
+    auto& definition{_functions.add_function(std::move(signature))};
+    assign_user_call_definition(definition.name, &definition);
+  }
+
+  void replace_function(const std::string& name,
+                        function_definition new_signature) {
+    auto& definition{
         _functions.replace_function(name, std::move(new_signature))};
-    return assign_user_call_definition(name, definition);
+    assign_user_call_definition(name, &definition);
   }
 
   void remove_function(const std::string& name) {
     _functions.remove_function(name);
-    auto updates{assign_user_call_definition(name, nullptr)};
-    assert(updates.size() == 0);
+    assign_user_call_definition(name, nullptr);
   }
 
-  std::vector<source_update> assign_user_call_definition(
-      const std::string& name, const function_definition* definition) {
-    std::vector<source_update> updates;
-    format::formatter formatter;
-    assign_user_call_definition(*_program, name, definition, updates, formatter,
-                                true);
-    return updates;
+  void assign_user_call_definition(const std::string& name,
+                                   const function_definition* definition) {
+    assign_user_call_definition(*_program, name, definition, true);
   }
 
   void assign_user_call_definition(ast::base& node, const std::string& name,
                                    const function_definition* definition,
-                                   std::vector<source_update>& updates,
-                                   format::formatter& formatter,
                                    bool needs_update) {
-    std::optional<source_range> update_original{std::nullopt};
     if (node.is<ast::user_function_call>()) {
       auto& call{node.as<ast::user_function_call>()};
       if (call.name == name) {
-        auto original{call.source_code_range};
         if (call.assign_definition(definition) && needs_update) {
+          _side_effects.emplace_back(&call);
           needs_update = false;
-          update_original = original;
         }
       }
     }
 
     for (auto& child : node.children()) {
-      assign_user_call_definition(*child, name, definition, updates, formatter,
-                                  needs_update);
-    }
-
-    if (update_original.has_value()) {
-      auto display{formatter.format(node, node)};
-      updates.emplace_back(*update_original, std::move(display));
+      assign_user_call_definition(*child, name, definition, needs_update);
     }
   }
 };

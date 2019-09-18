@@ -26,12 +26,16 @@ bool user_function_call::assign_definition(const function_definition* func) {
         it++;
       }
     } else if (args.size() > _func->parameters.size()) {
-      for (auto i{args.size() - 1};
-           i >= 0 && args.size() > _func->parameters.size(); i--) {
+      auto i{args.size() - 1};
+      while (args.size() > _func->parameters.size()) {
         if (args[i]->is<ast::expression_placeholder>()) {
           changed = true;
           args.pop(i);
         }
+        if (i == 0) {
+          break;
+        }
+        i--;
       }
     }
     for (auto i{0}; i < arg_check_count; i++) {

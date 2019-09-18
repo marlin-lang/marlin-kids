@@ -4,13 +4,16 @@
 
 namespace marlin::control {
 
-std::optional<source_update> expression_inserter::insert(
+std::vector<source_update> expression_inserter::insert(
     store::data_view data) const&& {
   assert(_selection != nullptr);
 
+  std::vector<source_update> updates;
+  _doc->start_recording_side_effects();
+
   std::optional<store::reconstruction_result> try_result;
   try {
-    try_result = store::read(data, *_selection, _doc->_functions);
+    try_result = store::read(data, *_selection, *_doc);
   } catch (const store::read_error&) {
     // Leave try_result as std::nullopt
   }
@@ -21,10 +24,11 @@ std::optional<source_update> expression_inserter::insert(
 
     auto original{_selection->source_code_range};
     _doc->replace_expression(*_selection, std::move(result.nodes[0]));
-    return source_update{original, std::move(result.display)};
-  } else {
-    return std::nullopt;
+    updates.emplace_back(original, std::move(result.display));
   }
+
+  _doc->gather_side_effects(updates);
+  return updates;
 }
 
 }  // namespace marlin::control

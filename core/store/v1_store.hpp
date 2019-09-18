@@ -66,12 +66,19 @@ struct store : base_store::impl<store> {
     _iter = data.begin() + data_prefix().size();
     _end = data.end();
     _functions = &table;
+    _new_functions.clear();
     _unknown_calls.clear();
 
     auto nodes{read_vector(type)};
     if (nodes.size() == 0) {
       throw read_error{"No data is read!"};
     }
+
+    // Only update function table when there are no errors
+    for (auto& it : _new_functions) {
+      _functions->add_function(std::move(it.second));
+    }
+    _new_functions.clear();
 
     for (auto* call : _unknown_calls) {
       if (_functions->has_function(call->name)) {
@@ -103,7 +110,10 @@ struct store : base_store::impl<store> {
 
   data_view::pointer _iter;
   data_view::pointer _end;
+
   user_function_table_interface* _functions;
+  std::unordered_map<std::string, function_definition> _new_functions;
+
   std::vector<ast::user_function_call*> _unknown_calls;
 
   template <type_expectation... expect_types>
@@ -224,7 +234,8 @@ struct store : base_store::impl<store> {
     std::string name{read_string()};
     auto params{read_vector(type_expectation::lvalue)};
 
-    if (_functions->has_function(name)) {
+    if (_functions->has_function(name) ||
+        _new_functions.find(name) != _new_functions.end()) {
       throw read_error{"Repeated function name encountered!"};
     } else {
       std::vector<std::string> param_names;
@@ -235,7 +246,7 @@ struct store : base_store::impl<store> {
           throw read_error{"Unexpected node, expecting function parameter!"};
         }
       }
-      _functions->add_function({name, std::move(param_names)});
+      _new_functions[name] = {name, std::move(param_names)};
       return ast::make<ast::function_signature>(std::string{std::move(name)},
                                                 std::move(params));
     }
