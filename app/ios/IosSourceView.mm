@@ -31,7 +31,11 @@
 
 - (void)touchesBegan:(NSSet<UITouch*>*)touches withEvent:(UIEvent*)event {
   auto location = [[touches anyObject] locationInView:self];
-  [self touchAtLocation:location];
+  [self touchDownAtLocation:location];
+}
+
+- (void)touchesEnded:(NSSet<UITouch*>*)touches withEvent:(UIEvent*)event {
+  [self touchUp];
 }
 
 - (void)showEditorViewControllerFromRect:(CGRect)rect
@@ -72,7 +76,9 @@
                                                completionHandler:^(NSData* _Nullable data,
                                                                    NSError* _Nullable error) {
                                                  dispatch_async(dispatch_get_main_queue(), ^{
-                                                   [self dropPasteboardOfType:*type withData:data];
+                                                   [self dropPasteboardOfType:*type
+                                                                     withData:data
+                                                        removingCurrentSource:YES];
                                                  });
                                                }];
     }

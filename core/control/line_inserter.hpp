@@ -6,6 +6,7 @@
 
 #include "document.hpp"
 #include "prototypes.hpp"
+#include "source_selection.hpp"
 
 namespace marlin::control {
 
@@ -18,15 +19,26 @@ struct line_inserter {
   line_inserter(document& doc) : _doc{&doc} {}
 
   bool can_insert() const noexcept { return _loc.has_value(); }
-  source_loc get_location() const noexcept {
+  source_loc get_insert_location() const noexcept {
     assert(_loc.has_value());
     return {_loc->line, _loc->indent * indent_space_count + 1};
   }
 
-  void move_to_loc(source_loc loc) { move_to_line(loc.line); }
+  void move_to_loc(source_loc loc,
+                   const source_selection* exclusion = nullptr) {
+    move_to_line(loc.line, exclusion);
+  }
 
-  void move_to_line(size_t line) {
+  void move_to_line(size_t line, const source_selection* exclusion = nullptr) {
     if (_line == 0 || line != _line) {
+      if (exclusion != nullptr) {
+        const auto range{exclusion->get_range()};
+        if (line > range.begin.line && line <= range.end.line) {
+          _loc = std::nullopt;
+          _line = line;
+          return;
+        }
+      }
       _loc = find_insert_location_in_base(line, *_doc->_program, 0);
       _line = line;
     }

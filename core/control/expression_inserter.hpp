@@ -13,28 +13,21 @@ namespace marlin::control {
 
 enum struct literal_data_type { variable_name, identifier, number, string };
 
+struct source_selection;
+
 struct expression_inserter {
-  friend struct source_selection;
+  friend source_selection;
 
   expression_inserter(document& doc) : _doc{&doc} {}
 
   bool can_insert() const noexcept { return _selection != nullptr; }
+  source_loc get_selection_loc() const noexcept { return _loc; }
   source_range get_range() const noexcept {
     assert(_selection != nullptr);
     return _selection->source_code_range;
   }
 
-  void move_to_loc(source_loc loc) {
-    if (_loc == source_loc{} || _loc != loc) {
-      auto& node{_doc->locate(loc)};
-      if (node.is<ast::expression_placeholder>()) {
-        _selection = &node;
-      } else {
-        _selection = nullptr;
-      }
-      _loc = loc;
-    }
-  }
+  void move_to_loc(source_loc loc, const source_selection* exclusion = nullptr);
 
   source_update insert_literal(literal_data_type type,
                                std::string_view literal) const&& {

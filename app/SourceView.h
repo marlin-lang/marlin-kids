@@ -65,17 +65,21 @@ struct DraggingData {
 
 - (void)clearErrors;
 
-- (std::optional<DraggingData>)currentDraggingData;
+- (std::optional<DraggingData>)startDraggingAtLocation:(CGPoint)location;
 
 - (BOOL)draggingPasteboardOfType:(marlin::control::pasteboard_t)type toLocation:(CGPoint)location;
 
-- (BOOL)dropPasteboardOfType:(marlin::control::pasteboard_t)type withData:(NSData *)data;
+- (BOOL)dropPasteboardOfType:(marlin::control::pasteboard_t)type
+                    withData:(NSData *)data
+       removingCurrentSource:(BOOL)removing;
 
-- (void)removeDraggingSelection;
+- (void)resetDraggingDestination;
 
-- (void)resetAll;
+- (void)resetDraggingSource;
 
-- (void)touchAtLocation:(CGPoint)location;
+- (void)touchDownAtLocation:(CGPoint)location;
+
+- (void)touchUp;
 
 @end
 

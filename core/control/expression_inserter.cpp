@@ -1,8 +1,32 @@
 #include "expression_inserter.hpp"
 
+#include "source_selection.hpp"
 #include "store.hpp"
 
 namespace marlin::control {
+
+void expression_inserter::move_to_loc(source_loc loc,
+                                      const source_selection* exclusion) {
+  if (_loc == source_loc{} || _loc != loc) {
+    auto& node{_doc->locate(loc)};
+    if (node.is<ast::expression_placeholder>()) {
+      if (exclusion != nullptr) {
+        const auto range{exclusion->get_range()};
+        if (node.source_code_range.begin >= range.end ||
+            node.source_code_range.end <= range.begin) {
+          _selection = &node;
+        } else {
+          _selection = nullptr;
+        }
+      } else {
+        _selection = &node;
+      }
+    } else {
+      _selection = nullptr;
+    }
+    _loc = loc;
+  }
+}
 
 std::vector<source_update> expression_inserter::insert(
     store::data_view data) const&& {

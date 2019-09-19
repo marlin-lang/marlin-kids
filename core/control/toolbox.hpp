@@ -134,8 +134,11 @@ struct toolbox {
   }
 
   void remove_user_function(const prototype* function) {
-    std::remove(_user_functions.begin(), _user_functions.end(), function);
-    std::remove(_recent.begin(), _recent.end(), function);
+    _user_functions.erase(
+        std::remove(_user_functions.begin(), _user_functions.end(), function),
+        _user_functions.end());
+    _recent.erase(std::remove(_recent.begin(), _recent.end(), function),
+                  _recent.end());
   }
 
  private:

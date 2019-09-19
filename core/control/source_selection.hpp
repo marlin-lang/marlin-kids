@@ -57,6 +57,15 @@ constexpr selection_promotion_rule dragging_rule =
   }
 };
 
+struct line_update {
+  size_t start_line;
+  size_t offset;
+
+  line_update() : line_update{0, 0} {}
+  line_update(size_t _start_line, size_t _offset)
+      : start_line{_start_line}, offset{_offset} {}
+};
+
 struct source_selection {
   struct literal_content {
     literal_data_type type;
@@ -111,7 +120,7 @@ struct source_selection {
     return _selection->inherits<ast::statement>();
   }
   [[nodiscard]] bool is_expression() const {
-    return is_literal() || _selection->inherits<ast::expression>();
+    return _selection->inherits<ast::expression>();
   }
 
   [[nodiscard]] bool is_function_signature() const {
@@ -120,24 +129,51 @@ struct source_selection {
   }
 
   [[nodiscard]] bool is_literal() const {
-    return _selection->is<marlin::ast::variable_placeholder>() ||
-           _selection->is<marlin::ast::expression_placeholder>() ||
-           _selection->is<marlin::ast::variable_name>() ||
-           _selection->is<marlin::ast::number_literal>() ||
-           _selection->is<marlin::ast::string_literal>() ||
-           _selection->is<marlin::ast::identifier>();
+    return _selection->is<ast::variable_placeholder>() ||
+           _selection->is<ast::expression_placeholder>() ||
+           _selection->is<ast::variable_name>() ||
+           _selection->is<ast::number_literal>() ||
+           _selection->is<ast::string_literal>() ||
+           _selection->is<ast::identifier>();
   }
 
   [[nodiscard]] bool is_removable() const {
-    return is_block() || is_statement() || is_expression();
+    return dragging_type().has_value();
   }
 
   [[nodiscard]] source_selection as_dragging_selection() const&& {
     return {*_doc, _loc, *_selection, dragging_rule};
   }
 
+  [[nodiscard]] std::optional<pasteboard_t> dragging_type() const {
+    if (is_block()) {
+      if (_selection->is<ast::on_start>()) {
+        return std::nullopt;
+      } else {
+        return pasteboard_t::block;
+      }
+    } else if (is_statement()) {
+      return pasteboard_t::statement;
+    } else if (is_expression()) {
+      return pasteboard_t::expression;
+    } else {
+      return std::nullopt;
+    }
+  }
+
   [[nodiscard]] expression_inserter as_expression_inserter() const&& {
     return {*_doc, _loc, *_selection};
+  }
+
+  // Use this to update source_inserters, so that we can remove first and then
+  // insert when moving parts of the code
+  [[nodiscard]] line_update removal_line_update() const {
+    if (is_block() || is_statement()) {
+      const auto range{_selection->source_code_range};
+      return {range.end.line + 1, range.begin.line - range.end.line - 1};
+    } else {
+      return {};
+    }
   }
 
   std::vector<source_update> remove_from_document() const&&;

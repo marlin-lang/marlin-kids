@@ -7,14 +7,16 @@ std::vector<source_update> source_selection::remove_from_document() const&& {
   _doc->start_recording_side_effects();
 
   if (is_block()) {
-    if (_selection->is<ast::function>()) {
-      auto& signature = *_selection->as<ast::function>().signature();
-      if (signature.is<ast::function_signature>()) {
-        _doc->remove_function(signature.as<ast::function_signature>().name);
+    if (!_selection->is<ast::on_start>()) {
+      if (_selection->is<ast::function>()) {
+        auto& signature = *_selection->as<ast::function>().signature();
+        if (signature.is<ast::function_signature>()) {
+          _doc->remove_function(signature.as<ast::function_signature>().name);
+        }
       }
-    }
 
-    updates.emplace_back(std::move(*this).remove_line());
+      updates.emplace_back(std::move(*this).remove_line());
+    }
   } else if (is_statement()) {
     updates.emplace_back(std::move(*this).remove_line());
   } else if (is_expression()) {

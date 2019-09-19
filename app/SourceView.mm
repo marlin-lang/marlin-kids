@@ -230,18 +230,6 @@ struct DocumentGetter {
   return YES;
 }
 
-- (void)removeDraggingSelection {
-  if (_draggingSelection.has_value()) {
-    if (_draggingSelection->is_removable()) {
-      auto updates = (*std::exchange(_draggingSelection, std::nullopt)).remove_from_document();
-      [self performUpdates:std::move(updates)];
-    } else {
-      assert(false);
-      _draggingSelection.reset();
-    }
-  }
-}
-
 - (void)drawRect:(CGRect)dirtyRect {
   [super drawRect:dirtyRect];
   [self drawBackgroundInRect:dirtyRect];
@@ -346,22 +334,26 @@ struct DocumentGetter {
 #endif
 }
 
-- (void)touchAtLocation:(CGPoint)location {
+- (void)touchDownAtLocation:(CGPoint)location {
   NSAssert(self.dataSource.document != nil, @"");
   _selection = {self.dataSource.document.content, [self sourceLocationOfPoint:location]};
   [self setNeedsDisplayInRect:self.bounds];
+}
 
-  auto rect = [self rectOfSourceRange:_selection->get_range()];
-  if (_selection->is_literal()) {
-    auto [type, data] = _selection->get_literal_content();
-    [self.delegate showEditorViewControllerForSourceView:self
-                                                fromRect:rect
-                                                withType:type
-                                                    data:data];
-  } else if (_selection->is_function_signature()) {
-    [self.delegate showFunctionViewControllerForSourceView:self
+- (void)touchUp {
+  if (_selection.has_value()) {
+    auto rect = [self rectOfSourceRange:_selection->get_range()];
+    if (_selection->is_literal()) {
+      auto [type, data] = _selection->get_literal_content();
+      [self.delegate showEditorViewControllerForSourceView:self
                                                   fromRect:rect
-                                     withFunctionSignature:_selection->get_function_signature()];
+                                                  withType:type
+                                                      data:data];
+    } else if (_selection->is_function_signature()) {
+      [self.delegate showFunctionViewControllerForSourceView:self
+                                                    fromRect:rect
+                                       withFunctionSignature:_selection->get_function_signature()];
+    }
   }
 }
 
@@ -392,23 +384,20 @@ struct DocumentGetter {
 
 #pragma mark - Drag and drop
 
-- (std::optional<DraggingData>)currentDraggingData {
+- (std::optional<DraggingData>)startDraggingAtLocation:(CGPoint)location {
   NSAssert(!_draggingSelection.has_value(), @"");
 
   if (_selection.has_value()) {
-    _draggingSelection = (*std::exchange(_selection, std::nullopt)).as_dragging_selection();
-
-    if (_draggingSelection->is_block()) {
-      return DraggingData(marlin::control::pasteboard_t::block,
-                          [NSData dataWithDataView:_draggingSelection->get_data()]);
-    } else if (_draggingSelection->is_statement()) {
-      return DraggingData(marlin::control::pasteboard_t::statement,
-                          [NSData dataWithDataView:_draggingSelection->get_data()]);
-    } else if (_draggingSelection->is_expression()) {
-      return DraggingData(marlin::control::pasteboard_t::expression,
-                          [NSData dataWithDataView:_draggingSelection->get_data()]);
+    auto rect = [self rectOfSourceRange:_selection->get_range()];
+    if (!CGRectContainsPoint(rect, location)) {
+      _draggingSelection = (*std::exchange(_selection, std::nullopt)).as_dragging_selection();
+      if (auto type = _draggingSelection->dragging_type()) {
+        return DraggingData(*type, [NSData dataWithDataView:_draggingSelection->get_data()]);
+      } else {
+        _draggingSelection.reset();
+        return std::nullopt;
+      }
     } else {
-      _draggingSelection.reset();
       return std::nullopt;
     }
   } else {
@@ -423,20 +412,45 @@ struct DocumentGetter {
   }
 
   NSAssert(_inserter.has_value(), @"");
-  return _inserter->move_to_loc(type, [self sourceLocationOfPoint:location]);
+  auto exclusion = _draggingSelection.has_value() ? &*_draggingSelection : nullptr;
+  return _inserter->move_to_loc(type, [self sourceLocationOfPoint:location], exclusion);
 }
 
-- (BOOL)dropPasteboardOfType:(marlin::control::pasteboard_t)type withData:(NSData*)data {
+- (BOOL)dropPasteboardOfType:(marlin::control::pasteboard_t)type
+                    withData:(NSData*)data
+       removingCurrentSource:(BOOL)removing {
   NSAssert(_inserter.has_value(), @"");
+  if (removing) {
+    auto lineUpdate = [self removeDraggingSelection];
+    _inserter->update_lines(std::move(lineUpdate));
+  }
   auto update = _inserter->insert(type, data.dataView);
   const bool result = update.size() > 0;
   [self performUpdates:std::move(update)];
-  [self removeDraggingSelection];
   return result;
 }
 
-- (void)resetAll {
+- (marlin::control::line_update)removeDraggingSelection {
+  if (_draggingSelection.has_value()) {
+    if (_draggingSelection->is_removable()) {
+      auto line_update = _draggingSelection->removal_line_update();
+      auto updates = (*std::exchange(_draggingSelection, std::nullopt)).remove_from_document();
+      [self performUpdates:std::move(updates)];
+      return line_update;
+    } else {
+      assert(false);
+      _draggingSelection.reset();
+    }
+  }
+  return {};
+}
+
+- (void)resetDraggingDestination {
   _inserter->reset_all();
+  [self setNeedsDisplayInRect:self.bounds];
+}
+
+- (void)resetDraggingSource {
   _draggingSelection.reset();
   [self setNeedsDisplayInRect:self.bounds];
 }

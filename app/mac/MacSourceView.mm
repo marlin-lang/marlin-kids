@@ -3,6 +3,9 @@
 #import "NSString+StringView.h"
 #import "Pasteboard.h"
 
+constexpr NSDragOperation INTERNAL_DRAGGING_MASK = NSDragOperationMove | NSDragOperationDelete;
+constexpr NSDragOperation EXTERNAL_DRAGGING_MASK = NSDragOperationCopy;
+
 @interface MacSourceView () <NSDraggingSource>
 
 @end
@@ -20,12 +23,20 @@
   [super mouseDown:event];
 
   auto location = [self convertPoint:event.locationInWindow fromView:nil];
-  [self touchAtLocation:location];
+  [self touchDownAtLocation:location];
+}
+
+- (void)mouseUp:(NSEvent*)event {
+  [super mouseDown:event];
+
+  [self touchUp];
 }
 
 - (void)mouseDragged:(NSEvent*)event {
   [super mouseDragged:event];
-  if (auto draggingData = self.currentDraggingData) {
+
+  auto location = [self convertPoint:event.locationInWindow fromView:nil];
+  if (auto draggingData = [self startDraggingAtLocation:location]) {
     auto* pasteboardItem = [[NSPasteboardItem alloc] init];
     [pasteboardItem setData:draggingData->data forType:pasteboardOfType(draggingData->type)];
     auto draggingItem = [[NSDraggingItem alloc] initWithPasteboardWriter:pasteboardItem];
@@ -42,34 +53,44 @@
   ];
 }
 
+// TODO: draggingSourceOperationMask is not really working
+// consider fixing or changing to another implementation
+
+// TODO: set cursors
+
 - (NSDragOperation)draggingUpdated:(id<NSDraggingInfo>)sender {
   if (auto type = [self pasteboardTypeFromDraggingInfo:sender]) {
     auto location = [self convertPoint:sender.draggingLocation fromView:nil];
     if ([self draggingPasteboardOfType:*type toLocation:location]) {
       [self setNeedsDisplayInRect:self.bounds];
-      return NSDragOperationMove;
+      // NSLog(@"%d", sender.draggingSourceOperationMask == INTERNAL_DRAGGING_MASK);
+      if (sender.draggingSourceOperationMask & NSDragOperationMove) {
+        return NSDragOperationMove;
+      } else {
+        return NSDragOperationCopy;
+      }
     }
   }
   [self setNeedsDisplayInRect:self.bounds];
-  return NSDragOperationDelete;
+  if (sender.draggingSourceOperationMask & NSDragOperationDelete) {
+    return NSDragOperationDelete;
+  } else {
+    return NSDragOperationNone;
+  }
 }
 
 - (BOOL)performDragOperation:(id<NSDraggingInfo>)sender {
   if (auto type = [self pasteboardTypeFromDraggingInfo:sender]) {
-    auto* data = [sender.draggingPasteboard dataForType:pasteboardOfType(*type)];
-    return [self dropPasteboardOfType:*type withData:data];
+    auto data = [sender.draggingPasteboard dataForType:pasteboardOfType(*type)];
+    bool withinApplication = sender.draggingSourceOperationMask == INTERNAL_DRAGGING_MASK;
+    return [self dropPasteboardOfType:*type withData:data removingCurrentSource:withinApplication];
   } else {
-    [self removeDraggingSelection];
     return NO;
   }
 }
 
-- (void)draggingEnded:(id<NSDraggingInfo>)sender {
-  [self resetAll];
-}
-
 - (void)draggingExited:(id<NSDraggingInfo>)sender {
-  [self resetAll];
+  [self resetDraggingDestination];
 }
 
 #pragma mark - NSDraggingSource implementation
@@ -78,9 +99,34 @@
     sourceOperationMaskForDraggingContext:(NSDraggingContext)context {
   switch (context) {
     case NSDraggingContextWithinApplication:
-      return NSDragOperationCopy;
+      // NSLog(@"drag within! %ld", INTERNAL_DRAGGING_MASK);
+      return INTERNAL_DRAGGING_MASK;
     case NSDraggingContextOutsideApplication:
-      return NSDragOperationMove;
+      // NSLog(@"drag outside! %ld", EXTERNAL_DRAGGING_MASK);
+      return EXTERNAL_DRAGGING_MASK;
+  }
+}
+
+- (void)draggingSession:(NSDraggingSession*)session
+           endedAtPoint:(NSPoint)screenPoint
+              operation:(NSDragOperation)operation {
+  [self resetDraggingSource];
+  switch (operation) {
+    case NSDragOperationCopy:
+      NSLog(@"copy");
+      break;
+    case NSDragOperationMove:
+      NSLog(@"move");
+      break;
+    case NSDragOperationDelete:
+      NSLog(@"delete");
+      break;
+    case NSDragOperationNone:
+      NSLog(@"none");
+      break;
+    default:
+      NSLog(@"other");
+      break;
   }
 }
 
