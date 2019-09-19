@@ -51,7 +51,7 @@ struct DocumentGetter {
 }
 
 - (void)initialize {
-  self.frame = CGRectZero;
+  self.frameSize = CGSizeZero;
   _strings = [NSMutableArray new];
   _insets = EdgeInsetsMake(5, 5, 5, 5);
 
@@ -96,7 +96,6 @@ struct DocumentGetter {
     lineIndex = _strings.count;
   }
   size_t lineBegin = 0;
-  CGFloat maxLineWidth = 0;
   size_t highlightIndex = 0;
   while (lineBegin < display.source.size()) {
     auto lineEnd = display.source.find_first_of('\n', lineBegin);
@@ -112,15 +111,12 @@ struct DocumentGetter {
       ++highlightIndex;
     }
     applyTheme(currentTheme(), str, NSMakeRange(0, str.string.length), lineHighlights);
-    maxLineWidth = fmax(maxLineWidth, str.size.width);
     [_strings insertObject:str atIndex:lineIndex];
     lineBegin = lineEnd + 1;
     ++lineIndex;
   }
-  auto width = fmax(maxLineWidth + _insets.left + _insets.right, self.bounds.size.width);
-  auto height = self.lineHeight * _strings.count + _insets.top + _insets.bottom;
-  self.frame = CGRectMake(self.frame.origin.x, self.frame.origin.y, width, height);
-  [self setNeedsDisplayInRect:self.bounds];
+  self.frameSize = self.currentSize;
+  [self setNeedsDisplay:YES];
   if (!isInitialize) {
     [self.delegate sourceViewChanged:self];
   }
@@ -136,12 +132,8 @@ struct DocumentGetter {
   [str replaceCharactersInRange:range withString:[NSString stringWithStringView:display.source]];
   range.length = display.source.size();
   applyTheme(currentTheme(), str, range, display.highlights);
-  auto width = str.size.width + _insets.left + _insets.right;
-  if (width > self.frame.size.width) {
-    self.frame =
-        CGRectMake(self.frame.origin.x, self.frame.origin.y, width, self.frame.size.height);
-  }
-  [self setNeedsDisplayInRect:self.bounds];
+  self.frameSize = self.currentSize;
+  [self setNeedsDisplay:YES];
   [self.delegate sourceViewChanged:self];
 }
 
@@ -152,7 +144,8 @@ struct DocumentGetter {
   auto indexSet = [NSMutableIndexSet new];
   [indexSet addIndexesInRange:NSMakeRange(from - 1, to - from)];
   [_strings removeObjectsAtIndexes:indexSet];
-  [self setNeedsDisplayInRect:self.bounds];
+  self.frameSize = self.currentSize;
+  [self setNeedsDisplay:YES];
   [self.delegate sourceViewChanged:self];
 }
 
@@ -180,12 +173,12 @@ struct DocumentGetter {
 
 - (void)addErrorInSourceRange:(marlin::source_range)range {
   _errors.push_back(range);
-  [self setNeedsDisplayInRect:self.bounds];
+  [self setNeedsDisplay:YES];
 }
 
 - (void)clearErrors {
   _errors.clear();
-  [self setNeedsDisplayInRect:self.bounds];
+  [self setNeedsDisplay:YES];
 }
 
 #pragma mark - EditorViewControllerDelegate
@@ -228,6 +221,15 @@ struct DocumentGetter {
 
 - (BOOL)isFlipped {
   return YES;
+}
+
+- (CGSize)currentSize {
+  CGFloat width = 0;
+  for (NSAttributedString* string in _strings) {
+    width = fmax(width, string.size.width + _insets.left + _insets.right);
+  }
+  auto height = self.lineHeight * _strings.count + _insets.top + _insets.bottom;
+  return CGSizeMake(width, height);
 }
 
 - (void)drawRect:(CGRect)dirtyRect {
@@ -337,7 +339,7 @@ struct DocumentGetter {
 - (void)touchDownAtLocation:(CGPoint)location {
   NSAssert(self.dataSource.document != nil, @"");
   _selection = {self.dataSource.document.content, [self sourceLocationOfPoint:location]};
-  [self setNeedsDisplayInRect:self.bounds];
+  [self setNeedsDisplay:YES];
 }
 
 - (void)touchUp {
@@ -447,12 +449,12 @@ struct DocumentGetter {
 
 - (void)resetDraggingDestination {
   _inserter->reset_all();
-  [self setNeedsDisplayInRect:self.bounds];
+  [self setNeedsDisplay:YES];
 }
 
 - (void)resetDraggingSource {
   _draggingSelection.reset();
-  [self setNeedsDisplayInRect:self.bounds];
+  [self setNeedsDisplay:YES];
 }
 
 @end
