@@ -175,6 +175,7 @@ struct placeholder_system_procedure_args {
         std::vector<std::string_view>{"message"} /* print */,
         std::vector<std::string_view>{"start_x", "start_y", "end_x",
                                       "end_y"} /* draw_line */,
+        std::vector<std::string_view>{"width"} /* set_line_width */,
         std::vector<std::string_view>{"length"} /* logo_forward */,
         std::vector<std::string_view>{"length"} /* logo_backward */,
         std::vector<std::string_view>{"degree"} /* logo_turn_left */,
@@ -206,9 +207,19 @@ struct placeholder_system_function_args {
         std::vector<std::string_view>{"begin", "end"} /* range2 */,
         std::vector<std::string_view>{"begin", "end", "step"} /* range3 */,
         std::vector<std::string_view>{} /* time */,
-        std::vector<std::string_view>{"radian"} /* sin */,
-        std::vector<std::string_view>{"radian"} /* cos */
-    };
+        std::vector<std::string_view>{"value"} /* abs */,
+        std::vector<std::string_view>{"value"} /* sqrt */,
+        std::vector<std::string_view>{"degree"} /* sin */,
+        std::vector<std::string_view>{"degree"} /* cos */,
+        std::vector<std::string_view>{"degree"} /* tan */,
+        std::vector<std::string_view>{"value"} /* asin */,
+        std::vector<std::string_view>{"value"} /* acos */,
+        std::vector<std::string_view>{"value"} /* atan */,
+        std::vector<std::string_view>{"value"} /* ln */,
+        std::vector<std::string_view>{"value"} /* log */,
+        std::vector<std::string_view>{"value"} /* round */,
+        std::vector<std::string_view>{"value"} /* floor */,
+        std::vector<std::string_view>{"value"} /* ceil */};
     return _placeholders;
   }
 

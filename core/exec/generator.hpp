@@ -98,7 +98,7 @@ struct generator {
   }
 
   using callee_entry = std::pair<jsast::ast::node (*)(), bool>;
-  static constexpr std::array<callee_entry, 9> system_procedure_callee_map{
+  static constexpr std::array<callee_entry, 10> system_procedure_callee_map{
       std::pair{
           []() { return jsast::ast::node{jsast::ast::identifier{"sleep"}}; },
           true} /* sleep */,
@@ -107,6 +107,8 @@ struct generator {
           false} /* print */,
       std::pair{[]() { return system_callee("graphics", "drawLine"); },
                 true} /* draw_line */,
+      std::pair{[]() { return system_callee("graphics", "setLineWidth"); },
+                false} /* set_line_width */,
       std::pair{[]() { return system_callee("logo", "forward"); },
                 true} /* logo_forward */,
       std::pair{[]() { return system_callee("logo", "backward"); },
@@ -120,7 +122,7 @@ struct generator {
       std::pair{[]() { return system_callee("logo", "penDown"); },
                 false} /* logo_pen_down */
   };
-  static constexpr std::array<callee_entry, 6> system_function_callee_map{
+  static constexpr std::array<callee_entry, 17> system_function_callee_map{
       std::pair{
           []() { return jsast::ast::node{jsast::ast::identifier{"range"}}; },
           false} /* range1 */
@@ -136,17 +138,83 @@ struct generator {
           false} /* time */,
       std::pair{[]() {
                   return jsast::ast::node{jsast::ast::member_expression{
+                      jsast::ast::identifier{"Math"},
+                      jsast::ast::member_identifier{"abs"}}};
+                },
+                false} /* abs */,
+      std::pair{[]() {
+                  return jsast::ast::node{jsast::ast::member_expression{
+                      jsast::ast::identifier{"Math"},
+                      jsast::ast::member_identifier{"sqrt"}}};
+                },
+                false} /* sqrt */,
+      std::pair{[]() {
+                  return jsast::ast::node{jsast::ast::member_expression{
                       jsast::ast::identifier{"math_extra"},
                       jsast::ast::member_identifier{"sin"}}};
                 },
-                false} /* sin */,
+                false} /* sin */
+      ,
       std::pair{[]() {
                   return jsast::ast::node{jsast::ast::member_expression{
                       jsast::ast::identifier{"math_extra"},
                       jsast::ast::member_identifier{"cos"}}};
                 },
-                false} /* cos */
-  };
+                false} /* cos */,
+      std::pair{[]() {
+                  return jsast::ast::node{jsast::ast::member_expression{
+                      jsast::ast::identifier{"math_extra"},
+                      jsast::ast::member_identifier{"tan"}}};
+                },
+                false} /* tan */,
+      std::pair{[]() {
+                  return jsast::ast::node{jsast::ast::member_expression{
+                      jsast::ast::identifier{"math_extra"},
+                      jsast::ast::member_identifier{"asin"}}};
+                },
+                false} /* asin */,
+      std::pair{[]() {
+                  return jsast::ast::node{jsast::ast::member_expression{
+                      jsast::ast::identifier{"math_extra"},
+                      jsast::ast::member_identifier{"acos"}}};
+                },
+                false} /* acos */,
+      std::pair{[]() {
+                  return jsast::ast::node{jsast::ast::member_expression{
+                      jsast::ast::identifier{"math_extra"},
+                      jsast::ast::member_identifier{"atan"}}};
+                },
+                false} /* atan */,
+      std::pair{[]() {
+                  return jsast::ast::node{jsast::ast::member_expression{
+                      jsast::ast::identifier{"math_extra"},
+                      jsast::ast::member_identifier{"ln"}}};
+                },
+                false} /* ln */,
+      std::pair{[]() {
+                  return jsast::ast::node{jsast::ast::member_expression{
+                      jsast::ast::identifier{"Math"},
+                      jsast::ast::member_identifier{"log10"}}};
+                },
+                false} /* log */,
+      std::pair{[]() {
+                  return jsast::ast::node{jsast::ast::member_expression{
+                      jsast::ast::identifier{"Math"},
+                      jsast::ast::member_identifier{"round"}}};
+                },
+                false} /* round */,
+      std::pair{[]() {
+                  return jsast::ast::node{jsast::ast::member_expression{
+                      jsast::ast::identifier{"Math"},
+                      jsast::ast::member_identifier{"floor"}}};
+                },
+                false} /* floor */,
+      std::pair{[]() {
+                  return jsast::ast::node{jsast::ast::member_expression{
+                      jsast::ast::identifier{"Math"},
+                      jsast::ast::member_identifier{"ceil"}}};
+                },
+                false} /* ceil */};
 
   bool _is_async;
 
@@ -407,6 +475,8 @@ struct generator {
   auto get_jsast(ast::unary_expression& unary, wrapper_type&& wrapper) {
     static constexpr std::array symbol_map{
         jsast::unary_op::negative /* negative */
+        ,
+        jsast::unary_op::logical_not /* logical_not */,
     };
     return wrapper(
         jsast::ast::unary_expression{symbol_map[static_cast<uint8_t>(unary.op)],

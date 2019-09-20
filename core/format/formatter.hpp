@@ -335,6 +335,10 @@ struct formatter {
     if (ast::unary_op_precedence <= paren_precedence) {
       emit_string("(");
     }
+    auto highlight = highlight_token_type::op;
+    if (unary.op == ast::unary_op::logical_not) {
+      highlight = highlight_token_type::keyword;
+    }
     emit_highlight(symbol_for(unary.op), highlight_token_type::op);
     emit_node(*unary.argument(), ast::unary_op_precedence);
     if (ast::unary_op_precedence <= paren_precedence) {

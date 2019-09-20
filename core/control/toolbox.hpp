@@ -43,6 +43,7 @@ struct toolbox {
             eval_prototype(), assignment_prototype(), use_global_prototype(),
             system_procedure_prototype(ast::system_procedure::print),
             system_procedure_prototype(ast::system_procedure::draw_line),
+            system_procedure_prototype(ast::system_procedure::set_line_width),
             system_procedure_prototype(ast::system_procedure::logo_forward),
             system_procedure_prototype(ast::system_procedure::logo_backward),
             system_procedure_prototype(ast::system_procedure::logo_turn_left),
@@ -60,13 +61,26 @@ struct toolbox {
                     binary_prototype(ast::binary_op::greater),
                     binary_prototype(ast::binary_op::greater_equal),
                     binary_prototype(ast::binary_op::logical_and),
-                    binary_prototype(ast::binary_op::logical_or)},
+                    binary_prototype(ast::binary_op::logical_or),
+                    unary_prototype(ast::unary_op::negative),
+                    unary_prototype(ast::unary_op::logical_not)},
         std::vector{system_function_prototype(ast::system_function::range1),
                     system_function_prototype(ast::system_function::range2),
                     system_function_prototype(ast::system_function::range3),
                     system_function_prototype(ast::system_function::time),
+                    system_function_prototype(ast::system_function::abs),
+                    system_function_prototype(ast::system_function::sqrt),
                     system_function_prototype(ast::system_function::sin),
-                    system_function_prototype(ast::system_function::cos)}};
+                    system_function_prototype(ast::system_function::cos),
+                    system_function_prototype(ast::system_function::tan),
+                    system_function_prototype(ast::system_function::asin),
+                    system_function_prototype(ast::system_function::acos),
+                    system_function_prototype(ast::system_function::atan),
+                    system_function_prototype(ast::system_function::ln),
+                    system_function_prototype(ast::system_function::log),
+                    system_function_prototype(ast::system_function::round),
+                    system_function_prototype(ast::system_function::floor),
+                    system_function_prototype(ast::system_function::ceil)}};
     static const std::array<
         std::string_view, std::tuple_size<decltype(_default_prototypes)>::value>
         _default_names{"control flow", "statement", "expression", "function"};

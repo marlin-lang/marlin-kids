@@ -73,6 +73,26 @@
 
         cos(degree) {
           return Math.cos(degree * this.RAD_PER_DEG);
+        },
+
+        tan(degree) {
+          return Math.tan(degree * this.RAD_PER_DEG);
+        },
+
+        asin(value) {
+          return Math.asin(value) / this.RAD_PER_DEG;
+        },
+
+        acos(value) {
+          return Math.acos(value) / this.RAD_PER_DEG;
+        },
+
+        atan(value) {
+          return Math.atan(value) / this.RAD_PER_DEG;
+        },
+
+        ln(value) {
+          return Math.log10(value) / Math.LOG10E;
         }
       };
 
@@ -109,6 +129,10 @@
           this.context.lineTo(endX + origin.x, endY + origin.y);
           this.context.stroke();
           await sleep(0);
+        },
+
+        setLineWidth(width) {
+          this.context.lineWidth = width;
         }
       };
 
