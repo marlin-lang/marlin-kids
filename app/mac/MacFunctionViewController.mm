@@ -28,8 +28,8 @@
   self.okButton.enabled = NO;
   self.nameTextField.delegate = self;
   self.nameTextField.tag = -1;
-  _formatter = [[VariableFormatter alloc] init];
-  _parameters = [[NSMutableArray alloc] init];
+  _formatter = [VariableFormatter new];
+  _parameters = [NSMutableArray new];
 }
 
 - (void)setFunctionSignature:(marlin::function_definition)signature {

@@ -51,7 +51,7 @@
   auto item = indexPath.item;
   auto &prototype = self.model.use_current_category_prototype(item);
   auto *data = [NSData dataWithDataView:prototype.data];
-  auto *itemProvider = [[NSItemProvider alloc] init];
+  auto *itemProvider = [NSItemProvider new];
   auto *typeIdentifier = pasteboardOfType(prototype.type);
   [itemProvider
       registerDataRepresentationForTypeIdentifier:typeIdentifier

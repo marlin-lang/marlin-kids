@@ -20,7 +20,7 @@
 }
 
 - (NSButton *)buttonWithTitle:(NSString *)title action:(SEL)selector {
-  auto button = [[NSButton alloc] init];
+  auto button = [NSButton new];
   button.bordered = NO;
   button.title = title;
   button.target = self;

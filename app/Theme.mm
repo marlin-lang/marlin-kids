@@ -7,7 +7,7 @@
     auto* font = [Font fontWithName:@"Courier" size:22];
     _allAttrs = @{NSFontAttributeName : font};
 
-    auto* paragraphStyle = [[NSMutableParagraphStyle alloc] init];
+    auto* paragraphStyle = [NSMutableParagraphStyle new];
     paragraphStyle.alignment = NSTextAlignmentRight;
     _lineNumberAttrs = @{
       NSFontAttributeName : [Font fontWithName:@"Courier" size:18],

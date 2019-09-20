@@ -24,7 +24,7 @@
 - (void)viewDidLoad {
   [super viewDidLoad];
 
-  setCurrentTheme([[DefaultTheme alloc] init]);
+  setCurrentTheme([DefaultTheme new]);
 }
 
 - (Document *)document {

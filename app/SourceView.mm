@@ -52,7 +52,7 @@ struct DocumentGetter {
 
 - (void)initialize {
   self.frameSize = CGSizeZero;
-  _strings = [NSMutableArray new];
+  _strings = [NSMutableArray arrayWithObject:[NSMutableAttributedString new]];
   _insets = EdgeInsetsMake(5, 5, 5, 5);
 
   _inserter = {{self}};
@@ -430,6 +430,10 @@ struct DocumentGetter {
   const bool result = update.size() > 0;
   [self performUpdates:std::move(update)];
   return result;
+}
+
+- (BOOL)removeDraggingSource {
+  return [self removeDraggingSelection].start_line > 0;
 }
 
 - (marlin::control::line_update)removeDraggingSelection {

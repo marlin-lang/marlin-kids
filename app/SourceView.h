@@ -73,6 +73,8 @@ struct DraggingData {
                     withData:(NSData *)data
        removingCurrentSource:(BOOL)removing;
 
+- (BOOL)removeDraggingSource;
+
 - (void)resetDraggingDestination;
 
 - (void)resetDraggingSource;

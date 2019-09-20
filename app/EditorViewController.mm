@@ -33,16 +33,16 @@
       [self setupSegmentControlWithTitles:@[ @"Variable" ] selection:0];
       break;
     case EditorType::number: {
-      _formatter = [[NumberFormatter alloc] init];
+      _formatter = [NumberFormatter new];
       [self setupSegmentControlWithTitles:titles selection:0];
       break;
     }
     case EditorType::string:
-      _formatter = [[StringFormatter alloc] init];
+      _formatter = [StringFormatter new];
       [self setupSegmentControlWithTitles:titles selection:1];
       break;
     case EditorType::identifier:
-      _formatter = [[VariableFormatter alloc] init];
+      _formatter = [VariableFormatter new];
       [self setupSegmentControlWithTitles:titles selection:2];
       break;
   }
@@ -75,17 +75,17 @@
   switch (self.typeSegmentControl.selectedSegment) {
     case 0:
       _type = EditorType::number;
-      _formatter = [[NumberFormatter alloc] init];
+      _formatter = [NumberFormatter new];
       self.editorTextField.stringValue = _numberStr;
       break;
     case 1:
       _type = EditorType::string;
-      _formatter = [[StringFormatter alloc] init];
+      _formatter = [StringFormatter new];
       self.editorTextField.stringValue = _stringStr;
       break;
     case 2:
       _type = EditorType::identifier;
-      _formatter = [[VariableFormatter alloc] init];
+      _formatter = [VariableFormatter new];
       self.editorTextField.stringValue = _identifierStr;
       break;
     default:

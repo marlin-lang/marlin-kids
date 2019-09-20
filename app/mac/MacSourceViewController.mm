@@ -53,7 +53,7 @@
       [self.storyboard instantiateControllerWithIdentifier:@"EditorViewController"];
   vc.delegate = view;
 
-  _popover = [[NSPopover alloc] init];
+  _popover = [NSPopover new];
   _popover.behavior = NSPopoverBehaviorTransient;
   _popover.contentViewController = vc;
   [_popover showRelativeToRect:rect ofView:view preferredEdge:NSMinYEdge];
@@ -68,7 +68,7 @@
   MacFunctionViewController *vc =
       [self.storyboard instantiateControllerWithIdentifier:@"FunctionViewController"];
   vc.delegate = view;
-  _popover = [[NSPopover alloc] init];
+  _popover = [NSPopover new];
   _popover.behavior = NSPopoverBehaviorTransient;
   _popover.contentViewController = vc;
   [_popover showRelativeToRect:rect ofView:view preferredEdge:NSMinYEdge];
