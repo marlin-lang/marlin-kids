@@ -138,13 +138,13 @@ struct generator {
           false} /* time */,
       std::pair{[]() {
                   return jsast::ast::node{jsast::ast::member_expression{
-                      jsast::ast::identifier{"Math"},
+                      jsast::ast::identifier{"math_extra"},
                       jsast::ast::member_identifier{"abs"}}};
                 },
                 false} /* abs */,
       std::pair{[]() {
                   return jsast::ast::node{jsast::ast::member_expression{
-                      jsast::ast::identifier{"Math"},
+                      jsast::ast::identifier{"math_extra"},
                       jsast::ast::member_identifier{"sqrt"}}};
                 },
                 false} /* sqrt */,
@@ -193,25 +193,25 @@ struct generator {
                 false} /* ln */,
       std::pair{[]() {
                   return jsast::ast::node{jsast::ast::member_expression{
-                      jsast::ast::identifier{"Math"},
-                      jsast::ast::member_identifier{"log10"}}};
+                      jsast::ast::identifier{"math_extra"},
+                      jsast::ast::member_identifier{"log"}}};
                 },
                 false} /* log */,
       std::pair{[]() {
                   return jsast::ast::node{jsast::ast::member_expression{
-                      jsast::ast::identifier{"Math"},
+                      jsast::ast::identifier{"math_extra"},
                       jsast::ast::member_identifier{"round"}}};
                 },
                 false} /* round */,
       std::pair{[]() {
                   return jsast::ast::node{jsast::ast::member_expression{
-                      jsast::ast::identifier{"Math"},
+                      jsast::ast::identifier{"math_extra"},
                       jsast::ast::member_identifier{"floor"}}};
                 },
                 false} /* floor */,
       std::pair{[]() {
                   return jsast::ast::node{jsast::ast::member_expression{
-                      jsast::ast::identifier{"Math"},
+                      jsast::ast::identifier{"math_extra"},
                       jsast::ast::member_identifier{"ceil"}}};
                 },
                 false} /* ceil */};

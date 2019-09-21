@@ -21,15 +21,33 @@
     <script>
       const globals = {};
 
+      function assert_number(value) {
+        const result = Number(value);
+        if (isNaN(result)) {
+          throw new TypeError("Expecting a number");
+        } else {
+          return result;
+        }
+      }
+
       function execute(func) {
         async function _exec() {
-          // TODO: catch exceptions
-          await func();
+          try {
+            await func();
+          } catch (err) {
+            webkit.messageHandlers.system.postMessage({
+              type: "error",
+              name: err.name,
+              message: err.message,
+              stacktrace: err.stack
+            });
+          }
         }
         _exec();
       }
 
       async function sleep(time) {
+        time = assert_number(time);
         return new Promise(accept => {
           setTimeout(accept, time * 1000);
         });
@@ -44,13 +62,13 @@
           end,
           step = 1;
         if (second != undefined) {
-          begin = first;
-          end = second;
+          begin = assert_number(first);
+          end = assert_number(second);
           if (third != undefined) {
-            step = third;
+            step = assert_number(third);
           }
         } else {
-          end = first;
+          end = assert_number(first);
         }
         for (var i = begin; step >= 0 ? i < end : i > end; i += step) {
           yield i;
@@ -67,32 +85,69 @@
       const math_extra = {
         RAD_PER_DEG: Math.PI / 180,
 
+        abs(value) {
+          value = assert_number(value);
+          return Math.abs(value);
+        },
+
+        sqrt(value) {
+          value = assert_number(value);
+          return Math.sqrt(value);
+        },
+
         sin(degree) {
+          degree = assert_number(degree);
           return Math.sin(degree * this.RAD_PER_DEG);
         },
 
         cos(degree) {
+          degree = assert_number(degree);
           return Math.cos(degree * this.RAD_PER_DEG);
         },
 
         tan(degree) {
+          degree = assert_number(degree);
           return Math.tan(degree * this.RAD_PER_DEG);
         },
 
         asin(value) {
+          value = assert_number(value);
           return Math.asin(value) / this.RAD_PER_DEG;
         },
 
         acos(value) {
+          value = assert_number(value);
           return Math.acos(value) / this.RAD_PER_DEG;
         },
 
         atan(value) {
+          value = assert_number(value);
           return Math.atan(value) / this.RAD_PER_DEG;
         },
 
         ln(value) {
-          return Math.log10(value) / Math.LOG10E;
+          value = assert_number(value);
+          return Math.log(value);
+        },
+
+        log(value) {
+          value = assert_number(value);
+          return Math.log10(value);
+        },
+
+        round(value) {
+          value = assert_number(value);
+          return Math.round(value);
+        },
+
+        floor(value) {
+          value = assert_number(value);
+          return Math.floor(value);
+        },
+
+        ceil(value) {
+          value = assert_number(value);
+          return Math.ceil(value);
         }
       };
 
@@ -123,6 +178,11 @@
         },
 
         async drawLine(startX, startY, endX, endY) {
+          startX = assert_number(startX);
+          startY = assert_number(startY);
+          endX = assert_number(endX);
+          endY = assert_number(endY);
+
           const origin = this.origin();
           this.context.beginPath();
           this.context.moveTo(startX + origin.x, startY + origin.y);
@@ -132,6 +192,8 @@
         },
 
         setLineWidth(width) {
+          width = assert_number(width);
+
           this.context.lineWidth = width;
         }
       };
@@ -143,6 +205,8 @@
         isPenDown: true,
 
         async forward(length) {
+          length = assert_number(length);
+
           const originalX = this.x;
           const originalY = this.y;
           this.x -= length * Math.sin(this.dir);
@@ -157,6 +221,8 @@
         },
 
         turnLeft(degree) {
+          degree = assert_number(degree);
+
           this.dir =
             (this.dir + degree * math_extra.RAD_PER_DEG) % (Math.PI * 2);
         },
