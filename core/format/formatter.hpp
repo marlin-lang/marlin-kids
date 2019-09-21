@@ -196,7 +196,7 @@ struct formatter {
 
   void emit_ast(node_type<ast::function_placeholder>& placeholder, size_t) {
     emit_placeholder(placeholder.name);
-    emit_string("()");
+    emit_arguments(placeholder.parameters());
   }
 
   void emit_ast(node_type<ast::function_signature>& signature, size_t) {

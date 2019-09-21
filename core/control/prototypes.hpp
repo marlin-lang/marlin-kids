@@ -22,7 +22,8 @@ inline prototype function_prototype() {
   return {"function", pasteboard_t::block, []() {
             const auto node{ast::make<ast::function>(
                 ast::make<ast::function_placeholder>(
-                    std::string{placeholder::get<ast::function>(0)}),
+                    std::string{placeholder::get<ast::function>(0)},
+                    std::vector<ast::node>{}),
                 std::vector<ast::node>{})};
             return store::write({node.get()});
           }()};

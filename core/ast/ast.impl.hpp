@@ -28,10 +28,15 @@ struct on_start : base::impl<on_start, subnode::vector>, block {
   using base_type::impl;
 };
 
-struct function_placeholder : base::impl<function_placeholder> {
+struct function_placeholder
+    : base::impl<function_placeholder, subnode::vector> {
   std::string name;
 
-  explicit function_placeholder(std::string _name) : name{std::move(_name)} {}
+  [[nodiscard]] decltype(auto) parameters() { return get_subnode<0>(); }
+  [[nodiscard]] decltype(auto) parameters() const { return get_subnode<0>(); }
+
+  explicit function_placeholder(std::string _name, std::vector<node> _args)
+      : base_type{std::move(_args)}, name{std::move(_name)} {}
 };
 
 struct function_signature : base::impl<function_signature, subnode::vector> {

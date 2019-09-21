@@ -83,8 +83,13 @@ struct source_selection {
     return _selection->source_code_range;
   }
 
-  [[nodiscard]] store::data_vector get_data() const {
-    return store::write({_selection});
+  [[nodiscard]] store::data_vector get_data(
+      bool erase_function_names = false) const {
+    if (erase_function_names) {
+      return store::write({_selection}, placeholder::get<ast::function>(0));
+    } else {
+      return store::write({_selection});
+    }
   }
 
   [[nodiscard]] literal_content get_literal_content() const {
@@ -100,15 +105,10 @@ struct source_selection {
     if (_selection->is<ast::function_signature>()) {
       auto& signature_node{_selection->as<ast::function_signature>()};
       signature.name = signature_node.name;
-      for (auto& child : signature_node.parameters()) {
-        if (child->is<ast::variable_name>()) {
-          auto& variable{child->as<ast::variable_name>()};
-          signature.parameters.emplace_back(variable.name);
-        } else {
-          // Should not occur!
-          assert(false);
-        }
-      }
+      fetch_parameters(signature, signature_node);
+    } else if (_selection->is<ast::function_placeholder>()) {
+      auto& signature_node{_selection->as<ast::function_placeholder>()};
+      fetch_parameters(signature, signature_node);
     }
     return signature;
   }
@@ -216,6 +216,20 @@ struct source_selection {
   document* _doc;
   source_loc _loc;
   ast::base* _selection;
+
+  template <typename node_type>
+  static void fetch_parameters(function_definition& signature,
+                               const node_type& node) {
+    for (auto& child : node.parameters()) {
+      if (child->template is<ast::variable_name>()) {
+        auto& variable{child->template as<ast::variable_name>()};
+        signature.parameters.emplace_back(variable.name);
+      } else {
+        // Should not occur!
+        assert(false);
+      }
+    }
+  }
 
   source_selection(document& doc, source_loc loc, ast::base& selection,
                    selection_promotion_rule rule)
