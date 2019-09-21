@@ -10,6 +10,15 @@
   return self;
 }
 
+- (BOOL)getObjectValue:(out id _Nullable __autoreleasing *)obj
+             forString:(NSString *)string
+      errorDescription:(out NSString *__autoreleasing _Nullable *)error {
+  if (string.length == 0) {
+    return NO;
+  }
+  return [super getObjectValue:obj forString:string errorDescription:error];
+}
+
 @end
 
 @implementation StringFormatter

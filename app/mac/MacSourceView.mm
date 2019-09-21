@@ -2,7 +2,6 @@
 
 #include <optional>
 
-#import "NSString+StringView.h"
 #import "Pasteboard.h"
 
 @interface MacSourceView () <NSDraggingSource>

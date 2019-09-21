@@ -1,15 +1,11 @@
 #import "SourceViewController.h"
 
-#include <optional>
-
 #import "Document.h"
 #import "ExecuteViewController.h"
-#import "NSData+DataView.h"
-#import "NSString+StringView.h"
 #import "Pasteboard.h"
 #import "Theme.h"
 
-@interface SourceViewController ()
+@interface SourceViewController () <SourceViewDelegate>
 
 - (Document *)document;
 
@@ -24,6 +20,7 @@
 - (void)viewDidLoad {
   [super viewDidLoad];
 
+  self.sourceView.delegate = self;
   setCurrentTheme([DefaultTheme new]);
 }
 
@@ -70,6 +67,28 @@
 - (ViewController *)destinationViewControllerOfSegue:(StoryboardSegue *)segue {
   NSAssert(NO, @"Implemented by subclass");
   return nil;
+}
+
+#pragma mark - SourceViewDelegate
+
+- (void)sourceViewChanged:(SourceView *)view {
+  [self.document updateChangeCount:NSChangeDone];
+}
+
+- (void)showEditorViewControllerForSourceView:(SourceView *)view
+                                     withType:(marlin::control::literal_data_type)type
+                                         data:(std::string_view)data {
+  [self.toolboxViewController showEditorViewControllerForSourceView:view withType:type data:data];
+}
+
+- (void)showFunctionViewControllerForSourceView:(SourceView *)view
+                          withFunctionSignature:(marlin::function_definition)signature {
+  [self.toolboxViewController showFunctionViewControllerForSourceView:view
+                                                withFunctionSignature:signature];
+}
+
+- (void)dismissEditorViewControllersForSourceView:(SourceView *)view {
+  [self.toolboxViewController dismissEditorViewControllers];
 }
 
 @end

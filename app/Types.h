@@ -4,6 +4,10 @@
 #import <Cocoa/Cocoa.h>
 #endif
 
+#include <string_view>
+
+#include "byte_span.hpp"
+
 #ifdef IOS
 
 #define AppleDocument UIDocument
@@ -61,6 +65,32 @@
 #define ViewController NSViewController
 
 #endif
+
+@interface NSObject (Casting)
+
++ (instancetype)cast:(id)object;
+
+@end
+
+@interface NSString (StringView)
+
++ (instancetype)stringWithStringView:(std::string_view)sv;
+
+- (instancetype)initWithStringView:(std::string_view)sv;
+
+- (std::string_view)stringView;
+
+@end
+
+@interface NSData (DataView)
+
++ (instancetype)dataWithDataView:(marlin::store::data_view)data;
+
+- (instancetype)initWithDataView:(marlin::store::data_view)data;
+
+- (marlin::store::data_view)dataView;
+
+@end
 
 #ifdef IOS
 

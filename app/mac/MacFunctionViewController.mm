@@ -3,8 +3,6 @@
 #include <vector>
 
 #import "Formatter.h"
-#import "NSObject+Casting.h"
-#import "NSString+StringView.h"
 #import "ParameterItem.h"
 
 @interface MacFunctionViewController () <NSCollectionViewDataSource,
@@ -28,8 +26,8 @@
   self.okButton.enabled = NO;
   self.nameTextField.delegate = self;
   self.nameTextField.tag = -1;
-  _formatter = [VariableFormatter new];
-  _parameters = [NSMutableArray new];
+  _formatter = [[VariableFormatter alloc] init];
+  _parameters = [[NSMutableArray alloc] init];
 }
 
 - (void)setFunctionSignature:(marlin::function_definition)signature {
@@ -39,8 +37,8 @@
     [_parameters addObject:[NSString stringWithStringView:parameter]];
     _isParametersValidated.push_back(true);
   }
-  self.okButton.enabled = YES;
   [self.parametersCollectionView reloadData];
+  [self validateForTextField:_nameTextField];
 }
 
 - (IBAction)okButtonPressed:(id)sender {

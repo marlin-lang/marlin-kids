@@ -1,7 +1,5 @@
 #import "Document.h"
 
-#import "NSData+DataView.h"
-#import "NSObject+Casting.h"
 #import "SourceViewController.h"
 
 @interface Document () {

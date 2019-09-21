@@ -1,6 +1,5 @@
 #import "WindowController.h"
 
-#import "NSObject+Casting.h"
 #import "SourceViewController.h"
 
 @interface WindowController ()

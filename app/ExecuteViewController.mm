@@ -4,7 +4,6 @@
 
 #include <chrono>
 
-#import "NSString+StringView.h"
 #import "Theme.h"
 
 constexpr double refreshTimeInMS = 40;

@@ -7,9 +7,6 @@ set(HEADERS
     FunctionViewController.h
     LineNumberView.h
     MessageViewController.h
-    NSData+DataView.h
-    NSObject+Casting.h
-    NSString+StringView.h
     Pasteboard.h
     SourceView.h
     SourceViewController.h
@@ -25,9 +22,6 @@ set(SOURCES
     FunctionViewController.mm
     LineNumberView.mm
     MessageViewController.mm
-    NSData+DataView.mm
-    NSObject+Casting.mm
-    NSString+StringView.mm
     SourceView.mm
     SourceViewController.mm
     Theme.mm

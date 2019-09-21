@@ -34,15 +34,13 @@ struct DraggingData {
 - (void)sourceViewChanged:(SourceView *)view;
 
 - (void)showEditorViewControllerForSourceView:(SourceView *)view
-                                     fromRect:(CGRect)rect
                                      withType:(marlin::control::literal_data_type)type
                                          data:(std::string_view)data;
 
 - (void)showFunctionViewControllerForSourceView:(SourceView *)view
-                                       fromRect:(CGRect)rect
                           withFunctionSignature:(marlin::function_definition)signature;
 
-- (void)dismissPopoverViewControllerForSourceView:(SourceView *)view;
+- (void)dismissEditorViewControllersForSourceView:(SourceView *)view;
 
 @end
 

@@ -1,8 +1,6 @@
 #import "MacDocument.h"
 
 #import "MacSourceViewController.h"
-#import "NSData+DataView.h"
-#import "NSObject+Casting.h"
 #import "ToolboxViewController.h"
 
 @implementation MacDocument

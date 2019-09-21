@@ -26,11 +26,11 @@
 
 - (void)setType:(EditorType)type {
   _type = type;
-  auto *titles = @[ @"Number", @"String", @"Variable" ];
+  auto *titles = @[ @"Num", @"Str", @"Var" ];
   switch (_type) {
     case EditorType::variable_name:
       _formatter = [VariableFormatter new];
-      [self setupSegmentControlWithTitles:@[ @"Variable" ] selection:0];
+      [self setupSegmentControlWithTitles:@[ @"Var" ] selection:0];
       break;
     case EditorType::number: {
       _formatter = [NumberFormatter new];
@@ -46,6 +46,7 @@
       [self setupSegmentControlWithTitles:titles selection:2];
       break;
   }
+  [self validate];
 }
 
 - (void)validate {

@@ -1,8 +1,5 @@
 #import "MacToolboxViewController.h"
 
-#import "NSData+DataView.h"
-#import "NSObject+Casting.h"
-#import "NSString+StringView.h"
 #import "Pasteboard.h"
 #import "ToolboxItem.h"
 

@@ -2,11 +2,14 @@
 
 #include <memory>
 
-#import "NSString+StringView.h"
+#import "mac/MacFunctionViewController.h"
 
 using ToolIndex = std::pair<NSInteger, NSInteger>;
 
 @interface ToolboxViewController () <CollectionViewDelegateFlowLayout>
+
+@property(weak) IBOutlet View *editorView;
+@property(weak) IBOutlet NSLayoutConstraint *editorViewHeightConstraint;
 
 @property(weak) IBOutlet StackView *categoryStackView;
 
@@ -36,6 +39,63 @@ using ToolIndex = std::pair<NSInteger, NSInteger>;
 
 - (void)registerModelToDocument:(marlin::control::document &)document {
   document.register_toolbox(_model);
+}
+
+- (void)showEditorViewControllerForSourceView:(SourceView *)view
+                                     withType:(marlin::control::literal_data_type)type
+                                         data:(std::string_view)data {
+  [self dismissEditorViewControllers];
+  EditorViewController *vc =
+      [self.storyboard instantiateControllerWithIdentifier:@"EditorViewController"];
+  vc.delegate = view;
+
+  [self addChildViewController:vc];
+  [self.editorView addSubview:vc.view];
+  self.editorViewHeightConstraint.constant = vc.view.bounds.size.height;
+  vc.view.translatesAutoresizingMaskIntoConstraints = NO;
+  [vc.view.leftAnchor constraintEqualToAnchor:self.editorView.leftAnchor].active = YES;
+  [vc.view.rightAnchor constraintEqualToAnchor:self.editorView.rightAnchor].active = YES;
+  [vc.view.topAnchor constraintEqualToAnchor:self.editorView.topAnchor].active = YES;
+  [vc.view.bottomAnchor constraintEqualToAnchor:self.editorView.bottomAnchor].active = YES;
+#ifdef IOS
+  [vc didMoveToParentViewController:self];
+#endif
+
+  vc.type = type;
+  vc.editorTextField.stringValue = [NSString stringWithStringView:data];
+}
+
+- (void)showFunctionViewControllerForSourceView:(SourceView *)view
+                          withFunctionSignature:(marlin::function_definition)signature {
+  [self dismissEditorViewControllers];
+  MacFunctionViewController *vc =
+      [self.storyboard instantiateControllerWithIdentifier:@"FunctionViewController"];
+  vc.delegate = view;
+
+  [self addChildViewController:vc];
+  [self.editorView addSubview:vc.view];
+  self.editorViewHeightConstraint.constant = vc.view.bounds.size.height;
+  vc.view.translatesAutoresizingMaskIntoConstraints = NO;
+  [vc.view.leftAnchor constraintEqualToAnchor:self.editorView.leftAnchor].active = YES;
+  [vc.view.rightAnchor constraintEqualToAnchor:self.editorView.rightAnchor].active = YES;
+  [vc.view.topAnchor constraintEqualToAnchor:self.editorView.topAnchor].active = YES;
+  [vc.view.bottomAnchor constraintEqualToAnchor:self.editorView.bottomAnchor].active = YES;
+#ifdef IOS
+  [vc didMoveToParentViewController:self];
+#endif
+
+  [vc setFunctionSignature:std::move(signature)];
+}
+
+- (void)dismissEditorViewControllers {
+  for (ViewController *vc in self.childViewControllers) {
+#ifdef IOS
+    [vc.willMoveToParentViewController:nil];
+#endif
+    [vc.view removeFromSuperview];
+    [vc removeFromParentViewController];
+  }
+  self.editorViewHeightConstraint.constant = 0;
 }
 
 - (void)sectionButtonPressed:(Button *)sender {
