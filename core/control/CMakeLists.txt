@@ -1,6 +1,6 @@
 set(HEADERS
     document.hpp
-    expression_inserter.hpp
+    expr_inserter.hpp
     placeholders.hpp
     prototypes.hpp
     source_update.hpp
@@ -9,7 +9,7 @@ set(HEADERS
     toolbox.hpp)
 
 set(SOURCES
-    expression_inserter.cpp
+    expr_inserter.cpp
     line_inserter.cpp
     source_selection.cpp
     toolbox.cpp)

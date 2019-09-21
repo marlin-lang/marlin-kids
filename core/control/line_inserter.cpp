@@ -4,8 +4,8 @@
 
 namespace marlin::control {
 
-template <line_node_type node_type>
-std::vector<source_update> line_inserter<node_type>::insert(
+template <pasteboard_t node_type, typename enable_type>
+std::vector<source_update> line_inserter<node_type, enable_type>::insert(
     store::data_view data) {
   assert(_loc.has_value());
 
@@ -44,10 +44,10 @@ template std::vector<source_update> block_inserter::insert(
 template std::vector<source_update> statement_inserter::insert(
     store::data_view data);
 
-template <line_node_type node_type>
-template <line_node_type element_type>
-std::optional<typename line_inserter<node_type>::location>
-line_inserter<node_type>::find_insert_location_in_vector(
+template <pasteboard_t node_type, typename enable_type>
+template <pasteboard_t element_type, typename>
+std::optional<typename line_inserter<node_type, enable_type>::location>
+line_inserter<node_type, enable_type>::find_insert_location_in_vector(
     size_t line, ast::base& parent, ast::subnode::vector_view<ast::base> vector,
     size_t current_indent) {
   if constexpr (static_cast<uint8_t>(node_type) >=
@@ -75,19 +75,19 @@ line_inserter<node_type>::find_insert_location_in_vector(
 }
 
 template std::optional<block_inserter::location>
-block_inserter::find_insert_location_in_vector<line_node_type::block>(
+block_inserter::find_insert_location_in_vector<pasteboard_t::block>(
     size_t line, ast::base& parent, ast::subnode::vector_view<ast::base> vector,
     size_t current_indent);
 template std::optional<block_inserter::location>
-block_inserter::find_insert_location_in_vector<line_node_type::statement>(
+block_inserter::find_insert_location_in_vector<pasteboard_t::statement>(
     size_t line, ast::base& parent, ast::subnode::vector_view<ast::base> vector,
     size_t current_indent);
 template std::optional<statement_inserter::location>
-statement_inserter::find_insert_location_in_vector<line_node_type::block>(
+statement_inserter::find_insert_location_in_vector<pasteboard_t::block>(
     size_t line, ast::base& parent, ast::subnode::vector_view<ast::base> vector,
     size_t current_indent);
 template std::optional<statement_inserter::location>
-statement_inserter::find_insert_location_in_vector<line_node_type::statement>(
+statement_inserter::find_insert_location_in_vector<pasteboard_t::statement>(
     size_t line, ast::base& parent, ast::subnode::vector_view<ast::base> vector,
     size_t current_indent);
 

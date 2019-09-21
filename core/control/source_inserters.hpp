@@ -2,8 +2,9 @@
 #define marlin_control_source_inserters_hpp
 
 #include <optional>
+#include <vector>
 
-#include "expression_inserter.hpp"
+#include "expr_inserter.hpp"
 #include "line_inserter.hpp"
 #include "prototypes.hpp"
 #include "source_selection.hpp"
@@ -40,38 +41,38 @@ struct source_inserters {
       update_lines(_block_inserter, update);
       update_lines(_statement_inserter, update);
       update_lines(_expression_inserter, update);
+      update_lines(_reference_inserter, update);
     }
   }
 
-  std::optional<source_loc> block_insert_location() const {
+  std::vector<source_loc> line_insert_locations() const {
+    std::vector<source_loc> result;
     if (_block_inserter.has_value() && _block_inserter->can_insert()) {
-      return _block_inserter->get_insert_location();
-    } else {
-      return std::nullopt;
+      result.emplace_back(_block_inserter->get_insert_location());
     }
-  }
-
-  std::optional<source_loc> statement_insert_location() const {
     if (_statement_inserter.has_value() && _statement_inserter->can_insert()) {
-      return _statement_inserter->get_insert_location();
-    } else {
-      return std::nullopt;
+      result.emplace_back(_statement_inserter->get_insert_location());
     }
+    return result;
   }
 
-  std::optional<source_range> expression_insert_range() const {
+  std::vector<source_range> expr_insert_ranges() const {
+    std::vector<source_range> result;
     if (_expression_inserter.has_value() &&
         _expression_inserter->can_insert()) {
-      return _expression_inserter->get_range();
-    } else {
-      return std::nullopt;
+      result.emplace_back(_expression_inserter->get_range());
     }
+    if (_reference_inserter.has_value() && _reference_inserter->can_insert()) {
+      result.emplace_back(_reference_inserter->get_range());
+    }
+    return result;
   }
 
   void reset_all() {
     _block_inserter.reset();
     _statement_inserter.reset();
     _expression_inserter.reset();
+    _reference_inserter.reset();
   }
 
  private:
@@ -80,6 +81,7 @@ struct source_inserters {
   std::optional<block_inserter> _block_inserter;
   std::optional<statement_inserter> _statement_inserter;
   std::optional<expression_inserter> _expression_inserter;
+  std::optional<reference_inserter> _reference_inserter;
 
   template <typename callable_type>
   auto perform_on_inserter(pasteboard_t type, callable_type&& callable) {
@@ -90,6 +92,8 @@ struct source_inserters {
         return callable(_statement_inserter);
       case pasteboard_t::expression:
         return callable(_expression_inserter);
+      case pasteboard_t::reference:
+        return callable(_reference_inserter);
     }
   }
 
@@ -98,10 +102,11 @@ struct source_inserters {
                     const line_update& update) {
     if (inserter.has_value() && inserter->can_insert()) {
       source_loc location;
-      if constexpr (std::is_same_v<inserter_type, expression_inserter>) {
-        location = inserter->get_selection_loc();
-      } else {
+      if constexpr (std::is_same_v<inserter_type, block_inserter> ||
+                    std::is_same_v<inserter_type, statement_inserter>) {
         location = inserter->get_insert_location();
+      } else {
+        location = inserter->get_selection_loc();
       }
       if (location.line >= update.start_line) {
         inserter->move_to_loc({location.line + update.offset, location.column});

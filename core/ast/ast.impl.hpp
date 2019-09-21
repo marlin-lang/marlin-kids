@@ -12,6 +12,7 @@ namespace marlin::ast {
 struct block {};
 struct statement {};
 struct expression {};
+struct lvalue {};
 
 struct program : base::impl<program, subnode::vector> {
   [[nodiscard]] decltype(auto) blocks() { return get_subnode<0>(); }
@@ -177,7 +178,7 @@ struct variable_placeholder : base::impl<variable_placeholder> {
   explicit variable_placeholder(std::string _name) : name{std::move(_name)} {}
 };
 
-struct variable_name : base::impl<variable_name> {
+struct variable_name : base::impl<variable_name>, lvalue {
   std::string name;
 
   explicit variable_name(std::string _name) : name{std::move(_name)} {}

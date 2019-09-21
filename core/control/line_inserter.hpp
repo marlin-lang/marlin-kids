@@ -2,6 +2,7 @@
 #define marlin_control_statement_inserter_hpp
 
 #include <optional>
+#include <type_traits>
 #include <vector>
 
 #include "document.hpp"
@@ -12,9 +13,11 @@ namespace marlin::control {
 
 static constexpr size_t indent_space_count = 2;
 
-enum struct line_node_type : uint8_t { block = 0, statement = 1 };
+template <pasteboard_t node_type>
+using line_enable_t = std::enable_if_t<node_type == pasteboard_t::block ||
+                                       node_type == pasteboard_t::statement>;
 
-template <line_node_type node_type>
+template <pasteboard_t node_type, typename = line_enable_t<node_type>>
 struct line_inserter {
   line_inserter(document& doc) : _doc{&doc} {}
 
@@ -88,63 +91,63 @@ struct line_inserter {
   std::optional<location> find_insert_location_in_node(size_t line,
                                                        ast::program& node,
                                                        size_t current_indent) {
-    return find_insert_location_in_vector<line_node_type::block>(
+    return find_insert_location_in_vector<pasteboard_t::block>(
         line, node, node.blocks(), current_indent);
   }
 
   std::optional<location> find_insert_location_in_node(size_t line,
                                                        ast::on_start& node,
                                                        size_t current_indent) {
-    return find_insert_location_in_vector<line_node_type::statement>(
+    return find_insert_location_in_vector<pasteboard_t::statement>(
         line, node, node.statements(), current_indent);
   }
 
   std::optional<location> find_insert_location_in_node(size_t line,
                                                        ast::function& node,
                                                        size_t current_indent) {
-    return find_insert_location_in_vector<line_node_type::statement>(
+    return find_insert_location_in_vector<pasteboard_t::statement>(
         line, node, node.statements(), current_indent);
   }
 
   std::optional<location> find_insert_location_in_node(size_t line,
                                                        ast::if_statement& node,
                                                        size_t current_indent) {
-    return find_insert_location_in_vector<line_node_type::statement>(
+    return find_insert_location_in_vector<pasteboard_t::statement>(
         line, node, node.statements(), current_indent);
   }
 
   std::optional<location> find_insert_location_in_node(
       size_t line, ast::if_else_statement& node, size_t current_indent) {
     if (line <= node.else_loc.line) {
-      return find_insert_location_in_vector<line_node_type::statement>(
+      return find_insert_location_in_vector<pasteboard_t::statement>(
           line, node, node.consequence(), current_indent);
     } else {
-      return find_insert_location_in_vector<line_node_type::statement>(
+      return find_insert_location_in_vector<pasteboard_t::statement>(
           line, node, node.alternate(), current_indent);
     }
   }
 
   std::optional<location> find_insert_location_in_node(
       size_t line, ast::while_statement& node, size_t current_indent) {
-    return find_insert_location_in_vector<line_node_type::statement>(
+    return find_insert_location_in_vector<pasteboard_t::statement>(
         line, node, node.statements(), current_indent);
   }
 
   std::optional<location> find_insert_location_in_node(size_t line,
                                                        ast::for_statement& node,
                                                        size_t current_indent) {
-    return find_insert_location_in_vector<line_node_type::statement>(
+    return find_insert_location_in_vector<pasteboard_t::statement>(
         line, node, node.statements(), current_indent);
   }
 
-  template <line_node_type element_type>
+  template <pasteboard_t element_type, typename = line_enable_t<element_type>>
   std::optional<location> find_insert_location_in_vector(
       size_t line, ast::base& parent,
       ast::subnode::vector_view<ast::base> vector, size_t current_indent);
 };
 
-using block_inserter = line_inserter<line_node_type::block>;
-using statement_inserter = line_inserter<line_node_type::statement>;
+using block_inserter = line_inserter<pasteboard_t::block>;
+using statement_inserter = line_inserter<pasteboard_t::statement>;
 
 }  // namespace marlin::control
 

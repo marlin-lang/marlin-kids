@@ -24,12 +24,11 @@ using enable_if_ast_t =
     std::enable_if_t<std::is_base_of_v<ast::base, node_type> &&
                      !std::is_same_v<ast::base, node_type>>;
 
-enum struct line_node_type : uint8_t;
-
 struct document final : store::user_function_table_interface {
-  template <line_node_type node_type>
+  template <pasteboard_t node_type, typename>
   friend struct line_inserter;
-  friend struct expression_inserter;
+  template <pasteboard_t node_type, typename>
+  friend struct expr_inserter;
   friend struct source_selection;
 
   static store::data_view default_data() {

@@ -188,9 +188,8 @@ struct DocumentGetter {
                   ofType:(EditorType)type {
   [self.delegate dismissPopoverViewControllerForSourceView:self];
   if (string.length > 0 && _selection.has_value()) {
-    auto update = (*std::exchange(_selection, std::nullopt))
-                      .as_expression_inserter()
-                      .insert_literal(type, string.stringView);
+    auto update =
+        (*std::exchange(_selection, std::nullopt)).insert_literal(type, string.stringView);
     [self performUpdate:std::move(update)];
   } else {
     _selection.reset();
@@ -251,9 +250,8 @@ struct DocumentGetter {
 - (void)drawBackgroundInRect:(CGRect)rect {
   [self drawSelectionInRect:rect];
   [self drawDraggingSelectionInRect:rect];
-  [self drawBlockInsertionPointInRect:rect];
-  [self drawStatementInsertionPointInRect:rect];
-  [self drawExpressionInsertionInRect:rect];
+  [self drawLineInsertionPointsInRect:rect];
+  [self drawExprInsertionRangesInRect:rect];
   [self drawErrorMessage];
 }
 
@@ -269,24 +267,17 @@ struct DocumentGetter {
   }
 }
 
-- (void)drawBlockInsertionPointInRect:(CGRect)rect {
+- (void)drawLineInsertionPointsInRect:(CGRect)rect {
   NSAssert(_inserter.has_value(), @"");
-  if (auto location = _inserter->block_insert_location()) {
-    [self drawInsertionPoint:*location inRect:rect];
+  for (auto& location : _inserter->line_insert_locations()) {
+    [self drawInsertionPoint:location inRect:rect];
   }
 }
 
-- (void)drawStatementInsertionPointInRect:(CGRect)rect {
+- (void)drawExprInsertionRangesInRect:(CGRect)rect {
   NSAssert(_inserter.has_value(), @"");
-  if (auto location = _inserter->statement_insert_location()) {
-    [self drawInsertionPoint:*location inRect:rect];
-  }
-}
-
-- (void)drawExpressionInsertionInRect:(CGRect)rect {
-  NSAssert(_inserter.has_value(), @"");
-  if (auto range = _inserter->expression_insert_range()) {
-    [self drawSourceRange:*range inRect:rect forSelection:NO];
+  for (auto& range : _inserter->expr_insert_ranges()) {
+    [self drawSourceRange:range inRect:rect forSelection:NO];
   }
 }
 

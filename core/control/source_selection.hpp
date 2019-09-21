@@ -7,7 +7,7 @@
 
 #include "ast.hpp"
 #include "document.hpp"
-#include "expression_inserter.hpp"
+#include "expr_inserter.hpp"
 #include "formatter.hpp"
 #include "function_definition.hpp"
 #include "placeholders.hpp"
@@ -123,6 +123,11 @@ struct source_selection {
     return _selection->inherits<ast::expression>();
   }
 
+  [[nodiscard]] bool is_reference() const {
+    return _selection->is<ast::variable_name>() ||
+           _selection->is<ast::identifier>();
+  }
+
   [[nodiscard]] bool is_function_signature() const {
     return _selection->is<ast::function_signature>() ||
            _selection->is<ast::function_placeholder>();
@@ -154,6 +159,10 @@ struct source_selection {
       }
     } else if (is_statement()) {
       return pasteboard_t::statement;
+    } else if (is_reference()) {
+      // Must check reference before expression, because ast::identifier etc.
+      // are both, and needs to be considered as reference
+      return pasteboard_t::reference;
     } else if (is_expression()) {
       return pasteboard_t::expression;
     } else {
@@ -161,13 +170,17 @@ struct source_selection {
     }
   }
 
-  [[nodiscard]] expression_inserter as_expression_inserter() const&& {
+  template <pasteboard_t node_type, typename = expr_enable_t<node_type>>
+  [[nodiscard]] expr_inserter<node_type> as_inserter() const&& {
+    assert(expr_inserter<node_type>::placeholder_test(*_selection));
     return {*_doc, _loc, *_selection};
   }
 
   // Use this to update source_inserters, so that we can remove first and then
   // insert when moving parts of the code
   [[nodiscard]] line_update removal_line_update() const {
+    assert(dragging_type().has_value());
+
     if (is_block() || is_statement()) {
       const auto range{_selection->source_code_range};
       return {range.end.line + 1, range.begin.line - range.end.line - 1};
@@ -177,6 +190,24 @@ struct source_selection {
   }
 
   std::vector<source_update> remove_from_document() const&&;
+
+  source_update insert_literal(literal_data_type type,
+                               std::string_view literal) const&& {
+    switch (type) {
+      case literal_data_type::variable_name:
+        [[fallthrough]];
+      case literal_data_type::identifier:
+        return std::move(*this)
+            .as_inserter<pasteboard_t::reference>()
+            .insert_literal(type, std::move(literal));
+      case literal_data_type::number:
+        [[fallthrough]];
+      case literal_data_type::string:
+        return std::move(*this)
+            .as_inserter<pasteboard_t::expression>()
+            .insert_literal(type, std::move(literal));
+    }
+  }
 
   std::vector<source_update> replace_function_signature(
       function_definition signature) const&&;
@@ -199,6 +230,7 @@ struct source_selection {
   }
 
   source_update remove_line() const&& {
+    assert(is_block() || is_statement());
     assert(_selection->has_parent());
 
     source_range line_range{{_selection->source_code_range.begin.line, 1},
@@ -210,38 +242,7 @@ struct source_selection {
     return source_update{line_range, {"", {}}};
   }
 
-  source_update remove_expression() const&& {
-    assert(_selection->has_parent());
-
-    auto placeholder_name{placeholder::get_replacing_node(*_selection)};
-    if (_selection->parent().is<ast::user_function_call>() &&
-        placeholder_name == placeholder::empty) {
-      auto& call{_selection->parent().as<ast::user_function_call>()};
-      auto original_range{call.source_code_range};
-
-      auto args{call.arguments()};
-      for (auto i{0}; i < args.size(); i++) {
-        if (args[i].get() == _selection) {
-          args.pop(i);
-
-          format::formatter formatter;
-          auto display{formatter.format(call, call)};
-          return source_update{original_range, std::move(display)};
-        }
-      }
-      // _selection not found, this is unexpected
-      assert(false);
-    }
-
-    auto original_range{_selection->source_code_range};
-    auto placeholder{ast::make<ast::expression_placeholder>(
-        std::string{std::move(placeholder_name)})};
-
-    format::formatter formatter;
-    auto display{formatter.format(placeholder, *_selection)};
-    _doc->replace_expression(*_selection, std::move(placeholder));
-    return source_update{original_range, std::move(display)};
-  }
+  source_update remove_expression() const&&;
 };
 
 template <>

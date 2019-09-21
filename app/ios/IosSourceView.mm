@@ -53,7 +53,9 @@
       ]] ||
       [session hasItemsConformingToTypeIdentifiers:@[
         pasteboardOfType(marlin::control::pasteboard_t::expression)
-      ]];
+      ]] ||
+      [session hasItemsConformingToTypeIdentifiers:@[ pasteboardOfType(
+                                                       marlin::control::pasteboard_t::reference) ]];
 }
 
 - (UIDropProposal*)dropInteraction:(UIDropInteraction*)interaction
@@ -99,6 +101,10 @@
                pasteboardOfType(marlin::control::pasteboard_t::expression)
              ]]) {
     return marlin::control::pasteboard_t::expression;
+  } else if ([session hasItemsConformingToTypeIdentifiers:@[
+               pasteboardOfType(marlin::control::pasteboard_t::reference)
+             ]]) {
+    return marlin::control::pasteboard_t::reference;
   } else {
     return std::nullopt;
   }
