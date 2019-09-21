@@ -79,6 +79,7 @@ else(IOS)
       mac/MacSourceViewController.h
       mac/MacToolboxViewController.h
       mac/ParameterItem.h
+      mac/SplitViewController.h
       mac/ToolboxItem.h
       mac/WindowController.h)
 
@@ -93,6 +94,7 @@ else(IOS)
       mac/MacToolboxViewController.mm
       mac/main.mm
       mac/ParameterItem.mm
+      mac/SplitViewController.mm
       mac/ToolboxItem.mm
       mac/WindowController.mm)
 
