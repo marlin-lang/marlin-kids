@@ -17,7 +17,9 @@ namespace marlin::store {
     data_view data, user_function_table_interface& table,
     type_expectation type = type_expectation::any);
 
-[[nodiscard]] data_vector write(std::vector<const ast::base*> nodes);
+[[nodiscard]] data_vector write(
+    std::vector<const ast::base*> nodes,
+    std::optional<std::string_view> erase_function_names = std::nullopt);
 
 }  // namespace marlin::store
 

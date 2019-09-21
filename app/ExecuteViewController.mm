@@ -41,7 +41,7 @@ constexpr double refreshTimeInMS = 40;
   [self.wkWebView addObserver:self forKeyPath:@"loading" options:0 context:nil];
 
   self.outputTextView.layer.borderWidth = 1;
-  self.outputTextView.layer.borderColor = [Color blackColor].CGColor;
+  self.outputTextView.layer.borderColor = Color.blackColor.CGColor;
 }
 
 #ifdef IOS
@@ -91,6 +91,10 @@ constexpr double refreshTimeInMS = 40;
         if (diff.count() >= refreshTimeInMS) {
           [self refreshOutput];
         }
+      } else if ([type isEqualToString:@"error"]) {
+        NSLog(@"Name: %@", payload[@"name"]);
+        NSLog(@"Message: %@", payload[@"message"]);
+        NSLog(@"Stacktrace: %@", payload[@"stacktrace"]);
       }
     }
   }

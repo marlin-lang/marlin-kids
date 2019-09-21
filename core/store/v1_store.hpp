@@ -90,8 +90,10 @@ struct store : base_store::impl<store> {
     return nodes;
   }
 
-  data_vector write(std::vector<const ast::base*> nodes) {
+  data_vector write(std::vector<const ast::base*> nodes,
+                    std::optional<std::string_view> erase_function_names) {
     _data_buffer.clear();
+    _erase_function_names = erase_function_names;
     write_bytes(data_prefix());
     write_vector(nodes);
     return std::exchange(_data_buffer, {});
@@ -107,6 +109,7 @@ struct store : base_store::impl<store> {
   }
 
   data_vector _data_buffer;
+  std::optional<std::string_view> _erase_function_names;
 
   data_view::pointer _iter;
   data_view::pointer _end;
@@ -371,8 +374,14 @@ struct store : base_store::impl<store> {
       return ast::make<ast::variable_placeholder>(
           std::string{std::move(string)});
     } else if (type == type_expectation::function_signature) {
+      auto params{read_vector(type_expectation::lvalue)};
+      for (auto& param : params) {
+        if (!param->is<ast::variable_name>()) {
+          throw read_error{"Unexpected node, expecting function parameter!"};
+        }
+      }
       return ast::make<ast::function_placeholder>(
-          std::string{std::move(string)});
+          std::string{std::move(string)}, std::move(params));
     } else {
       return ast::make<ast::expression_placeholder>(
           std::string{std::move(string)});
@@ -557,11 +566,17 @@ struct store : base_store::impl<store> {
   void write_node(const ast::function_placeholder& placeholder) {
     write_key(key::placeholder);
     write_string(placeholder.name);
+    write_vector(placeholder.parameters());
   }
 
   void write_node(const ast::function_signature& signature) {
-    write_key(key::function_signature);
-    write_string(signature.name);
+    if (_erase_function_names.has_value()) {
+      write_key(key::placeholder);
+      write_string(*_erase_function_names);
+    } else {
+      write_key(key::function_signature);
+      write_string(signature.name);
+    }
     write_vector(signature.parameters());
   }
 

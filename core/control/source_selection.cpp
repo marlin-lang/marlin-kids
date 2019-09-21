@@ -4,6 +4,8 @@ namespace marlin::control {
 
 std::vector<source_update> source_selection::remove_from_document() const&& {
   std::vector<source_update> updates;
+  assert(dragging_type().has_value());
+
   _doc->start_recording_side_effects();
 
   if (is_block()) {
@@ -19,7 +21,7 @@ std::vector<source_update> source_selection::remove_from_document() const&& {
     }
   } else if (is_statement()) {
     updates.emplace_back(std::move(*this).remove_line());
-  } else if (is_expression()) {
+  } else if (is_reference() || is_expression()) {
     updates.emplace_back(std::move(*this).remove_expression());
   } else {
     // These things are not draggable
@@ -28,6 +30,45 @@ std::vector<source_update> source_selection::remove_from_document() const&& {
 
   _doc->gather_side_effects(updates);
   return updates;
+}
+
+source_update source_selection::remove_expression() const&& {
+  assert(is_reference() || is_expression());
+  assert(_selection->has_parent());
+
+  format::in_place_formatter formatter;
+
+  auto placeholder_name{placeholder::get_replacing_node(*_selection)};
+  if (_selection->parent().is<ast::user_function_call>() &&
+      placeholder_name == placeholder::empty) {
+    auto& call{_selection->parent().as<ast::user_function_call>()};
+    auto original_range{call.source_code_range};
+
+    auto args{call.arguments()};
+    for (auto i{0}; i < args.size(); i++) {
+      if (args[i].get() == _selection) {
+        args.pop(i);
+
+        auto display{formatter.format(call, call)};
+        return source_update{original_range, std::move(display)};
+      }
+    }
+    // _selection not found, this is unexpected
+    assert(false);
+  }
+
+  auto original_range{_selection->source_code_range};
+
+  auto placeholder{_selection->is<ast::variable_placeholder>() ||
+                           _selection->inherits<ast::lvalue>()
+                       ? ast::make<ast::variable_placeholder>(
+                             std::string{std::move(placeholder_name)})
+                       : ast::make<ast::expression_placeholder>(
+                             std::string{std::move(placeholder_name)})};
+
+  auto display{formatter.format(placeholder, *_selection)};
+  _doc->replace_expression(*_selection, std::move(placeholder));
+  return source_update{original_range, std::move(display)};
 }
 
 std::vector<source_update> source_selection::replace_function_signature(
@@ -46,7 +87,7 @@ std::vector<source_update> source_selection::replace_function_signature(
     auto node{
         ast::make<ast::function_signature>(signature.name, std::move(params))};
 
-    format::formatter formatter;
+    format::in_place_formatter formatter;
     auto display{formatter.format(node, *_selection)};
 
     updates.emplace_back(original_range, std::move(display));

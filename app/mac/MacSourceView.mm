@@ -50,7 +50,8 @@
   return @[
     pasteboardOfType(marlin::control::pasteboard_t::block),
     pasteboardOfType(marlin::control::pasteboard_t::statement),
-    pasteboardOfType(marlin::control::pasteboard_t::expression)
+    pasteboardOfType(marlin::control::pasteboard_t::expression),
+    pasteboardOfType(marlin::control::pasteboard_t::reference)
   ];
 }
 
@@ -162,6 +163,8 @@
     return marlin::control::pasteboard_t::statement;
   } else if ([type isEqualToString:pasteboardOfType(marlin::control::pasteboard_t::expression)]) {
     return marlin::control::pasteboard_t::expression;
+  } else if ([type isEqualToString:pasteboardOfType(marlin::control::pasteboard_t::reference)]) {
+    return marlin::control::pasteboard_t::reference;
   } else {
     return std::nullopt;
   }

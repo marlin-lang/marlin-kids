@@ -1,7 +1,8 @@
 #ifndef marlin_store_store_definition_hpp
 #define marlin_store_store_definition_hpp
 
-#include <string>
+#include <optional>
+#include <string_view>
 #include <vector>
 
 #include "byte_span.hpp"
@@ -60,7 +61,8 @@ struct base_store {
                                       user_function_table_interface& table) = 0;
 
   // The latest version also needs to implement
-  // data_vector write(std::vector<const ast::base*> node);
+  // data_vector write(std::vector<const ast::base*> node,
+  //     std::optional<std::string_view> erase_function_names);
 
  private:
   [[nodiscard]] static std::vector<base_store*>& get_stores() {
@@ -71,7 +73,9 @@ struct base_store {
 
 template <typename store_type>
 struct base_store::impl : base_store {
-  friend data_vector write(std::vector<const ast::base*> nodes);
+  friend data_vector write(
+      std::vector<const ast::base*> nodes,
+      std::optional<std::string_view> erase_function_names);
 
  protected:
   impl() { get_stores().emplace_back(&_singleton); }

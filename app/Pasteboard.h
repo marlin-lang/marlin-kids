@@ -10,5 +10,7 @@ inline NSString* pasteboardOfType(marlin::control::pasteboard_t type) {
       return @"marlin.statement";
     case marlin::control::pasteboard_t::expression:
       return @"marlin.expression";
+    case marlin::control::pasteboard_t::reference:
+      return @"marlin.reference";
   }
 }

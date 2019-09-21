@@ -1,6 +1,6 @@
 #include <catch2/catch.hpp>
 
-#include "expression_inserter.hpp"
+#include "expr_inserter.hpp"
 #include "line_inserter.hpp"
 #include "source_selection.hpp"
 
@@ -47,7 +47,9 @@ TEST_CASE("control::Insert number literal at placeholder", "[control]") {
 
   marlin::control::source_selection selection{document, {2, 20}};
   REQUIRE(selection.is_literal());
-  auto expr_inserter = std::move(selection).as_expression_inserter();
+  auto expr_inserter =
+      std::move(selection)
+          .as_inserter<marlin::control::pasteboard_t::expression>();
   REQUIRE(expr_inserter.can_insert());
   auto update =
       std::move(expr_inserter)
@@ -74,7 +76,9 @@ TEST_CASE("control::Insert string literal at placeholder", "[control]") {
 
   marlin::control::source_selection selection{document, {2, 20}};
   REQUIRE(selection.is_literal());
-  auto expr_inserter = std::move(selection).as_expression_inserter();
+  auto expr_inserter =
+      std::move(selection)
+          .as_inserter<marlin::control::pasteboard_t::expression>();
   REQUIRE(expr_inserter.can_insert());
   auto update =
       std::move(expr_inserter)

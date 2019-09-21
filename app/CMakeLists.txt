@@ -176,4 +176,8 @@ if(IOS)
                                    "11.0"
                                    XCODE_ATTRIBUTE_TARGETED_DEVICE_FAMILY
                                    "1,2")
+else(IOS)
+  set_target_properties(${TARGET_NAME}
+                        PROPERTIES XCODE_ATTRIBUTE_MACOSX_DEPLOYMENT_TARGET
+                                   "10.13")
 endif(IOS)
