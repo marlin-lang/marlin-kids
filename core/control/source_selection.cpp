@@ -36,6 +36,8 @@ source_update source_selection::remove_expression() const&& {
   assert(is_reference() || is_expression());
   assert(_selection->has_parent());
 
+  format::in_place_formatter formatter;
+
   auto placeholder_name{placeholder::get_replacing_node(*_selection)};
   if (_selection->parent().is<ast::user_function_call>() &&
       placeholder_name == placeholder::empty) {
@@ -47,7 +49,6 @@ source_update source_selection::remove_expression() const&& {
       if (args[i].get() == _selection) {
         args.pop(i);
 
-        format::formatter formatter;
         auto display{formatter.format(call, call)};
         return source_update{original_range, std::move(display)};
       }
@@ -65,7 +66,6 @@ source_update source_selection::remove_expression() const&& {
                        : ast::make<ast::expression_placeholder>(
                              std::string{std::move(placeholder_name)})};
 
-  format::formatter formatter;
   auto display{formatter.format(placeholder, *_selection)};
   _doc->replace_expression(*_selection, std::move(placeholder));
   return source_update{original_range, std::move(display)};
@@ -87,7 +87,7 @@ std::vector<source_update> source_selection::replace_function_signature(
     auto node{
         ast::make<ast::function_signature>(signature.name, std::move(params))};
 
-    format::formatter formatter;
+    format::in_place_formatter formatter;
     auto display{formatter.format(node, *_selection)};
 
     updates.emplace_back(original_range, std::move(display));

@@ -80,7 +80,7 @@ struct document final : store::user_function_table_interface {
 
   void start_recording_side_effects() { _side_effects.clear(); }
   void gather_side_effects(std::vector<source_update>& updates) {
-    format::formatter formatter;
+    format::in_place_formatter formatter;
     for (auto node : _side_effects) {
       auto original{node->source_code_range};
       auto display{formatter.format(*node, *node)};

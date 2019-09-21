@@ -74,7 +74,7 @@ struct expr_inserter {
       } else {
         // Should not happen
         assert(false);
-          return {{{0, 0}, {0, 0}}, {"", {}}};
+        return {{{0, 0}, {0, 0}}, {"", {}}};
       }
     } else {
       // Should not happen
@@ -125,7 +125,7 @@ struct expr_inserter {
   source_update insert_literal(ast::node node) const&& {
     auto original{_selection->source_code_range};
 
-    format::formatter formatter;
+    format::in_place_formatter formatter;
     auto display{formatter.format(node, *_selection)};
 
     _doc->replace_expression(*_selection, std::move(node));

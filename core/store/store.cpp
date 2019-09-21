@@ -20,7 +20,7 @@ namespace marlin::store {
   }
 
   auto nodes{s->read(std::move(data), type, table)};
-  format::formatter formatter;
+  format::in_place_formatter formatter;
   auto display{formatter.format(nodes, start_line, &parent)};
   return {std::move(nodes), std::move(display)};
 }
@@ -42,7 +42,7 @@ namespace marlin::store {
   }
 
   auto nodes{s->read(std::move(data), type, table)};
-  format::formatter formatter;
+  format::in_place_formatter formatter;
   auto display{formatter.format(nodes, target)};
   return {std::move(nodes), std::move(display)};
 }
@@ -53,7 +53,7 @@ namespace marlin::store {
   auto* s{base_store::corresponding_store(data)};
 
   auto nodes{s->read(std::move(data), type, table)};
-  format::formatter formatter;
+  format::in_place_formatter formatter;
   auto display{formatter.format(nodes)};
   return {std::move(nodes), std::move(display)};
 }

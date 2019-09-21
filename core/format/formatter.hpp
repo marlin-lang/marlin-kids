@@ -2,6 +2,7 @@
 #define marlin_format_formatter_hpp
 
 #include <string>
+#include <type_traits>
 #include <vector>
 
 #include "ast.hpp"
@@ -36,7 +37,11 @@ struct display {
       : source{std::move(_source)}, highlights{std::move(_highlights)} {}
 };
 
+template <bool is_const>
 struct formatter {
+  template <typename base_type>
+  using node_type = std::conditional_t<is_const, const base_type, base_type>;
+
   template <typename input_type>
   display format(input_type&& nodes, const ast::base& target) {
     size_t paren_precedence{0};
@@ -154,26 +159,31 @@ struct formatter {
     emit_string(")");
   }
 
-  void emit_node(ast::base& node, size_t paren_precedence = 0) {
-    const bool is_line{node.inherits<ast::block>() ||
-                       node.inherits<ast::statement>()};
+  void emit_node(node_type<ast::base>& node, size_t paren_precedence = 0) {
+    const bool is_line{node.template inherits<ast::block>() ||
+                       node.template inherits<ast::statement>()};
     if (is_line) {
       emit_indent();
     }
-    node.source_code_range.begin = _current_loc;
-    node.apply<void>(
-        [this, &paren_precedence](auto& n) { emit_ast(n, paren_precedence); });
-    node.source_code_range.end = _current_loc;
+    if constexpr (!is_const) {
+      node.source_code_range.begin = _current_loc;
+    }
+    node.template apply<void>([this, &paren_precedence](auto& n) {
+      this->emit_ast(n, paren_precedence);
+    });
+    if constexpr (!is_const) {
+      node.source_code_range.end = _current_loc;
+    }
     if (is_line) {
       emit_new_line();
     }
   }
 
-  void emit_ast(ast::program& program, size_t) {
+  void emit_ast(node_type<ast::program>& program, size_t) {
     emit_vector(program.blocks());
   }
 
-  void emit_ast(ast::on_start& on_start, size_t) {
+  void emit_ast(node_type<ast::on_start>& on_start, size_t) {
     emit_highlight("on start", highlight_token_type::keyword);
     emit_string(" {");
     emit_new_line();
@@ -184,17 +194,17 @@ struct formatter {
     emit_string("}");
   }
 
-  void emit_ast(ast::function_placeholder& placeholder, size_t) {
+  void emit_ast(node_type<ast::function_placeholder>& placeholder, size_t) {
     emit_placeholder(placeholder.name);
     emit_string("()");
   }
 
-  void emit_ast(ast::function_signature& signature, size_t) {
+  void emit_ast(node_type<ast::function_signature>& signature, size_t) {
     emit_string(signature.name);
     emit_arguments(signature.parameters());
   }
 
-  void emit_ast(ast::function& function, size_t) {
+  void emit_ast(node_type<ast::function>& function, size_t) {
     emit_highlight("func", highlight_token_type::keyword);
     emit_string(" ");
     emit_node(*function.signature());
@@ -207,34 +217,34 @@ struct formatter {
     emit_string("}");
   }
 
-  void emit_ast(ast::eval_statement& eval, size_t) {
+  void emit_ast(node_type<ast::eval_statement>& eval, size_t) {
     emit_highlight("eval", highlight_token_type::keyword);
     emit_string(" ");
     emit_node(*eval.expression());
     emit_string(";");
   }
 
-  void emit_ast(ast::assignment& assignment, size_t) {
+  void emit_ast(node_type<ast::assignment>& assignment, size_t) {
     emit_node(*assignment.variable());
     emit_string(" = ");
     emit_node(*assignment.value());
     emit_string(";");
   }
 
-  void emit_ast(ast::use_global& use_global, size_t) {
+  void emit_ast(node_type<ast::use_global>& use_global, size_t) {
     emit_highlight("use global", highlight_token_type::keyword);
     emit_string(" ");
     emit_node(*use_global.variable());
     emit_string(";");
   }
 
-  void emit_ast(ast::system_procedure_call& call, size_t) {
+  void emit_ast(node_type<ast::system_procedure_call>& call, size_t) {
     emit_string(display_for(call.proc));
     emit_arguments(call.arguments());
     emit_string(";");
   }
 
-  void emit_ast(ast::if_statement& statement, size_t) {
+  void emit_ast(node_type<ast::if_statement>& statement, size_t) {
     emit_highlight("if", highlight_token_type::keyword);
     emit_string(" (");
     emit_node(*statement.condition());
@@ -247,7 +257,7 @@ struct formatter {
     emit_string("}");
   }
 
-  void emit_ast(ast::if_else_statement& statement, size_t) {
+  void emit_ast(node_type<ast::if_else_statement>& statement, size_t) {
     emit_highlight("if", highlight_token_type::keyword);
     emit_string(" (");
     emit_node(*statement.condition());
@@ -269,7 +279,7 @@ struct formatter {
     emit_string("}");
   }
 
-  void emit_ast(ast::while_statement& statement, size_t) {
+  void emit_ast(node_type<ast::while_statement>& statement, size_t) {
     emit_highlight("while", highlight_token_type::keyword);
     emit_string(" (");
     emit_node(*statement.condition());
@@ -282,7 +292,7 @@ struct formatter {
     emit_string("}");
   }
 
-  void emit_ast(ast::for_statement& statement, size_t) {
+  void emit_ast(node_type<ast::for_statement>& statement, size_t) {
     emit_highlight("for", highlight_token_type::keyword);
     emit_string(" (");
     emit_node(*statement.variable());
@@ -297,41 +307,42 @@ struct formatter {
     emit_string("}");
   }
 
-  void emit_ast(ast::break_statement&, size_t) {
+  void emit_ast(node_type<ast::break_statement>&, size_t) {
     emit_highlight("break", highlight_token_type::keyword);
     emit_string(";");
   }
 
-  void emit_ast(ast::continue_statement&, size_t) {
+  void emit_ast(node_type<ast::continue_statement>&, size_t) {
     emit_highlight("continue", highlight_token_type::keyword);
     emit_string(";");
   }
 
-  void emit_ast(ast::return_statement&, size_t) {
+  void emit_ast(node_type<ast::return_statement>&, size_t) {
     emit_highlight("return", highlight_token_type::keyword);
     emit_string(";");
   }
 
-  void emit_ast(ast::return_result_statement& statement, size_t) {
+  void emit_ast(node_type<ast::return_result_statement>& statement, size_t) {
     emit_highlight("return", highlight_token_type::keyword);
     emit_string(" ");
     emit_node(*statement.result());
     emit_string(";");
   }
 
-  void emit_ast(ast::variable_placeholder& placeholder, size_t) {
+  void emit_ast(node_type<ast::variable_placeholder>& placeholder, size_t) {
     emit_placeholder(placeholder.name);
   }
 
-  void emit_ast(ast::variable_name& variable, size_t) {
+  void emit_ast(node_type<ast::variable_name>& variable, size_t) {
     emit_string(variable.name);
   }
 
-  void emit_ast(ast::expression_placeholder& placeholder, size_t) {
+  void emit_ast(node_type<ast::expression_placeholder>& placeholder, size_t) {
     emit_placeholder(placeholder.name);
   }
 
-  void emit_ast(ast::unary_expression& unary, size_t paren_precedence) {
+  void emit_ast(node_type<ast::unary_expression>& unary,
+                size_t paren_precedence) {
     if (ast::unary_op_precedence <= paren_precedence) {
       emit_string("(");
     }
@@ -346,7 +357,8 @@ struct formatter {
     }
   }
 
-  void emit_ast(ast::binary_expression& binary, size_t paren_precedence) {
+  void emit_ast(node_type<ast::binary_expression>& binary,
+                size_t paren_precedence) {
     const size_t op_precedence{ast::precedence_for(binary.op)};
     if (op_precedence <= paren_precedence) {
       emit_string("(");
@@ -366,28 +378,31 @@ struct formatter {
     }
   }
 
-  void emit_ast(ast::system_function_call& call, size_t) {
+  void emit_ast(node_type<ast::system_function_call>& call, size_t) {
     emit_string(display_for(call.func));
     emit_arguments(call.arguments());
   }
 
-  void emit_ast(ast::user_function_call& call, size_t) {
+  void emit_ast(node_type<ast::user_function_call>& call, size_t) {
     emit_string(call.name);
     emit_arguments(call.arguments());
   }
 
-  void emit_ast(ast::identifier& identifier, size_t) {
+  void emit_ast(node_type<ast::identifier>& identifier, size_t) {
     emit_string(identifier.name);
   }
 
-  void emit_ast(ast::number_literal& literal, size_t) {
+  void emit_ast(node_type<ast::number_literal>& literal, size_t) {
     emit_highlight(literal.value, highlight_token_type::number);
   }
 
-  void emit_ast(ast::string_literal& literal, size_t) {
+  void emit_ast(node_type<ast::string_literal>& literal, size_t) {
     emit_highlight(quoted(literal.value), highlight_token_type::string);
   }
 };
+
+using in_place_formatter = formatter<false>;
+using const_formatter = formatter<true>;
 
 }  // namespace marlin::format
 
