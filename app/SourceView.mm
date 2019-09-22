@@ -184,7 +184,6 @@ struct DocumentGetter {
 - (void)viewController:(EditorViewController*)vc
     finishEditWithString:(NSString*)string
                   ofType:(EditorType)type {
-  [self.delegate dismissEditorViewControllersForSourceView:self];
   if (_selection.has_value()) {
     auto update =
         (*std::exchange(_selection, std::nullopt)).insert_literal(type, string.stringView);
@@ -192,14 +191,14 @@ struct DocumentGetter {
   } else {
     _selection.reset();
   }
+    [self.delegate dismissChildViewControllersForSourceView:self];
 }
 
 #pragma mark - FunctionViewControllerDelegate
 
-- (void)viewController:(FunctionViewController*)vc
+- (void)functionViewController:(FunctionViewController*)vc
     finishEditingWithName:(NSString*)name
                parameters:(NSArray<NSString*>*)parameters {
-  [self.delegate dismissEditorViewControllersForSourceView:self];
   if (_selection.has_value()) {
     marlin::function_definition signature{std::string{name.stringView}};
     for (NSString* parameter in parameters) {
@@ -212,6 +211,7 @@ struct DocumentGetter {
   } else {
     _selection.reset();
   }
+    [self.delegate dismissChildViewControllersForSourceView:self];
 }
 
 #pragma mark - Private methods
@@ -333,6 +333,7 @@ struct DocumentGetter {
 
 - (void)touchUp {
   if (_selection.has_value()) {
+      [self.delegate showDuplicateViewControllerForSourceView:self];
     if (_selection->is_literal()) {
       auto [type, data] = _selection->get_literal_content();
       [self.delegate showEditorViewControllerForSourceView:self withType:type data:data];
@@ -340,7 +341,7 @@ struct DocumentGetter {
       [self.delegate showFunctionViewControllerForSourceView:self
                                        withFunctionSignature:_selection->get_function_signature()];
     } else {
-      [self.delegate dismissEditorViewControllersForSourceView:self];
+      [self.delegate dismissEditorViewControllerForSourceView:self];
     }
   }
 }
@@ -379,7 +380,7 @@ struct DocumentGetter {
     auto rect = [self rectOfSourceRange:_selection->get_range()];
     if (!CGRectContainsPoint(rect, location)) {
       _draggingSelection = (*std::exchange(_selection, std::nullopt)).as_dragging_selection();
-      [self.delegate dismissEditorViewControllersForSourceView:self];
+      [self.delegate dismissChildViewControllersForSourceView:self];
       if (auto type = _draggingSelection->dragging_type()) {
         return DraggingData(*type, [NSData dataWithDataView:_draggingSelection->get_data()]);
       } else {
@@ -397,7 +398,7 @@ struct DocumentGetter {
 - (BOOL)draggingPasteboardOfType:(marlin::control::pasteboard_t)type toLocation:(CGPoint)location {
   if (_selection.has_value()) {
     _selection.reset();
-    [self.delegate dismissEditorViewControllersForSourceView:self];
+    [self.delegate dismissChildViewControllersForSourceView:self];
   }
 
   NSAssert(_inserter.has_value(), @"");

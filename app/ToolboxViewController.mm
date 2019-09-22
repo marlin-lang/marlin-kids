@@ -3,10 +3,14 @@
 #include <memory>
 
 #import "mac/MacFunctionViewController.h"
+#import "DuplicateViewController.h"
 
 using ToolIndex = std::pair<NSInteger, NSInteger>;
 
 @interface ToolboxViewController () <CollectionViewDelegateFlowLayout>
+
+@property (weak) IBOutlet View *duplicateView;
+@property (weak) IBOutlet NSLayoutConstraint *duplicateViewHeightConstraint;
 
 @property(weak) IBOutlet View *editorView;
 @property(weak) IBOutlet NSLayoutConstraint *editorViewHeightConstraint;
@@ -18,6 +22,8 @@ using ToolIndex = std::pair<NSInteger, NSInteger>;
 @implementation ToolboxViewController {
   std::shared_ptr<marlin::control::toolbox> _model;
 
+    __weak ViewController* _duplicateViewController;
+    __weak ViewController* _editorViewController;
   __weak Button *_currentCategoryButton;
 }
 
@@ -41,61 +47,87 @@ using ToolIndex = std::pair<NSInteger, NSInteger>;
   document.register_toolbox(_model);
 }
 
+- (void)showDuplicateViewControllerForSourceView:(SourceView *)view {
+    [self dismissDuplicateViewController];
+    DuplicateViewController* vc = [self.storyboard instantiateControllerWithIdentifier:@"DuplicateViewController"];
+    [self addChildViewController:vc inView:self.duplicateView heightConstraint:self.duplicateViewHeightConstraint];
+    _duplicateViewController = vc;
+}
+
 - (void)showEditorViewControllerForSourceView:(SourceView *)view
                                      withType:(marlin::control::literal_data_type)type
                                          data:(std::string_view)data {
-  [self dismissEditorViewControllers];
+  [self dismissEditorViewController];
   EditorViewController *vc =
       [self.storyboard instantiateControllerWithIdentifier:@"EditorViewController"];
   vc.delegate = view;
-
-  [self addChildViewController:vc];
-  [self.editorView addSubview:vc.view];
-  self.editorViewHeightConstraint.constant = vc.view.bounds.size.height;
-  vc.view.translatesAutoresizingMaskIntoConstraints = NO;
-  [vc.view.leftAnchor constraintEqualToAnchor:self.editorView.leftAnchor].active = YES;
-  [vc.view.rightAnchor constraintEqualToAnchor:self.editorView.rightAnchor].active = YES;
-  [vc.view.topAnchor constraintEqualToAnchor:self.editorView.topAnchor].active = YES;
-  [vc.view.bottomAnchor constraintEqualToAnchor:self.editorView.bottomAnchor].active = YES;
-#ifdef IOS
-  [vc didMoveToParentViewController:self];
-#endif
+    
+    [self addChildViewController:vc inView:self.editorView heightConstraint:self.editorViewHeightConstraint];
 
   vc.type = type;
   vc.editorTextField.stringValue = [NSString stringWithStringView:data];
+    _editorViewController = vc;
 }
 
 - (void)showFunctionViewControllerForSourceView:(SourceView *)view
                           withFunctionSignature:(marlin::function_definition)signature {
-  [self dismissEditorViewControllers];
+  [self dismissEditorViewController];
   MacFunctionViewController *vc =
       [self.storyboard instantiateControllerWithIdentifier:@"FunctionViewController"];
   vc.delegate = view;
 
-  [self addChildViewController:vc];
-  [self.editorView addSubview:vc.view];
-  self.editorViewHeightConstraint.constant = vc.view.bounds.size.height;
-  vc.view.translatesAutoresizingMaskIntoConstraints = NO;
-  [vc.view.leftAnchor constraintEqualToAnchor:self.editorView.leftAnchor].active = YES;
-  [vc.view.rightAnchor constraintEqualToAnchor:self.editorView.rightAnchor].active = YES;
-  [vc.view.topAnchor constraintEqualToAnchor:self.editorView.topAnchor].active = YES;
-  [vc.view.bottomAnchor constraintEqualToAnchor:self.editorView.bottomAnchor].active = YES;
-#ifdef IOS
-  [vc didMoveToParentViewController:self];
-#endif
-
+  [self addChildViewController:vc inView:self.editorView heightConstraint:self.editorViewHeightConstraint];
+    
   [vc setFunctionSignature:std::move(signature)];
+    _editorViewController = vc;
 }
 
-- (void)dismissEditorViewControllers {
-  for (ViewController *vc in self.childViewControllers) {
-#ifdef IOS
-    [vc.willMoveToParentViewController:nil];
-#endif
-    [vc.view removeFromSuperview];
-    [vc removeFromParentViewController];
-  }
-  self.editorViewHeightConstraint.constant = 0;
+- (void)dismissEditorViewController {
+    [self removeChildViewController:_editorViewController heightConstraint:self.editorViewHeightConstraint];
+    _editorViewController = nil;
+}
+
+- (void)dismissChildViewControllers {
+    [self dismissDuplicateViewController];
+    [self dismissEditorViewController];
+}
+
+#pragma mark - CollectionViewDelegateFlowLayout
+
+- (CGSize)collectionView:(CollectionView *)collectionView
+                    layout:(CollectionViewLayout *)collectionViewLayout
+    sizeForItemAtIndexPath:(NSIndexPath *)indexPath {
+  return CGSizeMake(collectionView.bounds.size.width - 10, 25);
+}
+
+#pragma mark - Private Methods
+
+- (void)addChildViewController:(ViewController*)vc inView:(View*)view heightConstraint:(NSLayoutConstraint*)heightConstraint {
+      [self addChildViewController:vc];
+      [view addSubview:vc.view];
+      heightConstraint.constant = vc.view.bounds.size.height;
+      vc.view.translatesAutoresizingMaskIntoConstraints = NO;
+      [vc.view.leftAnchor constraintEqualToAnchor:view.leftAnchor].active = YES;
+      [vc.view.rightAnchor constraintEqualToAnchor:view.rightAnchor].active = YES;
+      [vc.view.topAnchor constraintEqualToAnchor:view.topAnchor].active = YES;
+      [vc.view.bottomAnchor constraintEqualToAnchor:view.bottomAnchor].active = YES;
+    #ifdef IOS
+      [vc didMoveToParentViewController:self];
+    #endif
+}
+
+- (void)removeChildViewController:(ViewController*)vc heightConstraint:(NSLayoutConstraint*)heightConstraint {
+    #ifdef IOS
+        [vc willMoveToParentViewController:nil];
+    #endif
+        [vc.view removeFromSuperview];
+        [vc removeFromParentViewController];
+    heightConstraint.constant = 0;
+}
+
+- (void)dismissDuplicateViewController {
+    [self removeChildViewController:_duplicateViewController heightConstraint:self.duplicateViewHeightConstraint];
+    _duplicateViewController = nil;
 }
 
 - (void)sectionButtonPressed:(Button *)sender {
@@ -129,14 +161,6 @@ using ToolIndex = std::pair<NSInteger, NSInteger>;
 
 - (void)setBackgroundColor:(Color *)color forButton:(Button *)button {
   NSAssert(NO, @"Implemented by subclass");
-}
-
-#pragma mark - CollectionViewDelegateFlowLayout
-
-- (CGSize)collectionView:(CollectionView *)collectionView
-                    layout:(CollectionViewLayout *)collectionViewLayout
-    sizeForItemAtIndexPath:(NSIndexPath *)indexPath {
-  return CGSizeMake(collectionView.bounds.size.width - 10, 25);
 }
 
 @end

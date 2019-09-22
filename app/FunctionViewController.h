@@ -6,7 +6,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 @protocol FunctionViewControllerDelegate
 
-- (void)viewController:(FunctionViewController *)vc
+- (void)functionViewController:(FunctionViewController *)vc
     finishEditingWithName:(NSString *)name
                parameters:(NSArray<NSString *> *)parameters;
 

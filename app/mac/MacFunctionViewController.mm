@@ -42,7 +42,7 @@
 }
 
 - (IBAction)okButtonPressed:(id)sender {
-  [self.delegate viewController:self
+  [self.delegate functionViewController:self
           finishEditingWithName:self.nameTextField.stringValue
                      parameters:_parameters];
 }

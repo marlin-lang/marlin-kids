@@ -15,6 +15,8 @@ NS_ASSUME_NONNULL_BEGIN
 
 - (void)registerModelToDocument:(marlin::control::document &)document;
 
+- (void)showDuplicateViewControllerForSourceView:(SourceView*)view;
+
 - (void)showEditorViewControllerForSourceView:(SourceView *)view
                                      withType:(marlin::control::literal_data_type)type
                                          data:(std::string_view)data;
@@ -22,7 +24,9 @@ NS_ASSUME_NONNULL_BEGIN
 - (void)showFunctionViewControllerForSourceView:(SourceView *)view
                           withFunctionSignature:(marlin::function_definition)signature;
 
-- (void)dismissEditorViewControllers;
+- (void)dismissEditorViewController;
+
+- (void)dismissChildViewControllers;
 
 @end
 

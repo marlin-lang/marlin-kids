@@ -33,6 +33,8 @@ struct DraggingData {
 
 - (void)sourceViewChanged:(SourceView *)view;
 
+- (void)showDuplicateViewControllerForSourceView:(SourceView*)view;
+
 - (void)showEditorViewControllerForSourceView:(SourceView *)view
                                      withType:(marlin::control::literal_data_type)type
                                          data:(std::string_view)data;
@@ -40,7 +42,9 @@ struct DraggingData {
 - (void)showFunctionViewControllerForSourceView:(SourceView *)view
                           withFunctionSignature:(marlin::function_definition)signature;
 
-- (void)dismissEditorViewControllersForSourceView:(SourceView *)view;
+- (void)dismissEditorViewControllerForSourceView:(SourceView *)view;
+
+- (void)dismissChildViewControllersForSourceView:(SourceView *)view;
 
 @end
 

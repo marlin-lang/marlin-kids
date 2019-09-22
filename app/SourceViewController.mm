@@ -75,6 +75,10 @@
   [self.document updateChangeCount:NSChangeDone];
 }
 
+- (void)showDuplicateViewControllerForSourceView:(SourceView *)view {
+    [self.toolboxViewController showDuplicateViewControllerForSourceView:view];
+}
+
 - (void)showEditorViewControllerForSourceView:(SourceView *)view
                                      withType:(marlin::control::literal_data_type)type
                                          data:(std::string_view)data {
@@ -87,8 +91,12 @@
                                                 withFunctionSignature:signature];
 }
 
-- (void)dismissEditorViewControllersForSourceView:(SourceView *)view {
-  [self.toolboxViewController dismissEditorViewControllers];
+- (void)dismissEditorViewControllerForSourceView:(SourceView *)view {
+    [self.toolboxViewController dismissEditorViewController];
+}
+
+- (void)dismissChildViewControllersForSourceView:(SourceView *)view {
+    [self.toolboxViewController dismissChildViewControllers];
 }
 
 @end

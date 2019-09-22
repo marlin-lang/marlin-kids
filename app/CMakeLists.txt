@@ -1,6 +1,7 @@
 set(HEADERS
     Document.h
     DrawHelper.h
+    DuplicateViewController.h
     EditorViewController.h
     ExecuteViewController.h
     Formatter.h
@@ -16,6 +17,7 @@ set(HEADERS
 
 set(SOURCES
     Document.mm
+    DuplicateViewController.mm
     EditorViewController.mm
     ExecuteViewController.mm
     Formatter.mm
