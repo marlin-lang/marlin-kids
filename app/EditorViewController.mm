@@ -96,9 +96,9 @@
 }
 
 - (IBAction)okButtonPressed:(id)sender {
-  [self.delegate viewController:self
-           finishEditWithString:self.editorTextField.stringValue
-                         ofType:self.type];
+  [self.delegate editorViewController:self
+                 finishEditWithString:self.editorTextField.stringValue
+                               ofType:self.type];
 }
 
 - (void)setupSegmentControlWithTitles:(NSArray<NSString *> *)titles

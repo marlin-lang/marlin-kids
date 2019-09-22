@@ -51,6 +51,7 @@ using ToolIndex = std::pair<NSInteger, NSInteger>;
   [self dismissDuplicateViewController];
   DuplicateViewController *vc =
       [self.storyboard instantiateControllerWithIdentifier:@"DuplicateViewController"];
+  vc.delegate = view;
   [self addChildViewController:vc
                         inView:self.duplicateView
               heightConstraint:self.duplicateViewHeightConstraint];
@@ -90,9 +91,11 @@ using ToolIndex = std::pair<NSInteger, NSInteger>;
 }
 
 - (void)dismissEditorViewController {
-  [self removeChildViewController:_editorViewController
-                 heightConstraint:self.editorViewHeightConstraint];
-  _editorViewController = nil;
+  if (_editorViewController) {
+    [self removeChildViewController:_editorViewController
+                   heightConstraint:self.editorViewHeightConstraint];
+    _editorViewController = nil;
+  }
 }
 
 - (void)dismissChildViewControllers {
@@ -137,9 +140,11 @@ using ToolIndex = std::pair<NSInteger, NSInteger>;
 }
 
 - (void)dismissDuplicateViewController {
-  [self removeChildViewController:_duplicateViewController
-                 heightConstraint:self.duplicateViewHeightConstraint];
-  _duplicateViewController = nil;
+  if (_duplicateViewController) {
+    [self removeChildViewController:_duplicateViewController
+                   heightConstraint:self.duplicateViewHeightConstraint];
+    _duplicateViewController = nil;
+  }
 }
 
 - (void)sectionButtonPressed:(Button *)sender {
