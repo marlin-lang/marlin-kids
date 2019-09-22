@@ -182,7 +182,7 @@ struct DocumentGetter {
 #pragma mark - DuplicateViewControllerDelegate
 
 - (void)performDeleteForDuplicateViewController:(DuplicateViewController*)vc {
-  [self removeSelection:_selection];
+  [self removeSelection:_selection retainSelection:YES];
   [self.delegate dismissChildViewControllersForSourceView:self];
 }
 
@@ -192,9 +192,9 @@ struct DocumentGetter {
         finishEditWithString:(NSString*)string
                       ofType:(EditorType)type {
   if (_selection.has_value()) {
-    auto update =
-        (*std::exchange(_selection, std::nullopt)).insert_literal(type, string.stringView);
-    [self performUpdate:std::move(update)];
+    auto update = (*std::move(_selection)).insert_literal(type, string.stringView);
+    _selection = std::move(update.selection_update);
+    [self performUpdates:std::move(update.source_updates)];
   } else {
     _selection.reset();
   }
@@ -213,8 +213,9 @@ struct DocumentGetter {
         signature.parameters.emplace_back(parameter.stringView);
       }
     }
-    auto updates = (*std::exchange(_selection, std::nullopt)).replace_function_signature(signature);
-    [self performUpdates:std::move(updates)];
+    auto updates = (*std::move(_selection)).replace_function_signature(signature);
+    _selection = std::move(updates.selection_update);
+    [self performUpdates:std::move(updates.source_updates)];
   } else {
     _selection.reset();
   }
@@ -455,30 +456,40 @@ struct DocumentGetter {
        removingCurrentSource:(BOOL)removing {
   NSAssert(_inserter.has_value(), @"");
   if (removing) {
-    auto lineUpdate = [self removeSelection:_draggingSelection];
+    auto lineUpdate = [self removeSelection:_draggingSelection retainSelection:NO];
     _inserter->update_lines(std::move(lineUpdate));
   }
   auto update = _inserter->insert(type, data.dataView);
-  const bool result = update.size() > 0;
-  [self performUpdates:std::move(update)];
+  _selection = std::move(update.selection_update);
+  const bool result = update.source_updates.size() > 0;
+  [self performUpdates:std::move(update.source_updates)];
   return result;
 }
 
 - (BOOL)removeDraggingSource {
-  return [self removeSelection:_draggingSelection].start_line > 0;
+  return [self removeSelection:_draggingSelection retainSelection:NO].start_line > 0;
 }
 
 - (marlin::control::line_update)removeSelection:
-    (std::optional<marlin::control::source_selection>&)selection {
+                                    (std::optional<marlin::control::source_selection>&)selection
+                                retainSelection:(bool)retain {
   if (selection.has_value()) {
     if (selection->is_removable()) {
       auto line_update = selection->removal_line_update();
-      auto updates = (*std::exchange(selection, std::nullopt)).remove_from_document();
-      [self performUpdates:std::move(updates)];
+      if (retain) {
+        auto updates = (*std::move(selection)).remove_from_document();
+        selection = std::move(updates.selection_update);
+        [self performUpdates:std::move(updates.source_updates)];
+      } else {
+        auto updates = (*std::exchange(selection, std::nullopt)).remove_from_document();
+        [self performUpdates:std::move(updates.source_updates)];
+      }
       return line_update;
     } else {
       assert(false);
-      selection.reset();
+      if (!retain) {
+        selection.reset();
+      }
     }
   }
   return {};

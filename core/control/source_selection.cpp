@@ -2,10 +2,10 @@
 
 namespace marlin::control {
 
-std::vector<source_update> source_selection::remove_from_document() const&& {
-  std::vector<source_update> updates;
+document_update source_selection::remove_from_document() && {
   assert(dragging_type().has_value());
 
+  document_update result;
   _doc->start_recording_side_effects();
 
   if (is<pasteboard_t::block>()) {
@@ -17,24 +17,44 @@ std::vector<source_update> source_selection::remove_from_document() const&& {
         }
       }
 
-      updates.emplace_back(std::move(*this).remove_line());
+      result.source_updates.emplace_back(
+          std::move(*this).remove_line(result.selection_update));
     }
   } else if (is<pasteboard_t::statement>()) {
-    updates.emplace_back(std::move(*this).remove_line());
+    result.source_updates.emplace_back(
+        std::move(*this).remove_line(result.selection_update));
   } else if (is<pasteboard_t::expression>() || is<pasteboard_t::reference>()) {
-    updates.emplace_back(std::move(*this).remove_expression());
+    result.source_updates.emplace_back(
+        std::move(*this).remove_expression(result.selection_update));
   } else {
     // These things are not draggable
     assert(false);
   }
 
-  _doc->gather_side_effects(updates);
-  return updates;
+  _doc->gather_side_effects(result.source_updates);
+  return result;
 }
 
-source_update source_selection::remove_expression() const&& {
+source_update source_selection::remove_line(
+    std::optional<source_selection>& result_selection) && {
+  assert(is<pasteboard_t::block>() || is<pasteboard_t::statement>());
+  assert(_selection->has_parent());
+  assert(!result_selection.has_value());
+
+  source_range line_range{{_selection->source_code_range.begin.line, 1},
+                          {_selection->source_code_range.end.line + 1, 1}};
+  auto line_offset{static_cast<ptrdiff_t>(line_range.begin.line) -
+                   static_cast<ptrdiff_t>(line_range.end.line)};
+  _doc->update_source_line_after_node(*_selection, line_offset);
+  _doc->remove_line(*_selection);
+  return source_update{line_range, {"", {}}};
+}
+
+source_update source_selection::remove_expression(
+    std::optional<source_selection>& result_selection) && {
   assert(is<pasteboard_t::expression>() || is<pasteboard_t::reference>());
   assert(_selection->has_parent());
+  assert(!result_selection.has_value());
 
   format::in_place_formatter formatter;
 
@@ -64,15 +84,34 @@ source_update source_selection::remove_expression() const&& {
                              std::string{std::move(placeholder_name)})
                        : ast::make<ast::expression_placeholder>(
                              std::string{std::move(placeholder_name)})};
+  result_selection = source_selection{*_doc, *placeholder};
 
   auto display{formatter.format(placeholder, *_selection)};
   _doc->replace_expression(*_selection, std::move(placeholder));
   return source_update{original_range, std::move(display)};
 }
 
-std::vector<source_update> source_selection::replace_function_signature(
-    function_definition signature) const&& {
-  std::vector<source_update> updates;
+document_update source_selection::insert_literal(literal_data_type type,
+                                                 std::string_view literal) && {
+  switch (type) {
+    case literal_data_type::variable_name:
+      [[fallthrough]];
+    case literal_data_type::identifier:
+      return std::move(*this)
+          .as_inserter<pasteboard_t::reference>()
+          .insert_literal(type, std::move(literal));
+    case literal_data_type::number:
+      [[fallthrough]];
+    case literal_data_type::string:
+      return std::move(*this)
+          .as_inserter<pasteboard_t::expression>()
+          .insert_literal(type, std::move(literal));
+  }
+}
+
+document_update source_selection::replace_function_signature(
+    function_definition signature) && {
+  document_update result;
   _doc->start_recording_side_effects();
 
   if (is_function_signature()) {
@@ -85,11 +124,12 @@ std::vector<source_update> source_selection::replace_function_signature(
     }
     auto node{
         ast::make<ast::function_signature>(signature.name, std::move(params))};
+    result.selection_update = source_selection{*_doc, *node};
 
     format::in_place_formatter formatter;
     auto display{formatter.format(node, *_selection)};
 
-    updates.emplace_back(original_range, std::move(display));
+    result.source_updates.emplace_back(original_range, std::move(display));
 
     if (_selection->is<ast::function_signature>()) {
       const auto& previous_name{_selection->as<ast::function_signature>().name};
@@ -103,8 +143,8 @@ std::vector<source_update> source_selection::replace_function_signature(
     assert(false);
   }
 
-  _doc->gather_side_effects(updates);
-  return updates;
+  _doc->gather_side_effects(result.source_updates);
+  return result;
 }
 
 }  // namespace marlin::control

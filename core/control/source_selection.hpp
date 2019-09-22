@@ -40,6 +40,11 @@ struct ast_tag<pasteboard_t::reference> {
   using type = ast::reference;
 };
 
+inline bool function_signature_test(const ast::base& node) {
+  return node.is<ast::function_signature>() ||
+         node.is<ast::function_placeholder>();
+}
+
 }  // namespace details
 
 using selection_promotion_rule = ast::base& (*)(ast::base&);
@@ -48,7 +53,7 @@ constexpr selection_promotion_rule default_rule =
     [](ast::base& node) -> ast::base& {
   ast::base* function_signature{nullptr};
   for (auto current{&node};;) {
-    if (current->is<ast::function_signature>()) {
+    if (details::function_signature_test(*current)) {
       function_signature = current;
       break;
     }
@@ -69,7 +74,7 @@ constexpr selection_promotion_rule dragging_rule =
     [](ast::base& node) -> ast::base& {
   ast::base* function_signature{nullptr};
   for (auto current{&node};;) {
-    if (current->is<ast::function_signature>()) {
+    if (details::function_signature_test(*current)) {
       function_signature = current;
       break;
     }
@@ -101,6 +106,8 @@ struct line_update {
       : start_line{_start_line}, offset{_offset} {}
 };
 
+struct document_update;
+
 struct source_selection {
   struct literal_content {
     literal_data_type type;
@@ -112,7 +119,11 @@ struct source_selection {
 
   source_selection(document& doc, source_loc loc,
                    selection_promotion_rule rule = default_rule)
-      : source_selection{doc, loc, doc.locate(loc), rule} {}
+      : source_selection{doc, doc.locate(loc), rule} {}
+
+  source_selection(document& doc, ast::base& selection,
+                   selection_promotion_rule rule = default_rule)
+      : _doc{&doc}, _selection{&rule(selection)} {}
 
   [[nodiscard]] source_range get_range() const noexcept {
     return _selection->source_code_range;
@@ -154,8 +165,7 @@ struct source_selection {
   }
 
   [[nodiscard]] bool is_function_signature() const {
-    return _selection->is<ast::function_signature>() ||
-           _selection->is<ast::function_placeholder>();
+    return details::function_signature_test(*_selection);
   }
 
   [[nodiscard]] bool is_literal() const {
@@ -171,8 +181,8 @@ struct source_selection {
     return dragging_type().has_value();
   }
 
-  [[nodiscard]] source_selection as_dragging_selection() const&& {
-    return {*_doc, _loc, *_selection, dragging_rule};
+  [[nodiscard]] source_selection as_dragging_selection() && {
+    return {*_doc, *_selection, dragging_rule};
   }
 
   [[nodiscard]] std::optional<pasteboard_t> dragging_type() const {
@@ -196,7 +206,7 @@ struct source_selection {
   }
 
   template <pasteboard_t node_type, typename = expr_enable_t<node_type>>
-  [[nodiscard]] expr_inserter<node_type> as_inserter() const&& {
+  [[nodiscard]] expr_inserter<node_type> as_inserter() && {
     if constexpr (node_type == pasteboard_t::expression) {
       assert(_selection->is<ast::expression_placeholder>() ||
              _selection->is<ast::number_literal>() ||
@@ -209,7 +219,7 @@ struct source_selection {
       // Should not happen
       static_assert(details::dependent_false<node_type>::value);
     }
-    return {*_doc, _loc, *_selection};
+    return {*_doc, {}, *_selection};
   }
 
   // Use this to update source_inserters, so that we can remove first and then
@@ -225,32 +235,13 @@ struct source_selection {
     }
   }
 
-  std::vector<source_update> remove_from_document() const&&;
-
-  source_update insert_literal(literal_data_type type,
-                               std::string_view literal) const&& {
-    switch (type) {
-      case literal_data_type::variable_name:
-        [[fallthrough]];
-      case literal_data_type::identifier:
-        return std::move(*this)
-            .as_inserter<pasteboard_t::reference>()
-            .insert_literal(type, std::move(literal));
-      case literal_data_type::number:
-        [[fallthrough]];
-      case literal_data_type::string:
-        return std::move(*this)
-            .as_inserter<pasteboard_t::expression>()
-            .insert_literal(type, std::move(literal));
-    }
-  }
-
-  std::vector<source_update> replace_function_signature(
-      function_definition signature) const&&;
+  document_update remove_from_document() &&;
+  document_update insert_literal(literal_data_type type,
+                                 std::string_view literal) &&;
+  document_update replace_function_signature(function_definition signature) &&;
 
  private:
   document* _doc;
-  source_loc _loc;
   ast::base* _selection;
 
   template <typename node_type>
@@ -267,10 +258,6 @@ struct source_selection {
     }
   }
 
-  source_selection(document& doc, source_loc loc, ast::base& selection,
-                   selection_promotion_rule rule)
-      : _doc{&doc}, _loc{loc}, _selection{&rule(selection)} {}
-
   template <typename node_type>
   [[nodiscard]] literal_content get_literal_content(
       const node_type& node) const {
@@ -279,20 +266,10 @@ struct source_selection {
     return {literal_data_type::number, ""};
   }
 
-  source_update remove_line() const&& {
-    assert(is<pasteboard_t::block>() || is<pasteboard_t::statement>());
-    assert(_selection->has_parent());
-
-    source_range line_range{{_selection->source_code_range.begin.line, 1},
-                            {_selection->source_code_range.end.line + 1, 1}};
-    auto line_offset{static_cast<ptrdiff_t>(line_range.begin.line) -
-                     static_cast<ptrdiff_t>(line_range.end.line)};
-    _doc->update_source_line_after_node(*_selection, line_offset);
-    _doc->remove_line(*_selection);
-    return source_update{line_range, {"", {}}};
-  }
-
-  source_update remove_expression() const&&;
+  source_update remove_line(
+      std::optional<source_selection>& result_selection) &&;
+  source_update remove_expression(
+      std::optional<source_selection>& result_selection) &&;
 };
 
 template <>
@@ -336,6 +313,20 @@ source_selection::get_literal_content<ast::identifier>(
     const ast::identifier& node) const {
   return {literal_data_type::identifier, node.name};
 }
+
+struct document_update {
+  std::vector<source_update> source_updates;
+  std::optional<source_selection> selection_update;
+
+  document_update(
+      std::vector<source_update> _source_updates,
+      std::optional<source_selection> _selection_update = std::nullopt)
+      : source_updates{std::move(_source_updates)},
+        selection_update{std::move(_selection_update)} {}
+  document_update(
+      std::optional<source_selection> _selection_update = std::nullopt)
+      : selection_update{std::move(_selection_update)} {}
+};
 
 }  // namespace marlin::control
 
