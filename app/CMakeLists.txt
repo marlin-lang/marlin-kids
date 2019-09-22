@@ -30,7 +30,7 @@ set(SOURCES
     ToolboxViewController.mm
     Types.mm)
 
-set(RESOURCES exec_env.html)
+set(RESOURCES exec_env.html exec_env.js)
 
 if(IOS)
   set(HEADERS

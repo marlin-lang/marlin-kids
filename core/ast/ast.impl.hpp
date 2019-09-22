@@ -12,7 +12,8 @@ namespace marlin::ast {
 struct block {};
 struct statement {};
 struct expression {};
-struct lvalue {};
+struct reference {};
+struct lvalue : reference {};
 
 struct program : base::impl<program, subnode::vector> {
   [[nodiscard]] decltype(auto) blocks() { return get_subnode<0>(); }
@@ -251,7 +252,7 @@ struct user_function_call : base::impl<user_function_call, subnode::vector>,
   const function_definition* _func;
 };
 
-struct identifier : base::impl<identifier>, expression {
+struct identifier : base::impl<identifier>, expression, reference {
   std::string name;
 
   explicit identifier(std::string _name) : name{std::move(_name)} {}

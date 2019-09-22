@@ -35,9 +35,13 @@ constexpr double refreshTimeInMS = 40;
 
   [self.wkWebView.configuration.userContentController addScriptMessageHandler:self name:@"system"];
 
-  auto url = [[NSBundle mainBundle] URLForResource:@"exec_env" withExtension:@"html"];
-  auto request = [NSURLRequest requestWithURL:url];
-  [self.wkWebView loadRequest:request];
+  auto mainURL = [NSBundle.mainBundle URLForResource:@"exec_env" withExtension:@"html"];
+  auto jsPath = [NSBundle.mainBundle URLForResource:@"exec_env" withExtension:@"js"].absoluteString;
+  auto html = [[NSString stringWithContentsOfURL:mainURL encoding:NSUTF8StringEncoding error:nil]
+      stringByReplacingOccurrencesOfString:@"$ENV_JAVASCRIPT$"
+                                withString:jsPath];
+  NSLog(@"%@", html);
+  [self.wkWebView loadHTMLString:html baseURL:mainURL];
   [self.wkWebView addObserver:self forKeyPath:@"loading" options:0 context:nil];
 
   self.outputTextView.layer.borderWidth = 1;
