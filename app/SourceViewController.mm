@@ -76,9 +76,11 @@
 }
 
 - (void)showDuplicateViewControllerForSourceView:(SourceView *)view
-                                withDraggingData:(const DraggingData &)draggingData {
+                                      withString:(NSString *)string
+                                    draggingData:(const DraggingData &)draggingData {
   [self.toolboxViewController showDuplicateViewControllerForSourceView:view
-                                                      withDraggingData:draggingData];
+                                                            withString:string
+                                                          draggingData:draggingData];
 }
 
 - (void)showEditorViewControllerForSourceView:(SourceView *)view

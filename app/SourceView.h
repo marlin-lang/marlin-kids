@@ -29,7 +29,8 @@ NS_ASSUME_NONNULL_BEGIN
 - (void)sourceViewChanged:(SourceView *)view;
 
 - (void)showDuplicateViewControllerForSourceView:(SourceView *)view
-                                withDraggingData:(const DraggingData &)draggingData;
+                                      withString:(NSString *)string
+                                    draggingData:(const DraggingData &)draggingData;
 
 - (void)showEditorViewControllerForSourceView:(SourceView *)view
                                      withType:(marlin::control::literal_data_type)type

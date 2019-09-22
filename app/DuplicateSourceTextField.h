@@ -4,9 +4,11 @@
 
 NS_ASSUME_NONNULL_BEGIN
 
-@interface DuplicateSourceView : View
+@interface DuplicateSourceTextField : TextField
 
 @property DraggingData draggingData;
+
+- (void)setSourceString:(NSString*)sourceString;
 
 @end
 

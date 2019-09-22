@@ -343,13 +343,11 @@ struct DocumentGetter {
     if (_selection->is_removable()) {
       auto type = _selection->dragging_type();
       NSAssert(type.has_value(), @"");
-      [self.delegate
-          showDuplicateViewControllerForSourceView:self
-                                  withDraggingData:DraggingData{
-                                                       *type,
-                                                       [NSData
-                                                           dataWithDataView:_selection->get_data(
-                                                                                true)]}];
+      auto string = [self snapshotOfSelection:*_selection];
+      auto draggingData = DraggingData{*type, [NSData dataWithDataView:_selection->get_data(true)]};
+      [self.delegate showDuplicateViewControllerForSourceView:self
+                                                   withString:string
+                                                 draggingData:draggingData];
     } else {
       [self.delegate dismissChildViewControllersForSourceView:self];
     }
@@ -387,6 +385,33 @@ struct DocumentGetter {
     auto width = maxWidth + oneCharSize.width * inset * 2 - x;
     auto height = (range.end.line - range.begin.line + 1) * self.lineHeight;
     return CGRectMake(x, y, width, height);
+  }
+}
+
+- (NSString*)snapshotOfSelection:(const marlin::control::source_selection&)selection {
+  auto range = selection.get_range();
+  NSAssert(range.end.line >= range.begin.line, @"");
+  auto lines = range.end.line - range.begin.line;
+  if (range.end.column > range.begin.column) {
+    ++lines;
+  }
+  if (lines == 1) {
+    NSAttributedString* attrString = [_strings objectAtIndex:range.begin.line - 1];
+    return
+        [attrString.string substringWithRange:NSMakeRange(range.begin.column - 1,
+                                                          range.end.column - range.begin.column)];
+  } else if (lines > 1) {
+    auto string = [NSMutableString new];
+    NSAttributedString* attrString = [_strings objectAtIndex:range.begin.line - 1];
+    [string appendString:[attrString.string substringFromIndex:range.begin.column - 1]];
+    [string appendString:@"  ...  "];
+    auto endLine = range.end.column > range.begin.column ? range.end.line - 1 : range.end.line - 2;
+    attrString = [_strings objectAtIndex:endLine];
+    [string appendString:[attrString.string substringFromIndex:range.begin.column - 1]];
+    return string;
+  } else {
+    NSAssert(NO, @"");
+    return nil;
   }
 }
 

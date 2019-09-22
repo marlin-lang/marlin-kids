@@ -895,22 +895,27 @@
             <objects>
                 <viewController storyboardIdentifier="DuplicateViewController" id="Vwh-0X-uhS" customClass="DuplicateViewController" sceneMemberID="viewController">
                     <view key="view" id="RDI-ou-53N">
-                        <rect key="frame" x="0.0" y="0.0" width="354" height="100"/>
+                        <rect key="frame" x="0.0" y="0.0" width="200" height="87"/>
                         <autoresizingMask key="autoresizingMask"/>
                         <subviews>
                             <textField horizontalHuggingPriority="251" verticalHuggingPriority="750" translatesAutoresizingMaskIntoConstraints="NO" id="oNJ-QX-JCq">
-                                <rect key="frame" x="6" y="75" width="117" height="17"/>
+                                <rect key="frame" x="6" y="62" width="117" height="17"/>
                                 <textFieldCell key="cell" lineBreakMode="clipping" title="Drag to Duplicate" id="7KV-De-cFC">
                                     <font key="font" metaFont="systemBold"/>
                                     <color key="textColor" name="labelColor" catalog="System" colorSpace="catalog"/>
                                     <color key="backgroundColor" name="textBackgroundColor" catalog="System" colorSpace="catalog"/>
                                 </textFieldCell>
                             </textField>
-                            <customView translatesAutoresizingMaskIntoConstraints="NO" id="Omx-KX-6MK" customClass="DuplicateSourceView">
-                                <rect key="frame" x="8" y="37" width="338" height="30"/>
-                            </customView>
+                            <textField verticalHuggingPriority="750" horizontalCompressionResistancePriority="250" translatesAutoresizingMaskIntoConstraints="NO" id="9TP-Y1-Sm3" customClass="DuplicateSourceTextField">
+                                <rect key="frame" x="6" y="37" width="188" height="17"/>
+                                <textFieldCell key="cell" lineBreakMode="truncatingTail" alignment="center" title="Label" id="pHn-Af-FbV">
+                                    <font key="font" metaFont="system"/>
+                                    <color key="textColor" name="labelColor" catalog="System" colorSpace="catalog"/>
+                                    <color key="backgroundColor" name="textBackgroundColor" catalog="System" colorSpace="catalog"/>
+                                </textFieldCell>
+                            </textField>
                             <button verticalHuggingPriority="750" translatesAutoresizingMaskIntoConstraints="NO" id="kPD-SL-g4t">
-                                <rect key="frame" x="2" y="1" width="350" height="32"/>
+                                <rect key="frame" x="2" y="1" width="196" height="32"/>
                                 <buttonCell key="cell" type="push" title="Delete" bezelStyle="rounded" alignment="center" borderStyle="border" imageScaling="proportionallyDown" inset="2" id="kmh-3z-Ie7">
                                     <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
                                     <font key="font" metaFont="system"/>
@@ -922,35 +927,35 @@
                         </subviews>
                         <constraints>
                             <constraint firstAttribute="trailing" relation="greaterThanOrEqual" secondItem="oNJ-QX-JCq" secondAttribute="trailing" constant="20" symbolic="YES" id="8Xx-S5-gdX"/>
-                            <constraint firstItem="Omx-KX-6MK" firstAttribute="top" secondItem="oNJ-QX-JCq" secondAttribute="bottom" constant="8" symbolic="YES" id="JjH-BL-5aS"/>
+                            <constraint firstItem="kPD-SL-g4t" firstAttribute="top" secondItem="9TP-Y1-Sm3" secondAttribute="bottom" constant="8" symbolic="YES" id="HNa-DT-BSD"/>
+                            <constraint firstAttribute="trailing" secondItem="9TP-Y1-Sm3" secondAttribute="trailing" constant="8" id="Lfl-rF-D2M"/>
+                            <constraint firstItem="9TP-Y1-Sm3" firstAttribute="leading" secondItem="RDI-ou-53N" secondAttribute="leading" constant="8" id="SuZ-FJ-tPv"/>
                             <constraint firstAttribute="bottom" secondItem="kPD-SL-g4t" secondAttribute="bottom" constant="8" id="TgF-gN-NbA"/>
                             <constraint firstAttribute="trailing" secondItem="kPD-SL-g4t" secondAttribute="trailing" constant="8" id="VYB-ke-WOG"/>
                             <constraint firstItem="oNJ-QX-JCq" firstAttribute="top" secondItem="RDI-ou-53N" secondAttribute="top" constant="8" id="W0q-cQ-cXY"/>
-                            <constraint firstAttribute="trailing" secondItem="Omx-KX-6MK" secondAttribute="trailing" constant="8" id="YzW-rA-X9q"/>
-                            <constraint firstItem="kPD-SL-g4t" firstAttribute="top" secondItem="Omx-KX-6MK" secondAttribute="bottom" constant="8" id="utl-5D-x06"/>
-                            <constraint firstItem="Omx-KX-6MK" firstAttribute="leading" secondItem="RDI-ou-53N" secondAttribute="leading" constant="8" id="v3s-4t-ZOs"/>
+                            <constraint firstItem="9TP-Y1-Sm3" firstAttribute="top" secondItem="oNJ-QX-JCq" secondAttribute="bottom" constant="8" symbolic="YES" id="buv-31-Mca"/>
                             <constraint firstItem="kPD-SL-g4t" firstAttribute="leading" secondItem="RDI-ou-53N" secondAttribute="leading" constant="8" id="xHx-jw-mcw"/>
                             <constraint firstItem="oNJ-QX-JCq" firstAttribute="leading" secondItem="RDI-ou-53N" secondAttribute="leading" constant="8" id="yUG-cR-RfY"/>
                         </constraints>
                     </view>
                     <connections>
-                        <outlet property="sourceView" destination="Omx-KX-6MK" id="Xfk-dJ-j3F"/>
+                        <outlet property="sourceTextField" destination="9TP-Y1-Sm3" id="Dsy-6y-bnH"/>
                     </connections>
                 </viewController>
                 <customObject id="99o-2Y-cwe" userLabel="First Responder" customClass="NSResponder" sceneMemberID="firstResponder"/>
             </objects>
-            <point key="canvasLocation" x="1064" y="119"/>
+            <point key="canvasLocation" x="987" y="108"/>
         </scene>
         <!--Mac Editor View Controller-->
         <scene sceneID="lhX-jc-yF0">
             <objects>
                 <viewController storyboardIdentifier="EditorViewController" id="4i3-Bv-Vby" customClass="MacEditorViewController" sceneMemberID="viewController">
                     <view key="view" id="VRC-G5-jHx">
-                        <rect key="frame" x="0.0" y="0.0" width="354" height="68"/>
+                        <rect key="frame" x="0.0" y="0.0" width="200" height="68"/>
                         <autoresizingMask key="autoresizingMask"/>
                         <subviews>
                             <segmentedControl verticalHuggingPriority="750" translatesAutoresizingMaskIntoConstraints="NO" id="SYm-sg-hJ1">
-                                <rect key="frame" x="166" y="37" width="22" height="23"/>
+                                <rect key="frame" x="89" y="37" width="22" height="23"/>
                                 <segmentedCell key="cell" borderStyle="border" alignment="left" style="capsule" trackingMode="selectOne" id="vOc-rD-gO6">
                                     <font key="font" metaFont="system"/>
                                     <segments>
@@ -962,7 +967,7 @@
                                 </connections>
                             </segmentedControl>
                             <textField verticalHuggingPriority="750" translatesAutoresizingMaskIntoConstraints="NO" id="qmm-Wt-gtk">
-                                <rect key="frame" x="8" y="8" width="283" height="22"/>
+                                <rect key="frame" x="8" y="8" width="129" height="22"/>
                                 <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" selectable="YES" editable="YES" sendsActionOnEndEditing="YES" borderStyle="bezel" drawsBackground="YES" id="OQN-pQ-L4F">
                                     <font key="font" metaFont="system"/>
                                     <color key="textColor" name="controlTextColor" catalog="System" colorSpace="catalog"/>
@@ -970,7 +975,7 @@
                                 </textFieldCell>
                             </textField>
                             <button verticalHuggingPriority="750" translatesAutoresizingMaskIntoConstraints="NO" id="xyi-eb-Mef">
-                                <rect key="frame" x="293" y="2" width="59" height="32"/>
+                                <rect key="frame" x="139" y="2" width="59" height="32"/>
                                 <buttonCell key="cell" type="push" title="OK" bezelStyle="rounded" alignment="center" borderStyle="border" imageScaling="proportionallyDown" inset="2" id="xrW-tL-mbE">
                                     <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
                                     <font key="font" metaFont="system"/>
@@ -1002,14 +1007,14 @@ DQ
                 </viewController>
                 <customObject id="hQs-OE-asr" userLabel="First Responder" customClass="NSResponder" sceneMemberID="firstResponder"/>
             </objects>
-            <point key="canvasLocation" x="1064" y="338"/>
+            <point key="canvasLocation" x="987" y="324"/>
         </scene>
         <!--Mac Function View Controller-->
         <scene sceneID="sQh-R1-erl">
             <objects>
                 <viewController storyboardIdentifier="FunctionViewController" id="QAI-D9-tXQ" customClass="MacFunctionViewController" sceneMemberID="viewController">
                     <view key="view" id="gNP-RQ-1cB">
-                        <rect key="frame" x="0.0" y="0.0" width="354" height="200"/>
+                        <rect key="frame" x="0.0" y="0.0" width="200" height="200"/>
                         <autoresizingMask key="autoresizingMask"/>
                         <subviews>
                             <textField horizontalHuggingPriority="251" verticalHuggingPriority="750" translatesAutoresizingMaskIntoConstraints="NO" id="Mbx-u2-p2b">
@@ -1021,7 +1026,7 @@ DQ
                                 </textFieldCell>
                             </textField>
                             <textField verticalHuggingPriority="750" translatesAutoresizingMaskIntoConstraints="NO" id="mah-DF-mva">
-                                <rect key="frame" x="56" y="141" width="290" height="22"/>
+                                <rect key="frame" x="56" y="141" width="136" height="22"/>
                                 <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" selectable="YES" editable="YES" sendsActionOnEndEditing="YES" borderStyle="bezel" drawsBackground="YES" id="emj-6L-dZV">
                                     <font key="font" metaFont="system"/>
                                     <color key="textColor" name="controlTextColor" catalog="System" colorSpace="catalog"/>
@@ -1045,7 +1050,7 @@ DQ
                                 </textFieldCell>
                             </textField>
                             <button verticalHuggingPriority="750" translatesAutoresizingMaskIntoConstraints="NO" id="9rp-g9-nvX">
-                                <rect key="frame" x="287" y="105" width="65" height="32"/>
+                                <rect key="frame" x="133" y="105" width="65" height="32"/>
                                 <buttonCell key="cell" type="push" title="Add" bezelStyle="rounded" alignment="center" borderStyle="border" imageScaling="proportionallyDown" inset="2" id="iMp-I0-hzq">
                                     <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
                                     <font key="font" metaFont="system"/>
@@ -1055,13 +1060,13 @@ DQ
                                 </connections>
                             </button>
                             <scrollView wantsLayer="YES" autohidesScrollers="YES" horizontalLineScroll="10" horizontalPageScroll="10" verticalLineScroll="10" verticalPageScroll="10" hasHorizontalScroller="NO" usesPredominantAxisScrolling="NO" translatesAutoresizingMaskIntoConstraints="NO" id="HUo-Xg-aKN">
-                                <rect key="frame" x="8" y="8" width="338" height="96"/>
+                                <rect key="frame" x="8" y="8" width="184" height="96"/>
                                 <clipView key="contentView" drawsBackground="NO" id="u5f-Tt-6Ze">
-                                    <rect key="frame" x="1" y="1" width="336" height="94"/>
+                                    <rect key="frame" x="1" y="1" width="182" height="94"/>
                                     <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                                     <subviews>
                                         <collectionView id="Lkg-dh-hhY">
-                                            <rect key="frame" x="0.0" y="0.0" width="336" height="94"/>
+                                            <rect key="frame" x="0.0" y="0.0" width="182" height="94"/>
                                             <autoresizingMask key="autoresizingMask" widthSizable="YES"/>
                                             <collectionViewFlowLayout key="collectionViewLayout" minimumInteritemSpacing="10" minimumLineSpacing="10" id="Wn2-UG-BlD">
                                                 <size key="itemSize" width="50" height="50"/>
@@ -1084,7 +1089,7 @@ DQ
                                 </scroller>
                             </scrollView>
                             <button verticalHuggingPriority="750" translatesAutoresizingMaskIntoConstraints="NO" id="A5L-4d-DRT">
-                                <rect key="frame" x="293" y="164" width="59" height="32"/>
+                                <rect key="frame" x="139" y="164" width="59" height="32"/>
                                 <buttonCell key="cell" type="push" title="OK" bezelStyle="rounded" alignment="center" borderStyle="border" imageScaling="proportionallyDown" inset="2" id="lWY-AA-un4">
                                     <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
                                     <font key="font" metaFont="system"/>
@@ -1127,7 +1132,7 @@ DQ
                 </viewController>
                 <customObject id="ENS-aX-JLj" userLabel="First Responder" customClass="NSResponder" sceneMemberID="firstResponder"/>
             </objects>
-            <point key="canvasLocation" x="1064" y="586"/>
+            <point key="canvasLocation" x="987" y="586"/>
         </scene>
         <!--Execute View Controller-->
         <scene sceneID="IsG-yF-NLp">
