@@ -15,6 +15,33 @@
 
 namespace marlin::control {
 
+namespace details {
+
+template <pasteboard_t node_type>
+struct ast_tag {};
+
+template <>
+struct ast_tag<pasteboard_t::block> {
+  using type = ast::block;
+};
+
+template <>
+struct ast_tag<pasteboard_t::statement> {
+  using type = ast::statement;
+};
+
+template <>
+struct ast_tag<pasteboard_t::expression> {
+  using type = ast::expression;
+};
+
+template <>
+struct ast_tag<pasteboard_t::reference> {
+  using type = ast::reference;
+};
+
+}  // namespace details
+
 using selection_promotion_rule = ast::base& (*)(ast::base&);
 
 constexpr selection_promotion_rule default_rule =
@@ -113,19 +140,9 @@ struct source_selection {
     return signature;
   }
 
-  [[nodiscard]] bool is_block() const {
-    return _selection->inherits<ast::block>();
-  }
-  [[nodiscard]] bool is_statement() const {
-    return _selection->inherits<ast::statement>();
-  }
-  [[nodiscard]] bool is_expression() const {
-    return _selection->inherits<ast::expression>();
-  }
-
-  [[nodiscard]] bool is_reference() const {
-    return _selection->is<ast::variable_name>() ||
-           _selection->is<ast::identifier>();
+  template <pasteboard_t node_type>
+  [[nodiscard]] bool is() const {
+    return _selection->inherits<details::ast_tag<node_type>>();
   }
 
   [[nodiscard]] bool is_function_signature() const {
@@ -151,19 +168,19 @@ struct source_selection {
   }
 
   [[nodiscard]] std::optional<pasteboard_t> dragging_type() const {
-    if (is_block()) {
+    if (is<pasteboard_t::block>()) {
       if (_selection->is<ast::on_start>()) {
         return std::nullopt;
       } else {
         return pasteboard_t::block;
       }
-    } else if (is_statement()) {
+    } else if (is<pasteboard_t::statement>()) {
       return pasteboard_t::statement;
-    } else if (is_reference()) {
+    } else if (is<pasteboard_t::reference>()) {
       // Must check reference before expression, because ast::identifier etc.
       // are both, and needs to be considered as reference
       return pasteboard_t::reference;
-    } else if (is_expression()) {
+    } else if (is<pasteboard_t::expression>()) {
       return pasteboard_t::expression;
     } else {
       return std::nullopt;
@@ -172,7 +189,18 @@ struct source_selection {
 
   template <pasteboard_t node_type, typename = expr_enable_t<node_type>>
   [[nodiscard]] expr_inserter<node_type> as_inserter() const&& {
-    assert(expr_inserter<node_type>::placeholder_test(*_selection));
+    if constexpr (node_type == pasteboard_t::expression) {
+      assert(_selection->is<ast::expression_placeholder>() ||
+             _selection->is<ast::number_literal>() ||
+             _selection->is<ast::string_literal>() ||
+             _selection->is<ast::identifier>());
+    } else if constexpr (node_type == pasteboard_t::reference) {
+      // is_literal includes the case of being placeholders
+      assert(is_literal());
+    } else {
+      // Should not happen
+      static_assert(details::dependent_false<node_type>::value);
+    }
     return {*_doc, _loc, *_selection};
   }
 
@@ -181,7 +209,7 @@ struct source_selection {
   [[nodiscard]] line_update removal_line_update() const {
     assert(dragging_type().has_value());
 
-    if (is_block() || is_statement()) {
+    if (is<pasteboard_t::block>() || is<pasteboard_t::statement>()) {
       const auto range{_selection->source_code_range};
       return {range.end.line + 1, range.begin.line - range.end.line - 1};
     } else {
@@ -244,7 +272,7 @@ struct source_selection {
   }
 
   source_update remove_line() const&& {
-    assert(is_block() || is_statement());
+    assert(is<pasteboard_t::block>() || is<pasteboard_t::statement>());
     assert(_selection->has_parent());
 
     source_range line_range{{_selection->source_code_range.begin.line, 1},

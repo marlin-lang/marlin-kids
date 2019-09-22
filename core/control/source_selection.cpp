@@ -8,7 +8,7 @@ std::vector<source_update> source_selection::remove_from_document() const&& {
 
   _doc->start_recording_side_effects();
 
-  if (is_block()) {
+  if (is<pasteboard_t::block>()) {
     if (!_selection->is<ast::on_start>()) {
       if (_selection->is<ast::function>()) {
         auto& signature = *_selection->as<ast::function>().signature();
@@ -19,9 +19,9 @@ std::vector<source_update> source_selection::remove_from_document() const&& {
 
       updates.emplace_back(std::move(*this).remove_line());
     }
-  } else if (is_statement()) {
+  } else if (is<pasteboard_t::statement>()) {
     updates.emplace_back(std::move(*this).remove_line());
-  } else if (is_reference() || is_expression()) {
+  } else if (is<pasteboard_t::expression>() || is<pasteboard_t::reference>()) {
     updates.emplace_back(std::move(*this).remove_expression());
   } else {
     // These things are not draggable
@@ -33,7 +33,7 @@ std::vector<source_update> source_selection::remove_from_document() const&& {
 }
 
 source_update source_selection::remove_expression() const&& {
-  assert(is_reference() || is_expression());
+  assert(is<pasteboard_t::expression>() || is<pasteboard_t::reference>());
   assert(_selection->has_parent());
 
   format::in_place_formatter formatter;
@@ -59,8 +59,7 @@ source_update source_selection::remove_expression() const&& {
 
   auto original_range{_selection->source_code_range};
 
-  auto placeholder{_selection->is<ast::variable_placeholder>() ||
-                           _selection->inherits<ast::lvalue>()
+  auto placeholder{_selection->inherits<ast::lvalue>()
                        ? ast::make<ast::variable_placeholder>(
                              std::string{std::move(placeholder_name)})
                        : ast::make<ast::expression_placeholder>(

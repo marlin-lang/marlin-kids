@@ -35,7 +35,7 @@ constexpr double refreshTimeInMS = 40;
 
   [self.wkWebView.configuration.userContentController addScriptMessageHandler:self name:@"system"];
 
-  auto url = [[NSBundle mainBundle] URLForResource:@"exec_env" withExtension:@"html"];
+  auto url = [NSBundle.mainBundle URLForResource:@"exec_env" withExtension:@"html"];
   auto request = [NSURLRequest requestWithURL:url];
   [self.wkWebView loadRequest:request];
   [self.wkWebView addObserver:self forKeyPath:@"loading" options:0 context:nil];
