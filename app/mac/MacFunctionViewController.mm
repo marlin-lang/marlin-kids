@@ -43,8 +43,8 @@
 
 - (IBAction)okButtonPressed:(id)sender {
   [self.delegate functionViewController:self
-          finishEditingWithName:self.nameTextField.stringValue
-                     parameters:_parameters];
+                  finishEditingWithName:self.nameTextField.stringValue
+                             parameters:_parameters];
 }
 
 - (IBAction)addButtonPressed:(id)sender {
@@ -114,14 +114,11 @@
 #pragma mark - NSTextFieldDelegate
 
 - (void)controlTextDidChange:(NSNotification *)obj {
-  [self validateForTextField:[NSTextField cast:obj.object]];
-}
-
-- (void)controlTextDidEndEditing:(NSNotification *)obj {
   auto textField = [NSTextField cast:obj.object];
   if (textField.tag >= 0) {
     [_parameters replaceObjectAtIndex:textField.tag withObject:[textField.stringValue copy]];
   }
+  [self validateForTextField:textField];
 }
 
 @end

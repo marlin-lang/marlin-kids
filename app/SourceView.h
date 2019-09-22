@@ -33,7 +33,7 @@ struct DraggingData {
 
 - (void)sourceViewChanged:(SourceView *)view;
 
-- (void)showDuplicateViewControllerForSourceView:(SourceView*)view;
+- (void)showDuplicateViewControllerForSourceView:(SourceView *)view;
 
 - (void)showEditorViewControllerForSourceView:(SourceView *)view
                                      withType:(marlin::control::literal_data_type)type
@@ -48,7 +48,7 @@ struct DraggingData {
 
 @end
 
-@interface SourceView : View <EditorViewControllerDelegate, FunctionViewControllerDelegate>
+@interface SourceView : View<EditorViewControllerDelegate, FunctionViewControllerDelegate>
 
 @property(weak) id<SourceViewDataSource> dataSource;
 @property(weak) id<SourceViewDelegate> delegate;

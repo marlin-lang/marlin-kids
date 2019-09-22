@@ -76,7 +76,7 @@
 }
 
 - (void)showDuplicateViewControllerForSourceView:(SourceView *)view {
-    [self.toolboxViewController showDuplicateViewControllerForSourceView:view];
+  [self.toolboxViewController showDuplicateViewControllerForSourceView:view];
 }
 
 - (void)showEditorViewControllerForSourceView:(SourceView *)view
@@ -92,11 +92,11 @@
 }
 
 - (void)dismissEditorViewControllerForSourceView:(SourceView *)view {
-    [self.toolboxViewController dismissEditorViewController];
+  [self.toolboxViewController dismissEditorViewController];
 }
 
 - (void)dismissChildViewControllersForSourceView:(SourceView *)view {
-    [self.toolboxViewController dismissChildViewControllers];
+  [self.toolboxViewController dismissChildViewControllers];
 }
 
 @end

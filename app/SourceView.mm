@@ -191,14 +191,14 @@ struct DocumentGetter {
   } else {
     _selection.reset();
   }
-    [self.delegate dismissChildViewControllersForSourceView:self];
+  [self.delegate dismissChildViewControllersForSourceView:self];
 }
 
 #pragma mark - FunctionViewControllerDelegate
 
 - (void)functionViewController:(FunctionViewController*)vc
-    finishEditingWithName:(NSString*)name
-               parameters:(NSArray<NSString*>*)parameters {
+         finishEditingWithName:(NSString*)name
+                    parameters:(NSArray<NSString*>*)parameters {
   if (_selection.has_value()) {
     marlin::function_definition signature{std::string{name.stringView}};
     for (NSString* parameter in parameters) {
@@ -211,7 +211,7 @@ struct DocumentGetter {
   } else {
     _selection.reset();
   }
-    [self.delegate dismissChildViewControllersForSourceView:self];
+  [self.delegate dismissChildViewControllersForSourceView:self];
 }
 
 #pragma mark - Private methods
@@ -333,7 +333,7 @@ struct DocumentGetter {
 
 - (void)touchUp {
   if (_selection.has_value()) {
-      [self.delegate showDuplicateViewControllerForSourceView:self];
+    [self.delegate showDuplicateViewControllerForSourceView:self];
     if (_selection->is_literal()) {
       auto [type, data] = _selection->get_literal_content();
       [self.delegate showEditorViewControllerForSourceView:self withType:type data:data];
