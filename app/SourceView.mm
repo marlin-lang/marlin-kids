@@ -179,11 +179,18 @@ struct DocumentGetter {
   [self setNeedsDisplay:YES];
 }
 
+#pragma mark - DuplicateViewControllerDelegate
+
+- (void)performDeleteForDuplicateViewController:(DuplicateViewController*)vc {
+  [self removeSelection:_selection];
+  [self.delegate dismissChildViewControllersForSourceView:self];
+}
+
 #pragma mark - EditorViewControllerDelegate
 
-- (void)viewController:(EditorViewController*)vc
-    finishEditWithString:(NSString*)string
-                  ofType:(EditorType)type {
+- (void)editorViewController:(EditorViewController*)vc
+        finishEditWithString:(NSString*)string
+                      ofType:(EditorType)type {
   if (_selection.has_value()) {
     auto update =
         (*std::exchange(_selection, std::nullopt)).insert_literal(type, string.stringView);
@@ -333,7 +340,11 @@ struct DocumentGetter {
 
 - (void)touchUp {
   if (_selection.has_value()) {
-    [self.delegate showDuplicateViewControllerForSourceView:self];
+    if (_selection->is_removable()) {
+      [self.delegate showDuplicateViewControllerForSourceView:self];
+    } else {
+      [self.delegate dismissChildViewControllersForSourceView:self];
+    }
     if (_selection->is_literal()) {
       auto [type, data] = _selection->get_literal_content();
       [self.delegate showEditorViewControllerForSourceView:self withType:type data:data];
@@ -411,7 +422,7 @@ struct DocumentGetter {
        removingCurrentSource:(BOOL)removing {
   NSAssert(_inserter.has_value(), @"");
   if (removing) {
-    auto lineUpdate = [self removeDraggingSelection];
+    auto lineUpdate = [self removeSelection:_draggingSelection];
     _inserter->update_lines(std::move(lineUpdate));
   }
   auto update = _inserter->insert(type, data.dataView);
@@ -421,19 +432,20 @@ struct DocumentGetter {
 }
 
 - (BOOL)removeDraggingSource {
-  return [self removeDraggingSelection].start_line > 0;
+  return [self removeSelection:_draggingSelection].start_line > 0;
 }
 
-- (marlin::control::line_update)removeDraggingSelection {
-  if (_draggingSelection.has_value()) {
-    if (_draggingSelection->is_removable()) {
-      auto line_update = _draggingSelection->removal_line_update();
-      auto updates = (*std::exchange(_draggingSelection, std::nullopt)).remove_from_document();
+- (marlin::control::line_update)removeSelection:
+    (std::optional<marlin::control::source_selection>&)selection {
+  if (selection.has_value()) {
+    if (selection->is_removable()) {
+      auto line_update = selection->removal_line_update();
+      auto updates = (*std::exchange(selection, std::nullopt)).remove_from_document();
       [self performUpdates:std::move(updates)];
       return line_update;
     } else {
       assert(false);
-      _draggingSelection.reset();
+      selection.reset();
     }
   }
   return {};

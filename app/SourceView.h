@@ -9,6 +9,7 @@
 #include "prototypes.hpp"
 
 #import "Document.h"
+#import "DuplicateViewController.h"
 #import "EditorViewController.h"
 #import "FunctionViewController.h"
 
@@ -48,7 +49,9 @@ struct DraggingData {
 
 @end
 
-@interface SourceView : View<EditorViewControllerDelegate, FunctionViewControllerDelegate>
+@interface SourceView : View <DuplicateViewControllerDelegate,
+                              EditorViewControllerDelegate,
+                              FunctionViewControllerDelegate>
 
 @property(weak) id<SourceViewDataSource> dataSource;
 @property(weak) id<SourceViewDelegate> delegate;
