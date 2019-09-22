@@ -5,11 +5,11 @@
 namespace marlin::control {
 
 template <pasteboard_t node_type, typename enable_type>
-std::vector<source_update> line_inserter<node_type, enable_type>::insert(
+document_update line_inserter<node_type, enable_type>::insert(
     store::data_view data) {
   assert(_loc.has_value());
 
-  std::vector<source_update> updates;
+  document_update updates;
   _doc->start_recording_side_effects();
 
   std::optional<store::reconstruction_result> try_result;
@@ -26,23 +26,26 @@ std::vector<source_update> line_inserter<node_type, enable_type>::insert(
                          result.nodes.back()->source_code_range.end.line) +
                      1 - static_cast<ptrdiff_t>(_loc->line)};
 
+    // For now, we only support selecting one node
+    assert(result.nodes.size() == 1);
+    updates.selection_update = source_selection{*_doc, *result.nodes[0]};
+
     for (auto& node : result.nodes) {
       _loc->block.emplace(_loc->index, std::move(node));
     }
     _doc->update_source_line_after_node(*_loc->block[_loc->index], line_offset);
 
-    updates.emplace_back(source_range{{_loc->line, 1}, {_loc->line, 1}},
-                         std::move(result.display));
+    updates.source_updates.emplace_back(
+        source_range{{_loc->line, 1}, {_loc->line, 1}},
+        std::move(result.display));
   }
 
-  _doc->gather_side_effects(updates);
+  _doc->gather_side_effects(updates.source_updates);
   return updates;
 }
 
-template std::vector<source_update> block_inserter::insert(
-    store::data_view data);
-template std::vector<source_update> statement_inserter::insert(
-    store::data_view data);
+template document_update block_inserter::insert(store::data_view data);
+template document_update statement_inserter::insert(store::data_view data);
 
 template <pasteboard_t node_type, typename enable_type>
 template <pasteboard_t element_type, typename>

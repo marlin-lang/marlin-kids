@@ -47,7 +47,7 @@ struct line_inserter {
     }
   }
 
-  std::vector<source_update> insert(store::data_view data);
+  document_update insert(store::data_view data);
 
  private:
   struct location {

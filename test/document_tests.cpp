@@ -32,8 +32,9 @@ TEST_CASE("control::Insert statement in empty document", "[control]") {
   inserter.move_to_line(2);
   REQUIRE(inserter.can_insert());
   auto update = inserter.insert(assignment_prototype.data);
-  REQUIRE(update.size() == 1);
-  CHECK(update[0].display.source == "  @variable = @value;\n");
+  CHECK(update.selection_update.has_value());
+  REQUIRE(update.source_updates.size() == 1);
+  CHECK(update.source_updates[0].display.source == "  @variable = @value;\n");
 }
 
 TEST_CASE("control::Insert number literal at placeholder", "[control]") {
@@ -54,15 +55,17 @@ TEST_CASE("control::Insert number literal at placeholder", "[control]") {
   auto update =
       std::move(expr_inserter)
           .insert_literal(marlin::control::literal_data_type::number, "12");
-  REQUIRE(update.display.source == "12");
-  REQUIRE(update.range.begin.line == 2);
-  REQUIRE(update.range.begin.column == 15);
-  REQUIRE(update.range.end.line == 2);
-  REQUIRE(update.range.end.column == 21);
+  CHECK(update.selection_update.has_value());
+  REQUIRE(update.source_updates.size() == 1);
+  REQUIRE(update.source_updates[0].display.source == "12");
+  REQUIRE(update.source_updates[0].range.begin.line == 2);
+  REQUIRE(update.source_updates[0].range.begin.column == 15);
+  REQUIRE(update.source_updates[0].range.end.line == 2);
+  REQUIRE(update.source_updates[0].range.end.column == 21);
 
   auto &declaration = document.locate({2, 13});
-  REQUIRE(declaration.is<marlin::ast::assignment>());
-  REQUIRE(declaration.source_code_range.end.column == 18);
+  CHECK(declaration.is<marlin::ast::assignment>());
+  CHECK(declaration.source_code_range.end.column == 18);
 }
 
 TEST_CASE("control::Insert string literal at placeholder", "[control]") {
@@ -83,11 +86,13 @@ TEST_CASE("control::Insert string literal at placeholder", "[control]") {
   auto update =
       std::move(expr_inserter)
           .insert_literal(marlin::control::literal_data_type::string, "12");
-  REQUIRE(update.display.source == "\"12\"");
-  REQUIRE(update.range.begin.line == 2);
-  REQUIRE(update.range.begin.column == 15);
-  REQUIRE(update.range.end.line == 2);
-  REQUIRE(update.range.end.column == 21);
+  CHECK(update.selection_update.has_value());
+  REQUIRE(update.source_updates.size() == 1);
+  REQUIRE(update.source_updates[0].display.source == "\"12\"");
+  REQUIRE(update.source_updates[0].range.begin.line == 2);
+  REQUIRE(update.source_updates[0].range.begin.column == 15);
+  REQUIRE(update.source_updates[0].range.end.line == 2);
+  REQUIRE(update.source_updates[0].range.end.column == 21);
 
   auto &declaration = document.locate({2, 13});
   REQUIRE(declaration.is<marlin::ast::assignment>());
@@ -107,23 +112,25 @@ TEST_CASE("control::Insert binary expressions at placeholder", "[control]") {
   expr_inserter.move_to_loc({2, 20});
   REQUIRE(expr_inserter.can_insert());
   auto update = std::move(expr_inserter).insert(add_prototype.data);
-  REQUIRE(update.size() == 1);
-  REQUIRE(update[0].display.source == "@left + @right");
-  REQUIRE(update[0].range.begin.line == 2);
-  REQUIRE(update[0].range.begin.column == 15);
-  REQUIRE(update[0].range.end.line == 2);
-  REQUIRE(update[0].range.end.column == 21);
+  CHECK(update.selection_update.has_value());
+  REQUIRE(update.source_updates.size() == 1);
+  REQUIRE(update.source_updates[0].display.source == "@left + @right");
+  REQUIRE(update.source_updates[0].range.begin.line == 2);
+  REQUIRE(update.source_updates[0].range.begin.column == 15);
+  REQUIRE(update.source_updates[0].range.end.line == 2);
+  REQUIRE(update.source_updates[0].range.end.column == 21);
 
   expr_inserter = {document};
   expr_inserter.move_to_loc({2, 27});
   REQUIRE(expr_inserter.can_insert());
   auto inner_update = std::move(expr_inserter).insert(subtract_prototype.data);
-  REQUIRE(inner_update.size() == 1);
-  REQUIRE(inner_update[0].display.source == "(@left - @right)");
-  REQUIRE(inner_update[0].range.begin.line == 2);
-  REQUIRE(inner_update[0].range.begin.column == 23);
-  REQUIRE(inner_update[0].range.end.line == 2);
-  REQUIRE(inner_update[0].range.end.column == 29);
+  CHECK(inner_update.selection_update.has_value());
+  REQUIRE(inner_update.source_updates.size() == 1);
+  REQUIRE(inner_update.source_updates[0].display.source == "(@left - @right)");
+  REQUIRE(inner_update.source_updates[0].range.begin.line == 2);
+  REQUIRE(inner_update.source_updates[0].range.begin.column == 23);
+  REQUIRE(inner_update.source_updates[0].range.end.line == 2);
+  REQUIRE(inner_update.source_updates[0].range.end.column == 29);
 
   auto &declaration = document.locate({2, 13});
   REQUIRE(declaration.is<marlin::ast::assignment>());
@@ -143,23 +150,25 @@ TEST_CASE("control::Insert unary expressions at placeholder", "[control]") {
   expr_inserter.move_to_loc({2, 20});
   REQUIRE(expr_inserter.can_insert());
   auto update = std::move(expr_inserter).insert(negative_prototype.data);
-  REQUIRE(update.size() == 1);
-  REQUIRE(update[0].display.source == "-@argument");
-  REQUIRE(update[0].range.begin.line == 2);
-  REQUIRE(update[0].range.begin.column == 15);
-  REQUIRE(update[0].range.end.line == 2);
-  REQUIRE(update[0].range.end.column == 21);
+  CHECK(update.selection_update.has_value());
+  REQUIRE(update.source_updates.size() == 1);
+  REQUIRE(update.source_updates[0].display.source == "-@argument");
+  REQUIRE(update.source_updates[0].range.begin.line == 2);
+  REQUIRE(update.source_updates[0].range.begin.column == 15);
+  REQUIRE(update.source_updates[0].range.end.line == 2);
+  REQUIRE(update.source_updates[0].range.end.column == 21);
 
   expr_inserter = {document};
   expr_inserter.move_to_loc({2, 19});
   REQUIRE(expr_inserter.can_insert());
   auto inner_update = std::move(expr_inserter).insert(multiply_prototype.data);
-  REQUIRE(inner_update.size() == 1);
-  REQUIRE(inner_update[0].display.source == "(@left * @right)");
-  REQUIRE(inner_update[0].range.begin.line == 2);
-  REQUIRE(inner_update[0].range.begin.column == 16);
-  REQUIRE(inner_update[0].range.end.line == 2);
-  REQUIRE(inner_update[0].range.end.column == 25);
+  CHECK(inner_update.selection_update.has_value());
+  REQUIRE(inner_update.source_updates.size() == 1);
+  REQUIRE(inner_update.source_updates[0].display.source == "(@left * @right)");
+  REQUIRE(inner_update.source_updates[0].range.begin.line == 2);
+  REQUIRE(inner_update.source_updates[0].range.begin.column == 16);
+  REQUIRE(inner_update.source_updates[0].range.end.line == 2);
+  REQUIRE(inner_update.source_updates[0].range.end.column == 25);
 
   auto &declaration = document.locate({2, 13});
   REQUIRE(declaration.is<marlin::ast::assignment>());
@@ -184,8 +193,9 @@ TEST_CASE("control::Remove expressions", "[control]") {
   marlin::control::source_selection literal_selection{document, {2, 7}};
   REQUIRE(literal_selection.is_literal());
   auto removal = std::move(literal_selection).remove_from_document();
-  REQUIRE(removal.size() == 1);
-  auto remove_update = std::move(removal[0]);
+  REQUIRE(removal.selection_update.has_value());
+  REQUIRE(removal.source_updates.size() == 1);
+  auto remove_update = std::move(removal.source_updates[0]);
   REQUIRE(remove_update.display.source == "@condition");
   REQUIRE(remove_update.range.begin.line == 2);
   REQUIRE(remove_update.range.begin.column == 7);

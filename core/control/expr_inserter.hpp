@@ -2,6 +2,7 @@
 #define marlin_control_expr_inserter_hpp
 
 #include <type_traits>
+#include <utility>
 #include <vector>
 
 #include "ast.hpp"
@@ -21,6 +22,7 @@ struct dependent_false : std::false_type {};
 
 enum struct literal_data_type { variable_name, identifier, number, string };
 
+struct document_update;
 struct source_selection;
 
 template <pasteboard_t node_type>
@@ -30,6 +32,8 @@ using expr_enable_t = std::enable_if_t<node_type == pasteboard_t::expression ||
 template <pasteboard_t node_type, typename = expr_enable_t<node_type>>
 struct expr_inserter {
   friend source_selection;
+  template <typename document_getter>
+  friend struct source_inserters;
 
   static bool placeholder_test(const ast::base& node) {
     if constexpr (node_type == pasteboard_t::expression) {
@@ -46,7 +50,6 @@ struct expr_inserter {
   expr_inserter(document& doc) : _doc{&doc} {}
 
   bool can_insert() const noexcept { return _selection != nullptr; }
-  source_loc get_selection_loc() const noexcept { return _loc; }
   source_range get_range() const noexcept {
     assert(_selection != nullptr);
     return _selection->source_code_range;
@@ -54,35 +57,9 @@ struct expr_inserter {
 
   void move_to_loc(source_loc loc, const source_selection* exclusion = nullptr);
 
-  source_update insert_literal(literal_data_type type,
-                               std::string_view literal) const&& {
-    if constexpr (node_type == pasteboard_t::expression) {
-      switch (type) {
-        case literal_data_type::variable_name:
-          [[fallthrough]];
-        case literal_data_type::identifier:
-          return std::move(*this).insert_identifier(std::move(literal));
-        case literal_data_type::number:
-          return std::move(*this).insert_number(std::move(literal));
-        case literal_data_type::string:
-          return std::move(*this).insert_string(std::move(literal));
-      }
-    } else if constexpr (node_type == pasteboard_t::reference) {
-      if (type == literal_data_type::variable_name ||
-          type == literal_data_type::identifier) {
-        return std::move(*this).insert_identifier(std::move(literal));
-      } else {
-        // Should not happen
-        assert(false);
-        return {{{0, 0}, {0, 0}}, {"", {}}};
-      }
-    } else {
-      // Should not happen
-      static_assert(details::dependent_false<node_type>::value);
-    }
-  }
-
-  std::vector<source_update> insert(store::data_view data) const&&;
+  document_update insert(store::data_view data) &&;
+  document_update insert_literal(literal_data_type type,
+                                 std::string_view literal) &&;
 
  private:
   struct placeholder;
@@ -95,17 +72,17 @@ struct expr_inserter {
   expr_inserter(document& doc, source_loc loc, ast::base& selection)
       : _doc{&doc}, _loc{loc}, _selection{&selection} {}
 
-  source_update insert_number(std::string_view value) const&& {
+  auto insert_number(std::string_view value) && {
     auto node = ast::make<ast::number_literal>(std::string{std::move(value)});
     return std::move(*this).insert_literal(std::move(node));
   }
 
-  source_update insert_string(std::string_view value) const&& {
+  auto insert_string(std::string_view value) && {
     auto node = ast::make<ast::string_literal>(std::string{std::move(value)});
     return std::move(*this).insert_literal(std::move(node));
   }
 
-  source_update insert_identifier(std::string_view value) const&& {
+  auto insert_identifier(std::string_view value) && {
     if constexpr (node_type == pasteboard_t::expression) {
       auto node{ast::make<ast::identifier>(std::string{std::move(value)})};
       return std::move(*this).insert_literal(std::move(node));
@@ -122,14 +99,15 @@ struct expr_inserter {
     }
   }
 
-  source_update insert_literal(ast::node node) const&& {
+  std::pair<source_update, ast::base*> insert_literal(ast::node node) && {
     auto original{_selection->source_code_range};
 
     format::in_place_formatter formatter;
     auto display{formatter.format(node, *_selection)};
 
+    auto& base{*node};
     _doc->replace_expression(*_selection, std::move(node));
-    return source_update{original, std::move(display)};
+    return std::make_pair(source_update{original, std::move(display)}, &base);
   }
 };
 

@@ -31,7 +31,7 @@ struct source_inserters {
       if (inserter.has_value() && inserter->can_insert()) {
         return (*std::exchange(inserter, std::nullopt)).insert(data);
       } else {
-        return std::vector<source_update>{};
+        return document_update{};
       }
     });
   }
@@ -105,12 +105,13 @@ struct source_inserters {
       if constexpr (std::is_same_v<inserter_type, block_inserter> ||
                     std::is_same_v<inserter_type, statement_inserter>) {
         location = inserter->get_insert_location();
+        if (location.line >= update.start_line) {
+          inserter->move_to_line(location.line + update.offset);
+          assert(inserter->can_insert());
+        }
       } else {
-        location = inserter->get_selection_loc();
-      }
-      if (location.line >= update.start_line) {
-        inserter->move_to_loc({location.line + update.offset, location.column});
-        assert(inserter->can_insert());
+        // For expr_inserter, just reset the location cache (via friend access)
+        inserter->_loc = {};
       }
     }
   }
