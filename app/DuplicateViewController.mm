@@ -1,17 +1,21 @@
 #import "DuplicateViewController.h"
 
-#import "DuplicateSourceView.h"
+#import "DuplicateSourceTextField.h"
 
 @interface DuplicateViewController ()
 
-@property(weak) IBOutlet DuplicateSourceView *sourceView;
+@property(weak) IBOutlet DuplicateSourceTextField *sourceTextField;
 
 @end
 
 @implementation DuplicateViewController
 
+- (void)setSourceString:(NSString *)string {
+  self.sourceTextField.sourceString = string;
+}
+
 - (void)setDraggingData:(const DraggingData &)draggingData {
-  self.sourceView.draggingData = draggingData;
+  self.sourceTextField.draggingData = draggingData;
 }
 
 - (IBAction)deleteButtonPressed:(id)sender {

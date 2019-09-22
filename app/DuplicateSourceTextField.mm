@@ -1,12 +1,16 @@
-#import "DuplicateSourceView.h"
+#import "DuplicateSourceTextField.h"
 
-@interface DuplicateSourceView () <NSDraggingSource>
+@interface DuplicateSourceTextField () <NSDraggingSource>
 
 @end
 
-@implementation DuplicateSourceView
+@implementation DuplicateSourceTextField
 
-- (void)mouseDragged:(NSEvent*)event {
+- (void)setSourceString:(NSString *)sourceString {
+  self.stringValue = sourceString;
+}
+
+- (void)mouseDragged:(NSEvent *)event {
   [super mouseDragged:event];
 
   auto pasteboardItem = [NSPasteboardItem new];
@@ -18,7 +22,7 @@
 
 #pragma mark - NSDraggingSource
 
-- (NSDragOperation)draggingSession:(NSDraggingSession*)session
+- (NSDragOperation)draggingSession:(NSDraggingSession *)session
     sourceOperationMaskForDraggingContext:(NSDraggingContext)context {
   return NSDragOperationEvery;
 }

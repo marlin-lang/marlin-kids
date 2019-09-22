@@ -1,7 +1,7 @@
 set(HEADERS
     Document.h
     DrawHelper.h
-    DuplicateSourceView.h
+    DuplicateSourceTextField.h
     DuplicateViewController.h
     EditorViewController.h
     ExecuteViewController.h
@@ -18,7 +18,7 @@ set(HEADERS
 
 set(SOURCES
     Document.mm
-    DuplicateSourceView.mm
+    DuplicateSourceTextField.mm
     DuplicateViewController.mm
     EditorViewController.mm
     ExecuteViewController.mm

@@ -48,7 +48,8 @@ using ToolIndex = std::pair<NSInteger, NSInteger>;
 }
 
 - (void)showDuplicateViewControllerForSourceView:(SourceView *)view
-                                withDraggingData:(const DraggingData &)draggingData {
+                                      withString:(NSString *)string
+                                    draggingData:(const DraggingData &)draggingData {
   [self dismissDuplicateViewController];
   DuplicateViewController *vc =
       [self.storyboard instantiateControllerWithIdentifier:@"DuplicateViewController"];
@@ -56,6 +57,7 @@ using ToolIndex = std::pair<NSInteger, NSInteger>;
   [self addChildViewController:vc
                         inView:self.duplicateView
               heightConstraint:self.duplicateViewHeightConstraint];
+  vc.sourceString = string;
   vc.draggingData = draggingData;
   _duplicateViewController = vc;
 }
@@ -120,8 +122,8 @@ using ToolIndex = std::pair<NSInteger, NSInteger>;
               heightConstraint:(NSLayoutConstraint *)heightConstraint {
   [self addChildViewController:vc];
   [view addSubview:vc.view];
-  heightConstraint.constant = vc.view.bounds.size.height;
   vc.view.translatesAutoresizingMaskIntoConstraints = NO;
+  heightConstraint.constant = vc.view.bounds.size.height;
   [vc.view.leftAnchor constraintEqualToAnchor:view.leftAnchor].active = YES;
   [vc.view.rightAnchor constraintEqualToAnchor:view.rightAnchor].active = YES;
   [vc.view.topAnchor constraintEqualToAnchor:view.topAnchor].active = YES;

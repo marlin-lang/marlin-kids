@@ -16,6 +16,8 @@ NS_ASSUME_NONNULL_BEGIN
 
 @property(weak, nonatomic) id<DuplicateViewControllerDelegate> delegate;
 
+- (void)setSourceString:(NSString *)string;
+
 - (void)setDraggingData:(const DraggingData &)draggingData;
 
 @end
