@@ -142,7 +142,7 @@ struct source_selection {
 
   template <pasteboard_t node_type>
   [[nodiscard]] bool is() const {
-    return _selection->inherits<details::ast_tag<node_type>>();
+    return _selection->inherits<typename details::ast_tag<node_type>::type>();
   }
 
   [[nodiscard]] bool is_function_signature() const {
