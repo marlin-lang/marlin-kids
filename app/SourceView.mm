@@ -396,11 +396,11 @@ struct DocumentGetter {
   NSAssert(!_draggingSelection.has_value(), @"");
 
   if (_selection.has_value()) {
-    auto rect = [self rectOfSourceRange:_selection->get_range()];
-    if (!CGRectContainsPoint(rect, location)) {
-      _draggingSelection = (*std::exchange(_selection, std::nullopt)).as_dragging_selection();
+    if (const auto rect = [self rectOfSourceRange:_selection->get_range()];
+        !CGRectContainsPoint(rect, location)) {
       [self.delegate dismissChildViewControllersForSourceView:self];
-      if (auto type = _draggingSelection->dragging_type()) {
+      _draggingSelection = (*std::exchange(_selection, std::nullopt)).as_dragging_selection();
+      if (const auto type = _draggingSelection->dragging_type()) {
         return DraggingData(*type, [NSData dataWithDataView:_draggingSelection->get_data()]);
       } else {
         _draggingSelection.reset();
@@ -421,7 +421,7 @@ struct DocumentGetter {
   }
 
   NSAssert(_inserter.has_value(), @"");
-  auto exclusion = _draggingSelection.has_value() ? &*_draggingSelection : nullptr;
+  const auto exclusion = _draggingSelection.has_value() ? &*_draggingSelection : nullptr;
   return _inserter->move_to_loc(type, [self sourceLocationOfPoint:location], exclusion);
 }
 

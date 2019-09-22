@@ -46,12 +46,16 @@ using selection_promotion_rule = ast::base& (*)(ast::base&);
 
 constexpr selection_promotion_rule default_rule =
     [](ast::base& node) -> ast::base& {
-  auto current{&node};
   ast::base* function_signature{nullptr};
-  while (current->has_parent()) {
-    current = &current->parent();
+  for (auto current{&node};;) {
     if (current->is<ast::function_signature>()) {
       function_signature = current;
+      break;
+    }
+    if (current->has_parent()) {
+      current = &current->parent();
+    } else {
+      break;
     }
   }
   if (function_signature != nullptr) {
@@ -63,12 +67,16 @@ constexpr selection_promotion_rule default_rule =
 
 constexpr selection_promotion_rule dragging_rule =
     [](ast::base& node) -> ast::base& {
-  auto current{&node};
   ast::base* function_signature{nullptr};
-  while (current->has_parent()) {
-    current = &current->parent();
+  for (auto current{&node};;) {
     if (current->is<ast::function_signature>()) {
       function_signature = current;
+      break;
+    }
+    if (current->has_parent()) {
+      current = &current->parent();
+    } else {
+      break;
     }
   }
   if (function_signature != nullptr) {
