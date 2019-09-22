@@ -17,8 +17,6 @@
 namespace marlin::exec {
 
 struct generator {
-  generator(bool is_async = false) : _is_async{is_async} {}
-
   std::string generate(ast::base& c) {
     assert(c.is<ast::program>());
     jsast::generator gen;
@@ -83,28 +81,23 @@ struct generator {
     return "__func_" + std::move(name);
   }
 
-  static jsast::ast::node system_callee(std::string module, std::string name) {
+  static jsast::ast::node env_name(std::string name) {
     return jsast::ast::member_expression{
-        jsast::ast::identifier{std::move(module)},
+        jsast::ast::member_expression{jsast::ast::identifier{"window"},
+                                      jsast::ast::member_identifier{"env"}},
         jsast::ast::member_identifier{std::move(name)}};
   }
 
-  static jsast::ast::node check_termination() {
-    return jsast::ast::expression_statement{jsast::ast::call_expression{
-        jsast::ast::member_expression{
-            jsast::ast::identifier{"global_clock"},
-            jsast::ast::member_identifier{"check_termination"}},
-        {}}};
+  static jsast::ast::node system_callee(std::string module, std::string name) {
+    return jsast::ast::member_expression{
+        env_name(std::move(module)),
+        jsast::ast::member_identifier{std::move(name)}};
   }
 
   using callee_entry = std::pair<jsast::ast::node (*)(), bool>;
   static constexpr std::array<callee_entry, 10> system_procedure_callee_map{
-      std::pair{
-          []() { return jsast::ast::node{jsast::ast::identifier{"sleep"}}; },
-          true} /* sleep */,
-      std::pair{
-          []() { return jsast::ast::node{jsast::ast::identifier{"print"}}; },
-          false} /* print */,
+      std::pair{[]() { return env_name("sleep"); }, true} /* sleep */,
+      std::pair{[]() { return env_name("print"); }, false} /* print */,
       std::pair{[]() { return system_callee("graphics", "drawLine"); },
                 true} /* draw_line */,
       std::pair{[]() { return system_callee("graphics", "setLineWidth"); },
@@ -123,100 +116,89 @@ struct generator {
                 false} /* logo_pen_down */
   };
   static constexpr std::array<callee_entry, 17> system_function_callee_map{
-      std::pair{
-          []() { return jsast::ast::node{jsast::ast::identifier{"range"}}; },
-          false} /* range1 */
-      ,
-      std::pair{
-          []() { return jsast::ast::node{jsast::ast::identifier{"range"}}; },
-          false} /* range2 */,
-      std::pair{
-          []() { return jsast::ast::node{jsast::ast::identifier{"range"}}; },
-          false} /* range3 */,
-      std::pair{
-          []() { return jsast::ast::node{jsast::ast::identifier{"time"}}; },
-          false} /* time */,
+      std::pair{[]() { return env_name("range"); }, false} /* range1 */,
+      std::pair{[]() { return env_name("range"); }, false} /* range2 */,
+      std::pair{[]() { return env_name("range"); }, false} /* range3 */,
+      std::pair{[]() { return env_name("time"); }, false} /* time */,
       std::pair{[]() {
                   return jsast::ast::node{jsast::ast::member_expression{
-                      jsast::ast::identifier{"math_extra"},
+                      env_name("math_extra"),
                       jsast::ast::member_identifier{"abs"}}};
                 },
                 false} /* abs */,
       std::pair{[]() {
                   return jsast::ast::node{jsast::ast::member_expression{
-                      jsast::ast::identifier{"math_extra"},
+                      env_name("math_extra"),
                       jsast::ast::member_identifier{"sqrt"}}};
                 },
                 false} /* sqrt */,
       std::pair{[]() {
                   return jsast::ast::node{jsast::ast::member_expression{
-                      jsast::ast::identifier{"math_extra"},
+                      env_name("math_extra"),
                       jsast::ast::member_identifier{"sin"}}};
                 },
                 false} /* sin */
       ,
       std::pair{[]() {
                   return jsast::ast::node{jsast::ast::member_expression{
-                      jsast::ast::identifier{"math_extra"},
+                      env_name("math_extra"),
                       jsast::ast::member_identifier{"cos"}}};
                 },
                 false} /* cos */,
       std::pair{[]() {
                   return jsast::ast::node{jsast::ast::member_expression{
-                      jsast::ast::identifier{"math_extra"},
+                      env_name("math_extra"),
                       jsast::ast::member_identifier{"tan"}}};
                 },
                 false} /* tan */,
       std::pair{[]() {
                   return jsast::ast::node{jsast::ast::member_expression{
-                      jsast::ast::identifier{"math_extra"},
+                      env_name("math_extra"),
                       jsast::ast::member_identifier{"asin"}}};
                 },
                 false} /* asin */,
       std::pair{[]() {
                   return jsast::ast::node{jsast::ast::member_expression{
-                      jsast::ast::identifier{"math_extra"},
+                      env_name("math_extra"),
                       jsast::ast::member_identifier{"acos"}}};
                 },
                 false} /* acos */,
       std::pair{[]() {
                   return jsast::ast::node{jsast::ast::member_expression{
-                      jsast::ast::identifier{"math_extra"},
+                      env_name("math_extra"),
                       jsast::ast::member_identifier{"atan"}}};
                 },
                 false} /* atan */,
       std::pair{[]() {
                   return jsast::ast::node{jsast::ast::member_expression{
-                      jsast::ast::identifier{"math_extra"},
+                      env_name("math_extra"),
                       jsast::ast::member_identifier{"ln"}}};
                 },
                 false} /* ln */,
       std::pair{[]() {
                   return jsast::ast::node{jsast::ast::member_expression{
-                      jsast::ast::identifier{"math_extra"},
+                      env_name("math_extra"),
                       jsast::ast::member_identifier{"log"}}};
                 },
                 false} /* log */,
       std::pair{[]() {
                   return jsast::ast::node{jsast::ast::member_expression{
-                      jsast::ast::identifier{"math_extra"},
+                      env_name("math_extra"),
                       jsast::ast::member_identifier{"round"}}};
                 },
                 false} /* round */,
       std::pair{[]() {
                   return jsast::ast::node{jsast::ast::member_expression{
-                      jsast::ast::identifier{"math_extra"},
+                      env_name("math_extra"),
                       jsast::ast::member_identifier{"floor"}}};
                 },
                 false} /* floor */,
       std::pair{[]() {
                   return jsast::ast::node{jsast::ast::member_expression{
-                      jsast::ast::identifier{"math_extra"},
+                      env_name("math_extra"),
                       jsast::ast::member_identifier{"ceil"}}};
                 },
                 false} /* ceil */};
-
-  bool _is_async;
 
   std::unordered_set<ast::base*> _async_blocks;
   std::unordered_map<std::string_view, ast::base*> _user_functions;
@@ -274,9 +256,6 @@ struct generator {
     for (auto& statement : vector) {
       statements.emplace_back(get_node(*statement));
     }
-    if (_is_async) {
-      statements.emplace_back(check_termination());
-    }
     return jsast::ast::block_statement{std::move(statements)};
   }
 
@@ -322,9 +301,9 @@ struct generator {
     for (auto& block : program.blocks()) {
       blocks.emplace_back(get_node(*block));
     }
-    blocks.emplace_back(jsast::ast::expression_statement{
-        jsast::ast::call_expression{jsast::ast::identifier{"execute"},
-                                    {jsast::ast::identifier{main_name}}}});
+    blocks.emplace_back(
+        jsast::ast::expression_statement{jsast::ast::call_expression{
+            env_name("execute"), {jsast::ast::identifier{main_name}}}});
     return wrapper(jsast::ast::program{std::move(blocks)});
   }
 
@@ -565,8 +544,7 @@ struct generator {
   auto get_identifier(std::string name, wrapper_type&& wrapper) {
     if (_global_identifiers.find(name) != _global_identifiers.end()) {
       return wrapper(jsast::ast::member_expression{
-          jsast::ast::identifier{"globals"},
-          jsast::ast::member_identifier{std::move(name)}});
+          env_name("globals"), jsast::ast::member_identifier{std::move(name)}});
     } else {
       return wrapper(jsast::ast::identifier{"__var_" + std::move(name)});
     }
