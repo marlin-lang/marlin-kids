@@ -36,23 +36,25 @@ struct generator {
         }
       }
     }
-    std::deque<ast::base*> queue;
-    std::copy(_async_blocks.begin(), _async_blocks.end(),
-              std::back_inserter(queue));
-    while (!queue.empty()) {
-      auto block{queue.front()};
-      queue.pop_front();
+    {
+      std::deque<ast::base*> queue;
+      std::copy(_async_blocks.begin(), _async_blocks.end(),
+                std::back_inserter(queue));
+      while (!queue.empty()) {
+        auto block{queue.front()};
+        queue.pop_front();
 
-      if (block->is<ast::function>()) {
-        auto signature{block->as<ast::function>().signature()};
-        if (signature->is<ast::function_signature>()) {
-          auto it{_user_function_callees.find(
-              signature->as<ast::function_signature>().name)};
-          if (it != _user_function_callees.end()) {
-            for (auto block : it->second) {
-              if (_async_blocks.find(block) == _async_blocks.end()) {
-                _async_blocks.emplace(block);
-                queue.emplace_back(block);
+        if (block->is<ast::function>()) {
+          auto signature{block->as<ast::function>().signature()};
+          if (signature->is<ast::function_signature>()) {
+            auto it{_user_function_callees.find(
+                signature->as<ast::function_signature>().name)};
+            if (it != _user_function_callees.end()) {
+              for (auto block : it->second) {
+                if (_async_blocks.find(block) == _async_blocks.end()) {
+                  _async_blocks.emplace(block);
+                  queue.emplace_back(block);
+                }
               }
             }
           }

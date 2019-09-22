@@ -127,8 +127,7 @@ struct store : base_store::impl<store> {
   }
 
   std::string_view read_zero_terminated() {
-    auto begin{_iter};
-    while (_iter < _end) {
+    for (auto begin{_iter}; _iter < _end;) {
       if (*_iter == std::byte{0}) {
         data_view result{begin, _iter};
         _iter++;

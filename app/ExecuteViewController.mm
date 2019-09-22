@@ -40,7 +40,6 @@ constexpr double refreshTimeInMS = 40;
   auto html = [[NSString stringWithContentsOfURL:mainURL encoding:NSUTF8StringEncoding error:nil]
       stringByReplacingOccurrencesOfString:@"$ENV_JAVASCRIPT$"
                                 withString:jsPath];
-  NSLog(@"%@", html);
   [self.wkWebView loadHTMLString:html baseURL:mainURL];
   [self.wkWebView addObserver:self forKeyPath:@"loading" options:0 context:nil];
 

@@ -68,10 +68,9 @@ struct formatter {
                  const ast::base* parent = nullptr) {
     size_t indent{0};
     if (parent != nullptr) {
-      const ast::base* curr_parent{parent};
-      while (curr_parent->has_parent()) {
+      for (const ast::base* curr_parent{parent}; curr_parent->has_parent();
+           curr_parent = &curr_parent->parent()) {
         indent++;
-        curr_parent = &curr_parent->parent();
       }
     }
     return format(std::forward<input_type>(nodes), {start_line, 1}, indent, 0);

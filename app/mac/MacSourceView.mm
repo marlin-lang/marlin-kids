@@ -63,14 +63,10 @@
 }
 
 - (NSDragOperation)draggingUpdated:(id<NSDraggingInfo>)sender {
-  if (sender.draggingSequenceNumber == _currentDraggingSourceSession) {
-    _operation = NSDragOperationDelete;
-  } else {
-    _operation = NSDragOperationNone;
-  }
+  _operation = NSDragOperationNone;
   if (const auto type = [self pasteboardTypeFromDraggingInfo:sender]) {
-    const auto location = [self convertPoint:sender.draggingLocation fromView:nil];
-    if ([self draggingPasteboardOfType:*type toLocation:location]) {
+    if (const auto location = [self convertPoint:sender.draggingLocation fromView:nil];
+        [self draggingPasteboardOfType:*type toLocation:location]) {
       if (sender.draggingSequenceNumber == _currentDraggingSourceSession) {
         _operation = NSDragOperationMove;
       } else {
@@ -79,15 +75,10 @@
     }
   }
 
-  switch (_operation) {
-    case NSDragOperationDelete:
-      [NSCursor.disappearingItemCursor set];
-      break;
-    case NSDragOperationNone:
-      [NSCursor.operationNotAllowedCursor set];
-      break;
-    default:
-      [NSCursor.arrowCursor set];
+  if (_operation == NSDragOperationNone) {
+    [NSCursor.operationNotAllowedCursor set];
+  } else {
+    [NSCursor.arrowCursor set];
   }
 
   [self setNeedsDisplayInRect:self.bounds];

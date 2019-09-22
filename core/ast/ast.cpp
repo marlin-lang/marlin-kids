@@ -20,14 +20,13 @@ bool user_function_call::assign_definition(const function_definition* func) {
     if (args.size() < _func->parameters.size()) {
       changed = true;
       arg_check_count = args.size();
-      auto it{_func->parameters.begin() + args.size()};
-      while (it != _func->parameters.end()) {
+      for (auto it{_func->parameters.begin() + args.size()};
+           it != _func->parameters.end(); it++) {
         args.emplace_back(ast::make<expression_placeholder>(*it));
-        it++;
       }
     } else if (args.size() > _func->parameters.size()) {
-      auto i{args.size() - 1};
-      while (args.size() > _func->parameters.size()) {
+      for (auto i{args.size() - 1}; args.size() > _func->parameters.size();
+           i--) {
         if (args[i]->is<ast::expression_placeholder>()) {
           changed = true;
           args.pop(i);
@@ -35,7 +34,6 @@ bool user_function_call::assign_definition(const function_definition* func) {
         if (i == 0) {
           break;
         }
-        i--;
       }
     }
     for (auto i{0}; i < arg_check_count; i++) {
