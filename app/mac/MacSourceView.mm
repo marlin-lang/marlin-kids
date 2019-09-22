@@ -38,7 +38,7 @@
 
   auto location = [self convertPoint:event.locationInWindow fromView:nil];
   if (auto draggingData = [self startDraggingAtLocation:location]) {
-    auto* pasteboardItem = [NSPasteboardItem new];
+    auto pasteboardItem = [NSPasteboardItem new];
     [pasteboardItem setData:draggingData->data forType:pasteboardOfType(draggingData->type)];
     auto draggingItem = [[NSDraggingItem alloc] initWithPasteboardWriter:pasteboardItem];
     [draggingItem setDraggingFrame:NSMakeRect(0, 0, 100, 100)];
@@ -116,7 +116,7 @@
   [self resetDraggingDestination];
 }
 
-#pragma mark - NSDraggingSource implementation
+#pragma mark - NSDraggingSource
 
 - (NSDragOperation)draggingSession:(NSDraggingSession*)session
     sourceOperationMaskForDraggingContext:(NSDraggingContext)context {

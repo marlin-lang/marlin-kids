@@ -2,7 +2,15 @@
 
 #include "prototypes.hpp"
 
-inline NSString* pasteboardOfType(marlin::control::pasteboard_t type) {
+struct DraggingData {
+  marlin::control::pasteboard_t type;
+  NSData *data;
+
+  DraggingData() : type{marlin::control::pasteboard_t::block}, data{nil} {}
+  DraggingData(marlin::control::pasteboard_t _type, NSData *_data) : type{_type}, data{_data} {}
+};
+
+inline NSString *pasteboardOfType(marlin::control::pasteboard_t type) {
   switch (type) {
     case marlin::control::pasteboard_t::block:
       return @"marlin.block";

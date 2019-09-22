@@ -906,7 +906,7 @@
                                     <color key="backgroundColor" name="textBackgroundColor" catalog="System" colorSpace="catalog"/>
                                 </textFieldCell>
                             </textField>
-                            <customView translatesAutoresizingMaskIntoConstraints="NO" id="Omx-KX-6MK">
+                            <customView translatesAutoresizingMaskIntoConstraints="NO" id="Omx-KX-6MK" customClass="DuplicateSourceView">
                                 <rect key="frame" x="8" y="37" width="338" height="30"/>
                             </customView>
                             <button verticalHuggingPriority="750" translatesAutoresizingMaskIntoConstraints="NO" id="kPD-SL-g4t">
@@ -933,6 +933,9 @@
                             <constraint firstItem="oNJ-QX-JCq" firstAttribute="leading" secondItem="RDI-ou-53N" secondAttribute="leading" constant="8" id="yUG-cR-RfY"/>
                         </constraints>
                     </view>
+                    <connections>
+                        <outlet property="sourceView" destination="Omx-KX-6MK" id="Xfk-dJ-j3F"/>
+                    </connections>
                 </viewController>
                 <customObject id="99o-2Y-cwe" userLabel="First Responder" customClass="NSResponder" sceneMemberID="firstResponder"/>
             </objects>

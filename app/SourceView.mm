@@ -341,7 +341,15 @@ struct DocumentGetter {
 - (void)touchUp {
   if (_selection.has_value()) {
     if (_selection->is_removable()) {
-      [self.delegate showDuplicateViewControllerForSourceView:self];
+      auto type = _selection->dragging_type();
+      NSAssert(type.has_value(), @"");
+      [self.delegate
+          showDuplicateViewControllerForSourceView:self
+                                  withDraggingData:DraggingData{
+                                                       *type,
+                                                       [NSData
+                                                           dataWithDataView:_selection->get_data(
+                                                                                true)]}];
     } else {
       [self.delegate dismissChildViewControllersForSourceView:self];
     }

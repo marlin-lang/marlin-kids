@@ -75,8 +75,10 @@
   [self.document updateChangeCount:NSChangeDone];
 }
 
-- (void)showDuplicateViewControllerForSourceView:(SourceView *)view {
-  [self.toolboxViewController showDuplicateViewControllerForSourceView:view];
+- (void)showDuplicateViewControllerForSourceView:(SourceView *)view
+                                withDraggingData:(const DraggingData &)draggingData {
+  [self.toolboxViewController showDuplicateViewControllerForSourceView:view
+                                                      withDraggingData:draggingData];
 }
 
 - (void)showEditorViewControllerForSourceView:(SourceView *)view

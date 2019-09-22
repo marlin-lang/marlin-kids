@@ -47,7 +47,8 @@ using ToolIndex = std::pair<NSInteger, NSInteger>;
   document.register_toolbox(_model);
 }
 
-- (void)showDuplicateViewControllerForSourceView:(SourceView *)view {
+- (void)showDuplicateViewControllerForSourceView:(SourceView *)view
+                                withDraggingData:(const DraggingData &)draggingData {
   [self dismissDuplicateViewController];
   DuplicateViewController *vc =
       [self.storyboard instantiateControllerWithIdentifier:@"DuplicateViewController"];
@@ -55,6 +56,7 @@ using ToolIndex = std::pair<NSInteger, NSInteger>;
   [self addChildViewController:vc
                         inView:self.duplicateView
               heightConstraint:self.duplicateViewHeightConstraint];
+  vc.draggingData = draggingData;
   _duplicateViewController = vc;
 }
 

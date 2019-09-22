@@ -15,7 +15,8 @@ NS_ASSUME_NONNULL_BEGIN
 
 - (void)registerModelToDocument:(marlin::control::document &)document;
 
-- (void)showDuplicateViewControllerForSourceView:(SourceView *)view;
+- (void)showDuplicateViewControllerForSourceView:(SourceView *)view
+                                withDraggingData:(const DraggingData &)draggingData;
 
 - (void)showEditorViewControllerForSourceView:(SourceView *)view
                                      withType:(marlin::control::literal_data_type)type

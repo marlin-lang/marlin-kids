@@ -12,17 +12,11 @@
 #import "DuplicateViewController.h"
 #import "EditorViewController.h"
 #import "FunctionViewController.h"
+#import "Pasteboard.h"
 
 NS_ASSUME_NONNULL_BEGIN
 
 @class SourceView;
-
-struct DraggingData {
-  marlin::control::pasteboard_t type;
-  NSData *data;
-
-  DraggingData(marlin::control::pasteboard_t _type, NSData *_data) : type{_type}, data{_data} {}
-};
 
 @protocol SourceViewDataSource
 
@@ -34,7 +28,8 @@ struct DraggingData {
 
 - (void)sourceViewChanged:(SourceView *)view;
 
-- (void)showDuplicateViewControllerForSourceView:(SourceView *)view;
+- (void)showDuplicateViewControllerForSourceView:(SourceView *)view
+                                withDraggingData:(const DraggingData &)draggingData;
 
 - (void)showEditorViewControllerForSourceView:(SourceView *)view
                                      withType:(marlin::control::literal_data_type)type

@@ -1,5 +1,7 @@
 #import <Types.h>
 
+#import "Pasteboard.h"
+
 NS_ASSUME_NONNULL_BEGIN
 
 @class DuplicateViewController;
@@ -13,6 +15,8 @@ NS_ASSUME_NONNULL_BEGIN
 @interface DuplicateViewController : ViewController
 
 @property(weak, nonatomic) id<DuplicateViewControllerDelegate> delegate;
+
+- (void)setDraggingData:(const DraggingData &)draggingData;
 
 @end
 
