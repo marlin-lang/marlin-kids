@@ -26,9 +26,9 @@ NS_ASSUME_NONNULL_BEGIN
 - (void)showFunctionViewControllerForSourceView:(SourceView *)view
                           withFunctionSignature:(marlin::function_definition)signature;
 
-- (void)dismissEditorViewController;
+- (void)dismissDuplicateViewController;
 
-- (void)dismissChildViewControllers;
+- (void)dismissEditorViewController;
 
 @end
 

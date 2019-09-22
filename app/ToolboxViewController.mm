@@ -94,17 +94,20 @@ using ToolIndex = std::pair<NSInteger, NSInteger>;
   _editorViewController = vc;
 }
 
+- (void)dismissDuplicateViewController {
+  if (_duplicateViewController) {
+    [self removeChildViewController:_duplicateViewController
+                   heightConstraint:self.duplicateViewHeightConstraint];
+    _duplicateViewController = nil;
+  }
+}
+
 - (void)dismissEditorViewController {
   if (_editorViewController) {
     [self removeChildViewController:_editorViewController
                    heightConstraint:self.editorViewHeightConstraint];
     _editorViewController = nil;
   }
-}
-
-- (void)dismissChildViewControllers {
-  [self dismissDuplicateViewController];
-  [self dismissEditorViewController];
 }
 
 #pragma mark - CollectionViewDelegateFlowLayout
@@ -141,14 +144,6 @@ using ToolIndex = std::pair<NSInteger, NSInteger>;
   [vc.view removeFromSuperview];
   [vc removeFromParentViewController];
   heightConstraint.constant = 0;
-}
-
-- (void)dismissDuplicateViewController {
-  if (_duplicateViewController) {
-    [self removeChildViewController:_duplicateViewController
-                   heightConstraint:self.duplicateViewHeightConstraint];
-    _duplicateViewController = nil;
-  }
 }
 
 - (void)sectionButtonPressed:(Button *)sender {

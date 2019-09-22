@@ -39,15 +39,14 @@ NS_ASSUME_NONNULL_BEGIN
 - (void)showFunctionViewControllerForSourceView:(SourceView *)view
                           withFunctionSignature:(marlin::function_definition)signature;
 
-- (void)dismissEditorViewControllerForSourceView:(SourceView *)view;
+- (void)dismissDuplicateViewControllerForSourceView:(SourceView *)view;
 
-- (void)dismissChildViewControllersForSourceView:(SourceView *)view;
+- (void)dismissEditorViewControllerForSourceView:(SourceView *)view;
 
 @end
 
-@interface SourceView : View <DuplicateViewControllerDelegate,
-                              EditorViewControllerDelegate,
-                              FunctionViewControllerDelegate>
+@interface SourceView : View<DuplicateViewControllerDelegate, EditorViewControllerDelegate,
+                             FunctionViewControllerDelegate>
 
 @property(weak) id<SourceViewDataSource> dataSource;
 @property(weak) id<SourceViewDelegate> delegate;

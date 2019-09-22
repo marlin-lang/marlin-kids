@@ -95,12 +95,12 @@
                                                 withFunctionSignature:signature];
 }
 
-- (void)dismissEditorViewControllerForSourceView:(SourceView *)view {
-  [self.toolboxViewController dismissEditorViewController];
+- (void)dismissDuplicateViewControllerForSourceView:(SourceView *)view {
+  [self.toolboxViewController dismissDuplicateViewController];
 }
 
-- (void)dismissChildViewControllersForSourceView:(SourceView *)view {
-  [self.toolboxViewController dismissChildViewControllers];
+- (void)dismissEditorViewControllerForSourceView:(SourceView *)view {
+  [self.toolboxViewController dismissEditorViewController];
 }
 
 @end

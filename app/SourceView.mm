@@ -183,7 +183,7 @@ struct DocumentGetter {
 
 - (void)performDeleteForDuplicateViewController:(DuplicateViewController*)vc {
   [self removeSelection:_selection retainSelection:YES];
-  [self.delegate dismissChildViewControllersForSourceView:self];
+  [self updateDuplicateAndEditorViewControllersForSelection];
 }
 
 #pragma mark - EditorViewControllerDelegate
@@ -198,7 +198,7 @@ struct DocumentGetter {
   } else {
     _selection.reset();
   }
-  [self.delegate dismissChildViewControllersForSourceView:self];
+  [self updateDuplicateAndEditorViewControllersForSelection];
 }
 
 #pragma mark - FunctionViewControllerDelegate
@@ -219,7 +219,7 @@ struct DocumentGetter {
   } else {
     _selection.reset();
   }
-  [self.delegate dismissChildViewControllersForSourceView:self];
+  [self updateDuplicateAndEditorViewControllersForSelection];
 }
 
 #pragma mark - Private methods
@@ -340,17 +340,19 @@ struct DocumentGetter {
 }
 
 - (void)touchUp {
+  [self updateDuplicateAndEditorViewControllersForSelection];
+}
+
+- (void)updateDuplicateAndEditorViewControllersForSelection {
   if (_selection.has_value()) {
-    if (_selection->is_removable()) {
-      auto type = _selection->dragging_type();
-      NSAssert(type.has_value(), @"");
+    if (auto type = _selection->dragging_type()) {
       auto string = [self snapshotOfSelection:*_selection];
       auto draggingData = DraggingData{*type, [NSData dataWithDataView:_selection->get_data(true)]};
       [self.delegate showDuplicateViewControllerForSourceView:self
                                                    withString:string
                                                  draggingData:draggingData];
     } else {
-      [self.delegate dismissChildViewControllersForSourceView:self];
+      [self.delegate dismissDuplicateViewControllerForSourceView:self];
     }
     if (_selection->is_literal()) {
       auto [type, data] = _selection->get_literal_content();
@@ -361,6 +363,9 @@ struct DocumentGetter {
     } else {
       [self.delegate dismissEditorViewControllerForSourceView:self];
     }
+  } else {
+    [self.delegate dismissDuplicateViewControllerForSourceView:self];
+    [self.delegate dismissEditorViewControllerForSourceView:self];
   }
 }
 
@@ -424,8 +429,8 @@ struct DocumentGetter {
   if (_selection.has_value()) {
     if (const auto rect = [self rectOfSourceRange:_selection->get_range()];
         !CGRectContainsPoint(rect, location)) {
-      [self.delegate dismissChildViewControllersForSourceView:self];
       _draggingSelection = (*std::exchange(_selection, std::nullopt)).as_dragging_selection();
+      [self updateDuplicateAndEditorViewControllersForSelection];
       if (const auto type = _draggingSelection->dragging_type()) {
         return DraggingData(*type, [NSData dataWithDataView:_draggingSelection->get_data()]);
       } else {
@@ -443,7 +448,7 @@ struct DocumentGetter {
 - (BOOL)draggingPasteboardOfType:(marlin::control::pasteboard_t)type toLocation:(CGPoint)location {
   if (_selection.has_value()) {
     _selection.reset();
-    [self.delegate dismissChildViewControllersForSourceView:self];
+    [self updateDuplicateAndEditorViewControllersForSelection];
   }
 
   NSAssert(_inserter.has_value(), @"");
@@ -463,6 +468,7 @@ struct DocumentGetter {
   _selection = std::move(update.selection_update);
   const bool result = update.source_updates.size() > 0;
   [self performUpdates:std::move(update.source_updates)];
+  [self updateDuplicateAndEditorViewControllersForSelection];
   return result;
 }
 
@@ -487,9 +493,6 @@ struct DocumentGetter {
       return line_update;
     } else {
       assert(false);
-      if (!retain) {
-        selection.reset();
-      }
     }
   }
   return {};
