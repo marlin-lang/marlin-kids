@@ -410,7 +410,10 @@ struct DocumentGetter {
     auto string = [NSMutableString new];
     NSAttributedString* attrString = [_strings objectAtIndex:range.begin.line - 1];
     [string appendString:[attrString.string substringFromIndex:range.begin.column - 1]];
-    [string appendString:@"  ...  "];
+    [string appendString:@"\n"];
+    if (lines > 2) {
+      [string appendString:@"  ...\n"];
+    }
     auto endLine = range.end.column > range.begin.column ? range.end.line - 1 : range.end.line - 2;
     attrString = [_strings objectAtIndex:endLine];
     [string appendString:[attrString.string substringFromIndex:range.begin.column - 1]];
