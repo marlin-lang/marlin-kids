@@ -152,7 +152,7 @@ struct source_selection {
   }
 
   [[nodiscard]] bool is_removable() const {
-    return dragging_type(false).has_value();
+    return _selection->is<ast::parameter>() || dragging_type(false).has_value();
   }
 
   [[nodiscard]] source_selection as_dragging_selection() && {
