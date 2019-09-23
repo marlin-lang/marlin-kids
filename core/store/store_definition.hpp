@@ -30,6 +30,7 @@ enum struct type_expectation {
   statement,
   lvalue,
   rvalue,
+  parameter,
   any
 };
 

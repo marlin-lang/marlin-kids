@@ -47,51 +47,24 @@ inline bool function_signature_test(const ast::base& node) {
 
 }  // namespace details
 
-using selection_promotion_rule = ast::base& (*)(ast::base&);
+using selection_specialization_rule = ast::base& (*)(ast::base&);
 
-constexpr selection_promotion_rule default_rule =
+constexpr selection_specialization_rule default_rule =
+    [](ast::base& node) -> ast::base& { return node; };
+
+constexpr selection_specialization_rule dragging_rule =
     [](ast::base& node) -> ast::base& {
-  ast::base* function_signature{nullptr};
-  for (auto current{&node};;) {
-    if (details::function_signature_test(*current)) {
-      function_signature = current;
-      break;
-    }
-    if (current->has_parent()) {
-      current = &current->parent();
-    } else {
-      break;
-    }
-  }
-  if (function_signature != nullptr) {
-    return *function_signature;
+  if (details::function_signature_test(node) && node.has_parent()) {
+    return node.parent();
   } else {
     return node;
   }
 };
 
-constexpr selection_promotion_rule dragging_rule =
+constexpr selection_specialization_rule dropping_rule =
     [](ast::base& node) -> ast::base& {
-  ast::base* function_signature{nullptr};
-  for (auto current{&node};;) {
-    if (details::function_signature_test(*current)) {
-      function_signature = current;
-      break;
-    }
-    if (current->has_parent()) {
-      current = &current->parent();
-    } else {
-      break;
-    }
-  }
-  if (function_signature != nullptr) {
-    if (function_signature->has_parent()) {
-      return function_signature->parent();
-    } else {
-      // Should not occur!
-      assert(false);
-      return *function_signature;
-    }
+  if (node.is<ast::function>()) {
+    return *node.as<ast::function>().signature();
   } else {
     return node;
   }
@@ -118,11 +91,11 @@ struct source_selection {
   };
 
   source_selection(document& doc, source_loc loc,
-                   selection_promotion_rule rule = default_rule)
+                   selection_specialization_rule rule = default_rule)
       : source_selection{doc, doc.locate(loc), rule} {}
 
   source_selection(document& doc, ast::base& selection,
-                   selection_promotion_rule rule = default_rule)
+                   selection_specialization_rule rule = default_rule)
       : _doc{&doc}, _selection{&rule(selection)} {}
 
   [[nodiscard]] source_range get_range() const noexcept {
@@ -171,6 +144,7 @@ struct source_selection {
   [[nodiscard]] bool is_literal() const {
     return _selection->is<ast::variable_placeholder>() ||
            _selection->is<ast::expression_placeholder>() ||
+           _selection->is<ast::parameter>() ||
            _selection->is<ast::variable_name>() ||
            _selection->is<ast::number_literal>() ||
            _selection->is<ast::string_literal>() ||
@@ -178,18 +152,16 @@ struct source_selection {
   }
 
   [[nodiscard]] bool is_removable() const {
-    return dragging_type().has_value();
+    return dragging_type(false).has_value();
   }
 
   [[nodiscard]] source_selection as_dragging_selection() && {
     return {*_doc, *_selection, dragging_rule};
   }
 
-  [[nodiscard]] std::optional<pasteboard_t> dragging_type() const {
+  [[nodiscard]] std::optional<pasteboard_t> dragging_type(bool copying) const {
     if (is<pasteboard_t::block>()) {
-      if (_selection->is<ast::on_start>()) {
-        return std::nullopt;
-      } else {
+      if (!_selection->is<ast::on_start>()) {
         return pasteboard_t::block;
       }
     } else if (is<pasteboard_t::statement>()) {
@@ -197,12 +169,13 @@ struct source_selection {
     } else if (is<pasteboard_t::reference>()) {
       // Must check reference before expression, because ast::identifier etc.
       // are both, and needs to be considered as reference
-      return pasteboard_t::reference;
+      if (copying || !_selection->is<ast::parameter>()) {
+        return pasteboard_t::reference;
+      }
     } else if (is<pasteboard_t::expression>()) {
       return pasteboard_t::expression;
-    } else {
-      return std::nullopt;
     }
+    return std::nullopt;
   }
 
   template <pasteboard_t node_type, typename = expr_enable_t<node_type>>
@@ -225,7 +198,7 @@ struct source_selection {
   // Use this to update source_inserters, so that we can remove first and then
   // insert when moving parts of the code
   [[nodiscard]] line_update removal_line_update() const {
-    assert(dragging_type().has_value());
+    assert(is_removable());
 
     if (is<pasteboard_t::block>() || is<pasteboard_t::statement>()) {
       const auto range{_selection->source_code_range};
@@ -248,8 +221,8 @@ struct source_selection {
   static void fetch_parameters(function_definition& signature,
                                const node_type& node) {
     for (auto& child : node.parameters()) {
-      if (child->template is<ast::variable_name>()) {
-        auto& variable{child->template as<ast::variable_name>()};
+      if (child->template is<ast::parameter>()) {
+        auto& variable{child->template as<ast::parameter>()};
         signature.parameters.emplace_back(variable.name);
       } else {
         // Should not occur!
@@ -268,9 +241,32 @@ struct source_selection {
 
   source_update remove_line(
       std::optional<source_selection>& result_selection) &&;
+  source_update remove_parameter(
+      std::optional<source_selection>& result_selection) &&;
   source_update remove_expression(
       std::optional<source_selection>& result_selection) &&;
 };
+
+struct document_update {
+  std::vector<source_update> source_updates;
+  std::optional<source_selection> selection_update;
+
+  document_update(
+      std::vector<source_update> _source_updates,
+      std::optional<source_selection> _selection_update = std::nullopt)
+      : source_updates{std::move(_source_updates)},
+        selection_update{std::move(_selection_update)} {}
+  document_update(
+      std::optional<source_selection> _selection_update = std::nullopt)
+      : selection_update{std::move(_selection_update)} {}
+};
+
+template <>
+[[nodiscard]] inline source_selection::literal_content
+source_selection::get_literal_content<ast::parameter>(
+    const ast::parameter& param) const {
+  return {literal_data_type::parameter, param.name};
+}
 
 template <>
 [[nodiscard]] inline source_selection::literal_content
@@ -313,20 +309,6 @@ source_selection::get_literal_content<ast::identifier>(
     const ast::identifier& node) const {
   return {literal_data_type::identifier, node.name};
 }
-
-struct document_update {
-  std::vector<source_update> source_updates;
-  std::optional<source_selection> selection_update;
-
-  document_update(
-      std::vector<source_update> _source_updates,
-      std::optional<source_selection> _selection_update = std::nullopt)
-      : source_updates{std::move(_source_updates)},
-        selection_update{std::move(_selection_update)} {}
-  document_update(
-      std::optional<source_selection> _selection_update = std::nullopt)
-      : selection_update{std::move(_selection_update)} {}
-};
 
 }  // namespace marlin::control
 

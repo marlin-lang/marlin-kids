@@ -20,7 +20,13 @@ struct dependent_false : std::false_type {};
 
 }  // namespace details
 
-enum struct literal_data_type { variable_name, identifier, number, string };
+enum struct literal_data_type {
+  parameter,
+  variable_name,
+  identifier,
+  number,
+  string
+};
 
 struct document_update;
 struct source_selection;
@@ -72,32 +78,21 @@ struct expr_inserter {
   expr_inserter(document& doc, source_loc loc, ast::base& selection)
       : _doc{&doc}, _loc{loc}, _selection{&selection} {}
 
-  auto insert_number(std::string_view value) && {
+  std::pair<source_update, ast::base*> insert_number(
+      std::string_view value) && {
     auto node = ast::make<ast::number_literal>(std::string{std::move(value)});
     return std::move(*this).insert_literal(std::move(node));
   }
 
-  auto insert_string(std::string_view value) && {
+  std::pair<source_update, ast::base*> insert_string(
+      std::string_view value) && {
     auto node = ast::make<ast::string_literal>(std::string{std::move(value)});
     return std::move(*this).insert_literal(std::move(node));
   }
 
-  auto insert_identifier(std::string_view value) && {
-    if constexpr (node_type == pasteboard_t::expression) {
-      auto node{ast::make<ast::identifier>(std::string{std::move(value)})};
-      return std::move(*this).insert_literal(std::move(node));
-    } else if constexpr (node_type == pasteboard_t::reference) {
-      auto node{
-          _selection->is<ast::variable_placeholder>() ||
-                  _selection->inherits<ast::lvalue>()
-              ? ast::make<ast::variable_name>(std::string{std::move(value)})
-              : ast::make<ast::identifier>(std::string{std::move(value)})};
-      return std::move(*this).insert_literal(std::move(node));
-    } else {
-      // Should not happen
-      static_assert(details::dependent_false<node_type>::value);
-    }
-  }
+  // This function is only defined for reference_inserter (see cpp file)
+  std::pair<source_update, ast::base*> insert_identifier(
+      literal_data_type type, std::string_view value) &&;
 
   std::pair<source_update, ast::base*> insert_literal(ast::node node) && {
     auto original{_selection->source_code_range};

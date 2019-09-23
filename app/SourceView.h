@@ -33,7 +33,7 @@ NS_ASSUME_NONNULL_BEGIN
                                     draggingData:(const DraggingData &)draggingData;
 
 - (void)showEditorViewControllerForSourceView:(SourceView *)view
-                                     withType:(marlin::control::literal_data_type)type
+                                     withType:(EditorType)type
                                          data:(std::string_view)data;
 
 - (void)showFunctionViewControllerForSourceView:(SourceView *)view
@@ -45,8 +45,9 @@ NS_ASSUME_NONNULL_BEGIN
 
 @end
 
-@interface SourceView : View<DuplicateViewControllerDelegate, EditorViewControllerDelegate,
-                             FunctionViewControllerDelegate>
+@interface SourceView : View <DuplicateViewControllerDelegate,
+                              EditorViewControllerDelegate,
+                              FunctionViewControllerDelegate>
 
 @property(weak) id<SourceViewDataSource> dataSource;
 @property(weak) id<SourceViewDelegate> delegate;
@@ -65,6 +66,10 @@ NS_ASSUME_NONNULL_BEGIN
 
 - (void)clearErrors;
 
+- (void)touchDownAtLocation:(CGPoint)location;
+
+- (void)touchUp;
+
 - (std::optional<DraggingData>)startDraggingAtLocation:(CGPoint)location;
 
 - (BOOL)draggingPasteboardOfType:(marlin::control::pasteboard_t)type toLocation:(CGPoint)location;
@@ -78,10 +83,6 @@ NS_ASSUME_NONNULL_BEGIN
 - (void)resetDraggingDestination;
 
 - (void)resetDraggingSource;
-
-- (void)touchDownAtLocation:(CGPoint)location;
-
-- (void)touchUp;
 
 @end
 

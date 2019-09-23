@@ -28,7 +28,8 @@ document_update line_inserter<node_type, enable_type>::insert(
 
     // For now, we only support selecting one node
     assert(result.nodes.size() == 1);
-    updates.selection_update = source_selection{*_doc, *result.nodes[0]};
+    updates.selection_update =
+        source_selection{*_doc, *result.nodes[0], dropping_rule};
 
     for (auto& node : result.nodes) {
       _loc->block.emplace(_loc->index, std::move(node));

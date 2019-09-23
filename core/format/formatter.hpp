@@ -33,6 +33,7 @@ struct display {
   std::string source;
   std::vector<highlight_token> highlights;
 
+  display() {}
   display(std::string _source, std::vector<highlight_token> _highlights)
       : source{std::move(_source)}, highlights{std::move(_highlights)} {}
 };
@@ -201,6 +202,10 @@ struct formatter {
   void emit_ast(node_type<ast::function_signature>& signature, size_t) {
     emit_string(signature.name);
     emit_arguments(signature.parameters());
+  }
+
+  void emit_ast(node_type<ast::parameter>& param, size_t) {
+    emit_string(param.name);
   }
 
   void emit_ast(node_type<ast::function>& function, size_t) {

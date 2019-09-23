@@ -345,7 +345,7 @@ struct DocumentGetter {
 
 - (void)updateDuplicateAndEditorViewControllersForSelection {
   if (_selection.has_value()) {
-    if (auto type = _selection->dragging_type()) {
+    if (auto type = _selection->dragging_type(true)) {
       auto string = [self snapshotOfSelection:*_selection];
       auto draggingData = DraggingData{*type, [NSData dataWithDataView:_selection->get_data(true)]};
       [self.delegate showDuplicateViewControllerForSourceView:self
@@ -426,23 +426,20 @@ struct DocumentGetter {
 - (std::optional<DraggingData>)startDraggingAtLocation:(CGPoint)location {
   NSAssert(!_draggingSelection.has_value(), @"");
 
+  std::optional<DraggingData> data;
   if (_selection.has_value()) {
     if (const auto rect = [self rectOfSourceRange:_selection->get_range()];
         !CGRectContainsPoint(rect, location)) {
       _draggingSelection = (*std::exchange(_selection, std::nullopt)).as_dragging_selection();
-      [self updateDuplicateAndEditorViewControllersForSelection];
-      if (const auto type = _draggingSelection->dragging_type()) {
-        return DraggingData(*type, [NSData dataWithDataView:_draggingSelection->get_data()]);
+      if (const auto type = _draggingSelection->dragging_type(false)) {
+        data = DraggingData(*type, [NSData dataWithDataView:_draggingSelection->get_data()]);
       } else {
-        _draggingSelection.reset();
-        return std::nullopt;
+        std::swap(_selection, _draggingSelection);
       }
-    } else {
-      return std::nullopt;
+      [self updateDuplicateAndEditorViewControllersForSelection];
     }
-  } else {
-    return std::nullopt;
   }
+  return data;
 }
 
 - (BOOL)draggingPasteboardOfType:(marlin::control::pasteboard_t)type toLocation:(CGPoint)location {

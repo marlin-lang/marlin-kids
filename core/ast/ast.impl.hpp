@@ -50,6 +50,12 @@ struct function_signature : base::impl<function_signature, subnode::vector> {
       : base_type{std::move(_args)}, name{std::move(_name)} {}
 };
 
+struct parameter : base::impl<parameter>, reference {
+  std::string name;
+
+  explicit parameter(std::string _name) : name{std::move(_name)} {}
+};
+
 struct function : base::impl<function, subnode::concrete, subnode::vector>,
                   block {
   [[nodiscard]] decltype(auto) signature() { return get_subnode<0>(); }

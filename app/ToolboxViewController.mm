@@ -63,7 +63,7 @@ using ToolIndex = std::pair<NSInteger, NSInteger>;
 }
 
 - (void)showEditorViewControllerForSourceView:(SourceView *)view
-                                     withType:(marlin::control::literal_data_type)type
+                                     withType:(EditorType)type
                                          data:(std::string_view)data {
   [self dismissEditorViewController];
   EditorViewController *vc =

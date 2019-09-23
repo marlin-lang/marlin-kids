@@ -54,7 +54,8 @@ document_update expr_inserter<node_type, enable_type>::insert(
     auto& result{*try_result};
     assert(result.nodes.size() == 1);
 
-    updates.selection_update = source_selection{*_doc, *result.nodes[0]};
+    updates.selection_update =
+        source_selection{*_doc, *result.nodes[0], dropping_rule};
 
     auto original{_selection->source_code_range};
     _doc->replace_expression(*_selection, std::move(result.nodes[0]));
@@ -74,7 +75,7 @@ document_update expr_inserter<node_type, enable_type>::insert_literal(
   document_update updates;
   _doc->start_recording_side_effects();
 
-  auto* doc{_doc};
+  auto& doc{*_doc};
 
   std::optional<source_update> main_update;
   ast::base* new_node{nullptr};
@@ -93,13 +94,18 @@ document_update expr_inserter<node_type, enable_type>::insert_literal(
         assert(false);
     }
   } else if constexpr (node_type == pasteboard_t::reference) {
-    if (type == literal_data_type::variable_name ||
-        type == literal_data_type::identifier) {
-      std::tie(main_update, new_node) =
-          std::move(*this).insert_identifier(std::move(literal));
-    } else {
-      // Should not happen
-      assert(false);
+    switch (type) {
+      case literal_data_type::parameter:
+        [[fallthrough]];
+      case literal_data_type::variable_name:
+        [[fallthrough]];
+      case literal_data_type::identifier:
+        std::tie(main_update, new_node) =
+            std::move(*this).insert_identifier(type, std::move(literal));
+        break;
+      default:
+        // Should not happen
+        assert(false);
     }
   } else {
     // Should not happen
@@ -110,10 +116,10 @@ document_update expr_inserter<node_type, enable_type>::insert_literal(
     updates.source_updates.emplace_back(*std::move(main_update));
   }
   if (new_node != nullptr) {
-    updates.selection_update = source_selection{*doc, *new_node};
+    updates.selection_update = source_selection{doc, *new_node, dropping_rule};
   }
 
-  doc->gather_side_effects(updates.source_updates);
+  doc.gather_side_effects(updates.source_updates);
   return updates;
 }
 
@@ -121,5 +127,47 @@ template document_update expression_inserter::insert_literal(
     literal_data_type type, std::string_view literal) &&;
 template document_update reference_inserter::insert_literal(
     literal_data_type type, std::string_view literal) &&;
+
+template <pasteboard_t node_type, typename enable_type>
+std::pair<source_update, ast::base*>
+expr_inserter<node_type, enable_type>::insert_identifier(
+    literal_data_type type, std::string_view value) && {
+  static_assert(node_type == pasteboard_t::reference);
+
+  if (_selection->is<ast::parameter>()) {
+    assert(type == literal_data_type::parameter);
+
+    auto& doc{*_doc};
+    const ast::function_signature* parent{nullptr};
+    if (_selection->has_parent() &&
+        _selection->parent().is<ast::function_signature>()) {
+      parent = &_selection->parent().as<ast::function_signature>();
+    }
+
+    auto update{std::move(*this).insert_literal(
+        ast::make<ast::parameter>(std::string{std::move(value)}))};
+
+    if (parent != nullptr) {
+      doc.refresh_function_signature(parent->name, *parent);
+    }
+
+    return update;
+  } else if (_selection->is<ast::variable_placeholder>() ||
+             _selection->inherits<ast::lvalue>()) {
+    assert(type == literal_data_type::variable_name);
+
+    return std::move(*this).insert_literal(
+        ast::make<ast::variable_name>(std::string{std::move(value)}));
+  } else {
+    assert(type == literal_data_type::identifier);
+
+    return std::move(*this).insert_literal(
+        ast::make<ast::identifier>(std::string{std::move(value)}));
+  }
+}
+
+template std::pair<source_update, ast::base*>
+reference_inserter::insert_identifier(literal_data_type type,
+                                      std::string_view value) &&;
 
 }  // namespace marlin::control

@@ -34,9 +34,10 @@ namespace marlin::store {
   if (target.is<ast::function_signature>() ||
       target.is<ast::function_placeholder>()) {
     type = type_expectation::function_signature;
-  } else if (target.is<ast::variable_placeholder>() ||
-             target.is<ast::variable_name>()) {
+  } else if (target.inherits<ast::lvalue>()) {
     type = type_expectation::lvalue;
+  } else if (target.is<ast::parameter>()) {
+    type = type_expectation::parameter;
   } else {
     type = type_expectation::rvalue;
   }

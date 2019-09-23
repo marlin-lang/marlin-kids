@@ -320,6 +320,11 @@ struct generator {
   }
 
   template <typename wrapper_type>
+  auto get_jsast(ast::parameter& param, wrapper_type&& wrapper) {
+    return wrapper(jsast::ast::identifier{"__var_" + param.name});
+  }
+
+  template <typename wrapper_type>
   auto get_jsast(ast::function& function, wrapper_type&& wrapper) {
     if (function.signature()->is<ast::function_signature>()) {
       auto& signature{function.signature()->as<ast::function_signature>()};

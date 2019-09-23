@@ -39,7 +39,7 @@
 }
 
 - (void)showEditorViewControllerFromRect:(CGRect)rect
-                                withType:(marlin::control::literal_data_type)type
+                                withType:(EditorType)type
                                     data:(std::string_view)data {
 }
 

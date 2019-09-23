@@ -71,7 +71,7 @@
 
 - (void)showEditorViewControllerForSourceView:(SourceView *)view
                                      fromRect:(CGRect)rect
-                                     withType:(marlin::control::literal_data_type)type
+                                     withType:(EditorType)type
                                          data:(std::string_view)data {
   EditorViewController *vc =
       [self.storyboard instantiateViewControllerWithIdentifier:@"EditorViewController"];

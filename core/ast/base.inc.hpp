@@ -31,6 +31,7 @@ struct type_map {
   X(on_start)                \
   X(function_placeholder)    \
   X(function_signature)      \
+  X(parameter)               \
   X(function)                \
   X(eval_statement)          \
   X(assignment)              \

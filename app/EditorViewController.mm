@@ -28,6 +28,10 @@
   _type = type;
   auto *titles = @[ @"Num", @"Str", @"Var" ];
   switch (_type) {
+    case EditorType::parameter:
+      _formatter = [VariableFormatter new];
+      [self setupSegmentControlWithTitles:@[ @"Param" ] selection:0];
+      break;
     case EditorType::variable_name:
       _formatter = [VariableFormatter new];
       [self setupSegmentControlWithTitles:@[ @"Var" ] selection:0];

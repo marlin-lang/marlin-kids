@@ -3,7 +3,7 @@
 namespace marlin::control {
 
 document_update source_selection::remove_from_document() && {
-  assert(dragging_type().has_value());
+  assert(is_removable());
 
   document_update result;
   _doc->start_recording_side_effects();
@@ -23,6 +23,9 @@ document_update source_selection::remove_from_document() && {
   } else if (is<pasteboard_t::statement>()) {
     result.source_updates.emplace_back(
         std::move(*this).remove_line(result.selection_update));
+  } else if (_selection->is<ast::parameter>()) {
+    result.source_updates.emplace_back(
+        std::move(*this).remove_parameter(result.selection_update));
   } else if (is<pasteboard_t::expression>() || is<pasteboard_t::reference>()) {
     result.source_updates.emplace_back(
         std::move(*this).remove_expression(result.selection_update));
@@ -47,7 +50,30 @@ source_update source_selection::remove_line(
                    static_cast<ptrdiff_t>(line_range.end.line)};
   _doc->update_source_line_after_node(*_selection, line_offset);
   _doc->remove_line(*_selection);
-  return source_update{line_range, {"", {}}};
+  return {line_range, {}};
+}
+
+source_update source_selection::remove_parameter(
+    std::optional<source_selection>& result_selection) && {
+  assert(_selection->is<ast::parameter>());
+  assert(_selection->has_parent());
+  assert(!result_selection.has_value());
+
+  auto& parent{_selection->parent()};
+  source_range result_range;
+  if (parent.is<ast::function_signature>()) {
+    auto& signature{parent.as<ast::function_signature>()};
+    std::tie(std::ignore, result_range) =
+        _doc->remove_argument(signature.parameters(), *_selection);
+
+    _doc->refresh_function_signature(signature.name, signature);
+  } else {
+    assert(_selection->parent().is<ast::function_placeholder>());
+    std::tie(std::ignore, result_range) = _doc->remove_argument(
+        parent.as<ast::function_placeholder>().parameters(), *_selection);
+  }
+
+  return {result_range, {}};
 }
 
 source_update source_selection::remove_expression(
@@ -56,25 +82,12 @@ source_update source_selection::remove_expression(
   assert(_selection->has_parent());
   assert(!result_selection.has_value());
 
-  format::in_place_formatter formatter;
-
   auto placeholder_name{placeholder::get_replacing_node(*_selection)};
   if (_selection->parent().is<ast::user_function_call>() &&
       placeholder_name == placeholder::empty) {
     auto& call{_selection->parent().as<ast::user_function_call>()};
-    auto original_range{call.source_code_range};
-
-    auto args{call.arguments()};
-    for (auto i{0}; i < args.size(); i++) {
-      if (args[i].get() == _selection) {
-        args.pop(i);
-
-        auto display{formatter.format(call, call)};
-        return source_update{original_range, std::move(display)};
-      }
-    }
-    // _selection not found, this is unexpected
-    assert(false);
+    auto [node, range]{_doc->remove_argument(call.arguments(), *_selection)};
+    return source_update{range, {"", {}}};
   }
 
   auto original_range{_selection->source_code_range};
@@ -84,8 +97,9 @@ source_update source_selection::remove_expression(
                              std::string{std::move(placeholder_name)})
                        : ast::make<ast::expression_placeholder>(
                              std::string{std::move(placeholder_name)})};
-  result_selection = source_selection{*_doc, *placeholder};
+  result_selection = source_selection{*_doc, *placeholder, dropping_rule};
 
+  format::in_place_formatter formatter;
   auto display{formatter.format(placeholder, *_selection)};
   _doc->replace_expression(*_selection, std::move(placeholder));
   return source_update{original_range, std::move(display)};
@@ -94,6 +108,8 @@ source_update source_selection::remove_expression(
 document_update source_selection::insert_literal(literal_data_type type,
                                                  std::string_view literal) && {
   switch (type) {
+    case literal_data_type::parameter:
+      [[fallthrough]];
     case literal_data_type::variable_name:
       [[fallthrough]];
     case literal_data_type::identifier:
@@ -120,11 +136,18 @@ document_update source_selection::replace_function_signature(
     assert(signature.name.length() > 0);
     std::vector<ast::node> params;
     for (auto& param : signature.parameters) {
-      params.emplace_back(ast::make<ast::variable_name>(param));
+      params.emplace_back(ast::make<ast::parameter>(param));
     }
-    auto node{
-        ast::make<ast::function_signature>(signature.name, std::move(params))};
-    result.selection_update = source_selection{*_doc, *node};
+
+    ast::node node;
+    if (signature.name.length() > 0) {
+      node =
+          ast::make<ast::function_signature>(signature.name, std::move(params));
+    } else {
+      node = ast::make<ast::function_placeholder>(
+          std::string{placeholder::get<ast::function>(0)}, std::move(params));
+    }
+    result.selection_update = source_selection{*_doc, *node, dropping_rule};
 
     format::in_place_formatter formatter;
     auto display{formatter.format(node, *_selection)};
@@ -133,8 +156,12 @@ document_update source_selection::replace_function_signature(
 
     if (_selection->is<ast::function_signature>()) {
       const auto& previous_name{_selection->as<ast::function_signature>().name};
-      _doc->replace_function(previous_name, std::move(signature));
-    } else {
+      if (signature.name.length() > 0) {
+        _doc->replace_function(previous_name, std::move(signature));
+      } else {
+        _doc->remove_function(previous_name);
+      }
+    } else if (signature.name.length() > 0) {
       _doc->add_function(std::move(signature));
     }
 

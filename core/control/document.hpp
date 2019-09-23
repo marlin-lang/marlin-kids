@@ -125,6 +125,48 @@ struct document final : store::user_function_table_interface {
     return result;
   }
 
+  template <typename vector_type>
+  std::pair<ast::node, source_range> remove_argument(vector_type&& vector,
+                                                     ast::base& target) {
+    for (auto i{0}; i < vector.size(); i++) {
+      if (vector[i].get() == &target) {
+        source_range removed_range;
+        auto& node{*vector[i]};
+        if (i == 0) {
+          if (vector.size() == 1) {
+            removed_range = {{node.source_code_range.begin.line,
+                              node.source_code_range.begin.column},
+                             {node.source_code_range.end.line,
+                              node.source_code_range.end.column}};
+          } else {
+            removed_range = {{node.source_code_range.begin.line,
+                              node.source_code_range.begin.column},
+                             {node.source_code_range.end.line,
+                              node.source_code_range.end.column + 2}};
+          }
+        } else {
+          removed_range = {{node.source_code_range.begin.line,
+                            node.source_code_range.begin.column - 2},
+                           {node.source_code_range.end.line,
+                            node.source_code_range.end.column}};
+        }
+
+        const auto offset{static_cast<ptrdiff_t>(removed_range.begin.column) -
+                          static_cast<ptrdiff_t>(removed_range.end.column)};
+        if (offset != 0) {
+          update_source_column_after_node(node, offset);
+        }
+
+        auto result{vector.pop(i)};
+
+        return std::make_pair(std::move(result), removed_range);
+      }
+    }
+
+    // target not found, this is unexpected
+    assert(false);
+  }
+
   ast::node remove_line(ast::base& target) {
     // Statement must be in a vector of statements
     assert(target.has_parent());
@@ -308,6 +350,19 @@ struct document final : store::user_function_table_interface {
   void remove_function(const std::string& name) {
     _functions.remove_function(name);
     assign_user_call_definition(name, nullptr);
+  }
+
+  void refresh_function_signature(const std::string& original_name,
+                                  const ast::function_signature& node) {
+    function_definition signature{node.name};
+    for (const auto& param : node.parameters()) {
+      if (param->is<ast::parameter>()) {
+        signature.parameters.emplace_back(param->as<ast::parameter>().name);
+      } else {
+        assert(false);
+      }
+    }
+    replace_function(original_name, std::move(signature));
   }
 
   void assign_user_call_definition(const std::string& name,

@@ -20,7 +20,7 @@ NS_ASSUME_NONNULL_BEGIN
                                     draggingData:(const DraggingData &)draggingData;
 
 - (void)showEditorViewControllerForSourceView:(SourceView *)view
-                                     withType:(marlin::control::literal_data_type)type
+                                     withType:(EditorType)type
                                          data:(std::string_view)data;
 
 - (void)showFunctionViewControllerForSourceView:(SourceView *)view

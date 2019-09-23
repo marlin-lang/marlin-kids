@@ -234,7 +234,7 @@ struct store : base_store::impl<store> {
                                                       "Unexpected function!");
 
     std::string name{read_string()};
-    auto params{read_vector(type_expectation::lvalue)};
+    auto params{read_vector(type_expectation::parameter)};
 
     if (_functions->has_function(name) ||
         _new_functions.find(name) != _new_functions.end()) {
@@ -242,8 +242,8 @@ struct store : base_store::impl<store> {
     } else {
       std::vector<std::string> param_names;
       for (auto& param : params) {
-        if (param->is<ast::variable_name>()) {
-          param_names.emplace_back(param->as<ast::variable_name>().name);
+        if (param->is<ast::parameter>()) {
+          param_names.emplace_back(param->as<ast::parameter>().name);
         } else {
           throw read_error{"Unexpected node, expecting function parameter!"};
         }
@@ -373,12 +373,7 @@ struct store : base_store::impl<store> {
       return ast::make<ast::variable_placeholder>(
           std::string{std::move(string)});
     } else if (type == type_expectation::function_signature) {
-      auto params{read_vector(type_expectation::lvalue)};
-      for (auto& param : params) {
-        if (!param->is<ast::variable_name>()) {
-          throw read_error{"Unexpected node, expecting function parameter!"};
-        }
-      }
+      auto params{read_vector(type_expectation::parameter)};
       return ast::make<ast::function_placeholder>(
           std::string{std::move(string)}, std::move(params));
     } else {
@@ -388,14 +383,16 @@ struct store : base_store::impl<store> {
   }
 
   ast::node read_identifier(type_expectation type) {
-    assert_type<type_expectation::lvalue, type_expectation::rvalue>(
-        type, "Unexpected identifier!");
+    assert_type<type_expectation::lvalue, type_expectation::rvalue,
+                type_expectation::parameter>(type, "Unexpected identifier!");
 
     auto string{read_string()};
     if (type == type_expectation::lvalue) {
       return ast::make<ast::variable_name>(std::string{std::move(string)});
-    } else {
+    } else if (type == type_expectation::rvalue) {
       return ast::make<ast::identifier>(std::string{std::move(string)});
+    } else {
+      return ast::make<ast::parameter>(std::string{std::move(string)});
     }
   }
 
@@ -577,6 +574,11 @@ struct store : base_store::impl<store> {
       write_string(signature.name);
     }
     write_vector(signature.parameters());
+  }
+
+  void write_node(const ast::parameter& param) {
+    write_key(key::identifier);
+    write_string(param.name);
   }
 
   void write_node(const ast::function& function) {
