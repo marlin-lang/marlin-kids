@@ -4,6 +4,12 @@
 
 @end
 
+@interface ArrayCountFormatter : NumberFormatter
+
+@property NSUInteger minimalCount;
+
+@end
+
 @interface StringFormatter : NSFormatter
 
 @end

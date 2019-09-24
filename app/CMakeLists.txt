@@ -1,4 +1,5 @@
 set(HEADERS
+    ArrayViewController.h
     Document.h
     DrawHelper.h
     DuplicateSourceTextField.h
@@ -17,6 +18,7 @@ set(HEADERS
     Types.h)
 
 set(SOURCES
+    ArrayViewController.mm
     Document.mm
     DuplicateSourceTextField.mm
     DuplicateViewController.mm

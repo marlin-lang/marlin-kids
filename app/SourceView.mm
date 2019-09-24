@@ -175,6 +175,16 @@ struct DocumentGetter {
   [self setNeedsDisplay:YES];
 }
 
+#pragma mark - ArrayViewControllerDelegate
+
+- (void)arrayViewController:(ArrayViewController*)vc finishEditingWithCount:(NSUInteger)count {
+  if (_selection.has_value()) {
+    auto updates = _selection->set_new_array_elements_count(count);
+    [self performUpdates:std::move(updates)];
+  }
+  [self updateDuplicateAndEditorViewControllersForSelection];
+}
+
 #pragma mark - DuplicateViewControllerDelegate
 
 - (void)performDeleteForDuplicateViewController:(DuplicateViewController*)vc {
@@ -191,8 +201,6 @@ struct DocumentGetter {
     auto update = (*std::move(_selection)).insert_literal(type, string.stringView);
     _selection = std::move(update.selection_update);
     [self performUpdates:std::move(update.source_updates)];
-  } else {
-    _selection.reset();
   }
   [self updateDuplicateAndEditorViewControllersForSelection];
 }
@@ -212,8 +220,6 @@ struct DocumentGetter {
     auto updates = (*std::move(_selection)).replace_function_signature(signature);
     _selection = std::move(updates.selection_update);
     [self performUpdates:std::move(updates.source_updates)];
-  } else {
-    _selection.reset();
   }
   [self updateDuplicateAndEditorViewControllersForSelection];
 }
@@ -356,6 +362,11 @@ struct DocumentGetter {
     } else if (_selection->is_function_signature()) {
       [self.delegate showFunctionViewControllerForSourceView:self
                                        withFunctionSignature:_selection->get_function_signature()];
+    } else if (_selection->is_new_array()) {
+      [self.delegate
+          showArrayViewControllerForSourceView:self
+                                     withCount:_selection->get_new_array_element_count()
+                                  minimalCount:_selection->get_new_array_minimum_count()];
     } else {
       [self.delegate dismissEditorViewControllerForSourceView:self];
     }

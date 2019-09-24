@@ -21,6 +21,17 @@
 
 @end
 
+@implementation ArrayCountFormatter
+
+- (BOOL)getObjectValue:(out id _Nullable __autoreleasing *)obj
+             forString:(NSString *)string
+      errorDescription:(out NSString *__autoreleasing _Nullable *)error {
+  auto isValid = [super getObjectValue:obj forString:string errorDescription:error];
+  return isValid && string.integerValue >= self.minimalCount && string.integerValue <= 32;
+}
+
+@end
+
 @implementation StringFormatter
 
 - (BOOL)getObjectValue:(out id _Nullable __autoreleasing *)obj

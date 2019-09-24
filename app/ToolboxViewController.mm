@@ -43,6 +43,21 @@ using ToolIndex = std::pair<NSInteger, NSInteger>;
   document.register_toolbox(_model);
 }
 
+- (void)showArrayViewControllerForSourceView:(SourceView *)view
+                                   withCount:(NSUInteger)count
+                                minimalCount:(NSUInteger)minimalCount {
+  [self dismissEditorViewController];
+  ArrayViewController *vc =
+      [self.storyboard instantiateControllerWithIdentifier:@"ArrayViewController"];
+  vc.delegate = view;
+
+  [self addChildViewController:vc inView:self.editorView];
+
+  vc.minimalCount = minimalCount;
+  vc.countTextField.stringValue = [NSString stringWithFormat:@"%lu", count];
+  _editorViewController = vc;
+}
+
 - (void)showDuplicateViewControllerForSourceView:(SourceView *)view
                                       withString:(NSString *)string
                                     draggingData:(const DraggingData &)draggingData {
