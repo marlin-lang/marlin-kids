@@ -44,6 +44,8 @@ inline const std::string_view identifier{"id"};
 inline const std::string_view unary{"unary"};
 inline const std::string_view binary{"binary"};
 
+inline const std::string_view new_array{"new_array"};
+
 inline const std::string_view system_function{"sys_func"};
 inline const std::string_view user_function{"user_func"};
 
@@ -202,6 +204,7 @@ struct store : base_store::impl<store> {
             {key::identifier, &store::read_identifier},
             {key::unary, &store::read_unary_expression},
             {key::binary, &store::read_binary_expression},
+            {key::new_array, &store::read_new_array},
             {key::system_function, &store::read_system_function},
             {key::user_function, &store::read_user_function},
             {key::number, &store::read_number_literal},
@@ -440,6 +443,13 @@ struct store : base_store::impl<store> {
       return ast::make<ast::binary_expression>(std::move(left), op,
                                                std::move(right));
     }
+  }
+
+  ast::node read_new_array(type_expectation type) {
+    assert_type<type_expectation::rvalue>(type, "Unexpected expression!");
+
+    auto args{read_vector(type_expectation::rvalue)};
+    return ast::make<ast::new_array>(std::move(args));
   }
 
   ast::node read_system_function(type_expectation type) {
@@ -682,6 +692,11 @@ struct store : base_store::impl<store> {
     write_symbol(ast::symbol_for(binary.op));
     write_base(*binary.left());
     write_base(*binary.right());
+  }
+
+  void write_node(const ast::new_array& init) {
+    write_key(key::new_array);
+    write_vector(init.elements());
   }
 
   void write_node(const ast::system_function_call& call) {

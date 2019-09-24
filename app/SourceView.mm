@@ -62,27 +62,23 @@ struct DocumentGetter {
 
 - (void)performUpdates:(std::vector<marlin::control::source_update>)updates {
   for (auto& update : updates) {
-    [self performUpdate:std::move(update)];
-  }
-}
-
-- (void)performUpdate:(marlin::control::source_update)update {
-  // For now, we assume that there are only 3 types of updates:
-  //  - Insert statements/blocks
-  //  - Replace/remove expressions
-  //  - Remove statements/blocks
-  NSLog(@"%ld, %ld, %ld, %ld, %@", update.range.begin.line, update.range.begin.column,
-        update.range.end.line, update.range.end.column,
-        [NSString stringWithStringView:update.display.source]);
-  if (update.range.begin == update.range.end) {
-    [self insertLinesBeforeLine:update.range.begin.line
-                    withDisplay:std::move(update.display)
-                   isInitialize:false];
-  } else if (update.range.begin.line == update.range.end.line) {
-    [self updateExpressionInSourceRange:update.range withDisplay:std::move(update.display)];
-  } else {
-    assert(update.display.source.length() == 0);
-    [self removeLinesFromLine:update.range.begin.line toLine:update.range.end.line];
+    // For now, we assume that there are only 3 types of updates:
+    //  - Insert statements/blocks
+    //  - Replace/remove expressions
+    //  - Remove statements/blocks
+    NSLog(@"%ld, %ld, %ld, %ld, %@", update.range.begin.line, update.range.begin.column,
+          update.range.end.line, update.range.end.column,
+          [NSString stringWithStringView:update.display.source]);
+    if (update.range.begin == update.range.end) {
+      [self insertLinesBeforeLine:update.range.begin.line
+                      withDisplay:std::move(update.display)
+                     isInitialize:false];
+    } else if (update.range.begin.line == update.range.end.line) {
+      [self updateExpressionInSourceRange:update.range withDisplay:std::move(update.display)];
+    } else {
+      assert(update.display.source.length() == 0);
+      [self removeLinesFromLine:update.range.begin.line toLine:update.range.end.line];
+    }
   }
 }
 

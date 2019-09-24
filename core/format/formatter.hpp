@@ -145,8 +145,9 @@ struct formatter {
   }
 
   template <typename vector_type>
-  void emit_arguments(vector_type&& args) {
-    emit_string("(");
+  void emit_arguments(vector_type&& args, std::string_view left_delim = "(",
+                      std::string_view right_delim = ")") {
+    emit_string(left_delim);
     bool first{true};
     for (auto& arg : args) {
       if (first) {
@@ -156,7 +157,7 @@ struct formatter {
       }
       emit_node(*arg);
     }
-    emit_string(")");
+    emit_string(right_delim);
   }
 
   void emit_node(node_type<ast::base>& node, size_t paren_precedence = 0) {
@@ -380,6 +381,11 @@ struct formatter {
     if (op_precedence <= paren_precedence) {
       emit_string(")");
     }
+  }
+
+  void emit_ast(node_type<ast::new_array>& init, size_t) {
+    emit_string("array");
+    emit_arguments(init.elements());
   }
 
   void emit_ast(node_type<ast::system_function_call>& call, size_t) {

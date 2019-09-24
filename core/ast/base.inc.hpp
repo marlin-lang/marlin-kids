@@ -50,6 +50,7 @@ struct type_map {
   X(expression_placeholder)  \
   X(unary_expression)        \
   X(binary_expression)       \
+  X(new_array)               \
   X(system_function_call)    \
   X(user_function_call)      \
   X(identifier)              \

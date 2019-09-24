@@ -228,6 +228,13 @@ struct binary_expression
       : base_type{std::move(_l), std::move(_r)}, op{_op} {}
 };
 
+struct new_array : base::impl<new_array, subnode::vector>, expression {
+  [[nodiscard]] decltype(auto) elements() { return get_subnode<0>(); }
+  [[nodiscard]] decltype(auto) elements() const { return get_subnode<0>(); }
+
+  using base_type::impl;
+};
+
 struct system_function_call : base::impl<system_function_call, subnode::vector>,
                               expression {
   system_function func;

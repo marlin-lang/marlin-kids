@@ -78,24 +78,6 @@ struct document final : store::user_function_table_interface {
     _functions.set_toolbox(std::move(model));
   }
 
-  void start_recording_side_effects() { _side_effects.clear(); }
-  void gather_side_effects(std::vector<source_update>& updates) {
-    format::in_place_formatter formatter;
-    for (auto node : _side_effects) {
-      auto original{node->source_code_range};
-      auto display{formatter.format(*node, *node)};
-      updates.emplace_back(original, std::move(display));
-
-      const auto offset{
-          static_cast<ptrdiff_t>(node->source_code_range.end.column) -
-          static_cast<ptrdiff_t>(original.end.column)};
-      if (offset != 0) {
-        update_source_column_after_node(*node, offset);
-      }
-    }
-    _side_effects.clear();
-  }
-
  private:
   ast::node _program;
   user_function_table _functions;
@@ -104,6 +86,30 @@ struct document final : store::user_function_table_interface {
 
   // Convenient functions to modify _program
   // Implemented for use of friend structs
+
+  void start_recording_side_effects() { _side_effects.clear(); }
+  void gather_side_effects(std::vector<source_update>& updates) {
+    for (auto node : _side_effects) {
+      updates.emplace_back(refresh_node_display(*node));
+    }
+    _side_effects.clear();
+  }
+
+  source_update refresh_node_display(ast::base& node) {
+    format::in_place_formatter formatter;
+    auto original{node.source_code_range};
+    auto display{formatter.format(node, node)};
+    source_update result{original, std::move(display)};
+
+    const auto offset{
+        static_cast<ptrdiff_t>(node.source_code_range.end.column) -
+        static_cast<ptrdiff_t>(original.end.column)};
+    if (offset != 0) {
+      update_source_column_after_node(node, offset);
+    }
+
+    return result;
+  }
 
   ast::node replace_expression(ast::base& existing, ast::node replacement) {
     assert(existing.has_parent());

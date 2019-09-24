@@ -111,6 +111,33 @@ struct source_selection {
     }
   }
 
+  template <pasteboard_t node_type>
+  [[nodiscard]] bool is() const {
+    return _selection->inherits<typename details::ast_tag<node_type>::type>();
+  }
+
+  [[nodiscard]] bool is_function_signature() const {
+    return details::function_signature_test(*_selection);
+  }
+
+  [[nodiscard]] bool is_new_array() const {
+    return _selection->is<ast::new_array>();
+  }
+
+  [[nodiscard]] bool is_literal() const {
+    return _selection->is<ast::variable_placeholder>() ||
+           _selection->is<ast::expression_placeholder>() ||
+           _selection->is<ast::parameter>() ||
+           _selection->is<ast::variable_name>() ||
+           _selection->is<ast::number_literal>() ||
+           _selection->is<ast::string_literal>() ||
+           _selection->is<ast::identifier>();
+  }
+
+  [[nodiscard]] bool is_removable() const {
+    return _selection->is<ast::parameter>() || dragging_type(false).has_value();
+  }
+
   [[nodiscard]] literal_content get_literal_content() const {
     assert(is_literal());
     return _selection->apply<literal_content>(
@@ -132,27 +159,21 @@ struct source_selection {
     return signature;
   }
 
-  template <pasteboard_t node_type>
-  [[nodiscard]] bool is() const {
-    return _selection->inherits<typename details::ast_tag<node_type>::type>();
-  }
+  [[nodiscard]] size_t get_new_array_element_count() const {
+    assert(is_new_array());
 
-  [[nodiscard]] bool is_function_signature() const {
-    return details::function_signature_test(*_selection);
+    return _selection->as<ast::new_array>().elements().size();
   }
+  [[nodiscard]] size_t get_new_array_minimum_count() const {
+    assert(is_new_array());
 
-  [[nodiscard]] bool is_literal() const {
-    return _selection->is<ast::variable_placeholder>() ||
-           _selection->is<ast::expression_placeholder>() ||
-           _selection->is<ast::parameter>() ||
-           _selection->is<ast::variable_name>() ||
-           _selection->is<ast::number_literal>() ||
-           _selection->is<ast::string_literal>() ||
-           _selection->is<ast::identifier>();
-  }
-
-  [[nodiscard]] bool is_removable() const {
-    return _selection->is<ast::parameter>() || dragging_type(false).has_value();
+    size_t count{0};
+    for (auto& elem : _selection->as<ast::new_array>().elements()) {
+      if (!elem->is<ast::expression_placeholder>()) {
+        count++;
+      }
+    }
+    return count;
   }
 
   [[nodiscard]] source_selection as_dragging_selection() && {
@@ -207,6 +228,8 @@ struct source_selection {
       return {};
     }
   }
+
+  std::vector<source_update> set_new_array_elements_count(size_t count);
 
   document_update remove_from_document() &&;
   document_update insert_literal(literal_data_type type,

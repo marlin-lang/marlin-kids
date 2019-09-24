@@ -499,6 +499,15 @@ struct generator {
   }
 
   template <typename wrapper_type>
+  auto get_jsast(ast::new_array& init, wrapper_type&& wrapper) {
+    jsast::utils::move_vector<std::optional<jsast::ast::node>> elems;
+    for (auto& elem : init.elements()) {
+      elems.emplace_back(get_node(*elem));
+    }
+    return wrapper(jsast::ast::array_expression{std::move(elems)});
+  }
+
+  template <typename wrapper_type>
   auto get_jsast(ast::system_function_call& call, wrapper_type&& wrapper) {
     jsast::utils::move_vector<jsast::ast::node> args;
     for (auto& arg : call.arguments()) {

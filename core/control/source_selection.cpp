@@ -2,6 +2,41 @@
 
 namespace marlin::control {
 
+std::vector<source_update> source_selection::set_new_array_elements_count(
+    size_t count) {
+  assert(is_new_array());
+  assert(count >= get_new_array_minimum_count());
+
+  std::vector<source_update> result;
+  _doc->start_recording_side_effects();
+
+  auto elements{_selection->as<ast::new_array>().elements()};
+  const bool need_refresh = elements.size() != count;
+  if (elements.size() < count) {
+    for (auto i{elements.size()}; i < count; i++) {
+      elements.emplace_back(ast::make<ast::expression_placeholder>(
+          placeholder::get<ast::new_array>(0, i)));
+    }
+  } else if (elements.size() > count) {
+    for (auto i{elements.size() - 1}; elements.size() > count; i--) {
+      if (elements[i]->is<ast::expression_placeholder>()) {
+        elements.pop(i);
+      }
+      if (i == 0) {
+        break;
+      }
+    }
+  }
+
+  assert(elements.size() == count);
+  if (need_refresh) {
+    result.emplace_back(_doc->refresh_node_display(*_selection));
+  }
+
+  _doc->gather_side_effects(result);
+  return result;
+}
+
 document_update source_selection::remove_from_document() && {
   assert(is_removable());
 
@@ -84,7 +119,7 @@ source_update source_selection::remove_expression(
 
   auto placeholder_name{placeholder::get_replacing_node(*_selection)};
   if (_selection->parent().is<ast::user_function_call>() &&
-      placeholder_name == placeholder::empty) {
+      placeholder::is_empty(placeholder_name)) {
     auto& call{_selection->parent().as<ast::user_function_call>()};
     auto [node, range]{_doc->remove_argument(call.arguments(), *_selection)};
     return source_update{range, {"", {}}};
@@ -92,11 +127,11 @@ source_update source_selection::remove_expression(
 
   auto original_range{_selection->source_code_range};
 
-  auto placeholder{_selection->inherits<ast::lvalue>()
-                       ? ast::make<ast::variable_placeholder>(
-                             std::string{std::move(placeholder_name)})
-                       : ast::make<ast::expression_placeholder>(
-                             std::string{std::move(placeholder_name)})};
+  auto placeholder{
+      _selection->inherits<ast::lvalue>()
+          ? ast::make<ast::variable_placeholder>(std::move(placeholder_name))
+          : ast::make<ast::expression_placeholder>(
+                std::move(placeholder_name))};
   result_selection = source_selection{*_doc, *placeholder, dropping_rule};
 
   format::in_place_formatter formatter;
@@ -145,7 +180,7 @@ document_update source_selection::replace_function_signature(
           ast::make<ast::function_signature>(signature.name, std::move(params));
     } else {
       node = ast::make<ast::function_placeholder>(
-          std::string{placeholder::get<ast::function>(0)}, std::move(params));
+          placeholder::get<ast::function>(0), std::move(params));
     }
     result.selection_update = source_selection{*_doc, *node, dropping_rule};
 
