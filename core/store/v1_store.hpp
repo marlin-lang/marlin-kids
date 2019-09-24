@@ -44,6 +44,7 @@ inline const std::string_view identifier{"id"};
 inline const std::string_view unary{"unary"};
 inline const std::string_view binary{"binary"};
 
+inline const std::string_view subscript{"sub"};
 inline const std::string_view new_array{"new_array"};
 
 inline const std::string_view system_function{"sys_func"};
@@ -82,7 +83,7 @@ struct store : base_store::impl<store> {
     }
     _new_functions.clear();
 
-    for (auto* call : _unknown_calls) {
+    for (const auto& call : _unknown_calls) {
       if (_functions->has_function(call->name)) {
         call->assign_definition(&_functions->get_function(call->name));
       }
@@ -204,6 +205,7 @@ struct store : base_store::impl<store> {
             {key::identifier, &store::read_identifier},
             {key::unary, &store::read_unary_expression},
             {key::binary, &store::read_binary_expression},
+            {key::subscript, &store::read_subscript},
             {key::new_array, &store::read_new_array},
             {key::system_function, &store::read_system_function},
             {key::user_function, &store::read_user_function},
@@ -396,6 +398,19 @@ struct store : base_store::impl<store> {
       return ast::make<ast::identifier>(std::string{std::move(string)});
     } else {
       return ast::make<ast::parameter>(std::string{std::move(string)});
+    }
+  }
+
+  ast::node read_subscript(type_expectation type) {
+    assert_type<type_expectation::lvalue, type_expectation::rvalue>(
+        type, "Unexpected identifier!");
+
+    auto list{read_node(type)};
+    auto index{read_node(type_expectation::rvalue)};
+    if (type == type_expectation::lvalue) {
+      return ast::make<ast::subscript_set>(std::move(list), std::move(index));
+    } else {
+      return ast::make<ast::subscript_get>(std::move(list), std::move(index));
     }
   }
 
@@ -676,6 +691,12 @@ struct store : base_store::impl<store> {
     write_string(variable.name);
   }
 
+  void write_node(const ast::subscript_set& subscript) {
+    write_key(key::subscript);
+    write_base(*subscript.list());
+    write_base(*subscript.index());
+  }
+
   void write_node(const ast::expression_placeholder& placeholder) {
     write_key(key::placeholder);
     write_string(placeholder.name);
@@ -692,6 +713,12 @@ struct store : base_store::impl<store> {
     write_symbol(ast::symbol_for(binary.op));
     write_base(*binary.left());
     write_base(*binary.right());
+  }
+
+  void write_node(const ast::subscript_get& subscript) {
+    write_key(key::subscript);
+    write_base(*subscript.list());
+    write_base(*subscript.index());
   }
 
   void write_node(const ast::new_array& init) {

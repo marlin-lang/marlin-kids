@@ -167,6 +167,17 @@ inline prototype binary_prototype(ast::binary_op op) {
           }()};
 }
 
+inline prototype subscript_prototype() {
+  return {"subscript", pasteboard_t::reference, []() {
+            const auto node{ast::make<ast::subscript_get>(
+                ast::make<ast::expression_placeholder>(
+                    placeholder::get<ast::subscript_get>(0)),
+                ast::make<ast::expression_placeholder>(
+                    placeholder::get<ast::subscript_get>(1)))};
+            return store::write({node.get()});
+          }()};
+}
+
 inline prototype new_array_prototype() {
   return {
       "new_array", pasteboard_t::expression, []() {

@@ -79,6 +79,9 @@ static constexpr std::array binary_op_precedence_map{
 enum struct system_procedure : size_t {
   sleep,
   print,
+  list_append,
+  list_insert,
+  list_remove,
   draw_line,
   set_line_width,
   logo_forward,
@@ -89,9 +92,12 @@ enum struct system_procedure : size_t {
   logo_pen_down
 };
 
-static constexpr std::array<std::string_view, 10> system_procedure_name_map{
+static constexpr std::array<std::string_view, 13> system_procedure_name_map{
     "sleep" /* sleep */,
     "print" /* print */,
+    "append" /* list_append */,
+    "insert" /* list_insert */,
+    "remove" /* list_remove */,
     "draw_line" /* draw_line */,
     "set_line_width" /* set_line_width */,
     "logo_forward" /* logo_forward */,
@@ -105,9 +111,12 @@ static constexpr std::array<std::string_view, 10> system_procedure_name_map{
   return system_procedure_name_map[static_cast<size_t>(proc)];
 }
 
-static constexpr std::array<std::string_view, 10> system_procedure_display_map{
+static constexpr std::array<std::string_view, 13> system_procedure_display_map{
     "sleep" /* sleep */,
     "print" /* print */,
+    "append" /* list_append */,
+    "insert" /* list_insert */,
+    "remove" /* list_remove */,
     "draw_line" /* draw_line */,
     "set_line_width" /* set_line_width */,
     "logo.forward" /* logo_forward */,
@@ -125,6 +134,7 @@ enum struct system_function : size_t {
   range1,
   range2,
   range3,
+  list_length,
   time,
   abs,
   sqrt,
@@ -141,48 +151,32 @@ enum struct system_function : size_t {
   ceil
 };
 
-static constexpr std::array<std::string_view, 17> system_function_name_map{
-    "range1" /* range1 */,
-    "range2" /* range2 */,
-    "range3" /* range3 */,
-    "time" /* time */,
-    "abs" /* abs */,
-    "sqrt" /* sqrt */,
-    "sin" /* sin */,
-    "cos" /* cos */,
-    "tan" /* tan */,
-    "asin" /* asin */,
-    "acos" /* acos */,
-    "atan" /* atan */,
-    "ln" /* ln */,
-    "log" /* log */,
-    "round" /* round */,
-    "floor" /* floor */,
-    "ceil" /* ceil */
+static constexpr std::array<std::string_view, 18> system_function_name_map{
+    "range1" /* range1 */, "range2" /* range2 */,
+    "range3" /* range3 */, "length" /* list_length */,
+    "time" /* time */,     "abs" /* abs */,
+    "sqrt" /* sqrt */,     "sin" /* sin */,
+    "cos" /* cos */,       "tan" /* tan */,
+    "asin" /* asin */,     "acos" /* acos */,
+    "atan" /* atan */,     "ln" /* ln */,
+    "log" /* log */,       "round" /* round */,
+    "floor" /* floor */,   "ceil" /* ceil */
 };
 [[nodiscard]] inline constexpr std::string_view name_for(
     system_function func) noexcept {
   return system_function_name_map[static_cast<size_t>(func)];
 }
 
-static constexpr std::array<std::string_view, 17> system_function_display_map{
-    "range" /* range1 */,
-    "range" /* range2 */,
-    "range" /* range3 */,
-    "time" /* time */,
-    "abs" /* abs */,
-    "sqrt" /* sqrt */,
-    "sin" /* sin */,
-    "cos" /* cos */,
-    "tan" /* tan */,
-    "asin" /* asin */,
-    "acos" /* acos */,
-    "atan" /* atan */,
-    "ln" /* ln */,
-    "log" /* log */,
-    "round" /* round */,
-    "floor" /* floor */,
-    "ceil" /* ceil */
+static constexpr std::array<std::string_view, 18> system_function_display_map{
+    "range" /* range1 */, "range" /* range2 */,
+    "range" /* range3 */, "length" /* list_length */,
+    "time" /* time */,    "abs" /* abs */,
+    "sqrt" /* sqrt */,    "sin" /* sin */,
+    "cos" /* cos */,      "tan" /* tan */,
+    "asin" /* asin */,    "acos" /* acos */,
+    "atan" /* atan */,    "ln" /* ln */,
+    "log" /* log */,      "round" /* round */,
+    "floor" /* floor */,  "ceil" /* ceil */
 };
 [[nodiscard]] inline constexpr std::string_view display_for(
     system_function func) noexcept {

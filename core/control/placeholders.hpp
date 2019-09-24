@@ -177,12 +177,37 @@ inline std::string placeholder::get<ast::binary_expression>(
   return std::string{subnodes[subnode_index]};
 }
 
+template <>
+inline std::string placeholder::get<ast::subscript_set>(size_t subnode_index,
+                                                        size_t node_index) {
+  static constexpr std::array<std::string_view, 2> subnodes{"list", "index"};
+  return std::string{subnodes[subnode_index]};
+}
+
+template <>
+inline std::string placeholder::get<ast::subscript_get>(size_t subnode_index,
+                                                        size_t node_index) {
+  static constexpr std::array<std::string_view, 2> subnodes{"list", "index"};
+  return std::string{subnodes[subnode_index]};
+}
+
+template <>
+inline std::string placeholder::get<ast::new_array>(size_t subnode_index,
+                                                    size_t node_index) {
+  assert(subnode_index == 0);
+  return "elem" + std::to_string(node_index);
+}
+
 struct placeholder_system_procedure_args {
  private:
   static const auto& placeholders() {
     static const std::array _placeholders{
         std::vector<std::string_view>{"seconds"} /* sleep */,
         std::vector<std::string_view>{"message"} /* print */,
+        std::vector<std::string_view>{"list", "element"} /* list_append */,
+        std::vector<std::string_view>{"list", "index",
+                                      "element"} /* list_insert */,
+        std::vector<std::string_view>{"list", "index"} /* list_remove */,
         std::vector<std::string_view>{"start_x", "start_y", "end_x",
                                       "end_y"} /* draw_line */,
         std::vector<std::string_view>{"width"} /* set_line_width */,
@@ -217,6 +242,7 @@ struct placeholder_system_function_args {
         std::vector<std::string_view>{"end"} /* range1 */,
         std::vector<std::string_view>{"begin", "end"} /* range2 */,
         std::vector<std::string_view>{"begin", "end", "step"} /* range3 */,
+        std::vector<std::string_view>{"list"} /* list_length */,
         std::vector<std::string_view>{} /* time */,
         std::vector<std::string_view>{"value"} /* abs */,
         std::vector<std::string_view>{"value"} /* sqrt */,
@@ -239,13 +265,6 @@ struct placeholder_system_function_args {
     return placeholders()[static_cast<size_t>(func)];
   }
 };
-
-template <>
-inline std::string placeholder::get<ast::new_array>(size_t subnode_index,
-                                                    size_t node_index) {
-  assert(subnode_index == 0);
-  return "elem" + std::to_string(node_index);
-}
 
 template <>
 inline std::string placeholder::get<ast::system_function_call>(

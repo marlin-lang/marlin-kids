@@ -97,9 +97,15 @@ struct generator {
   }
 
   using callee_entry = std::pair<jsast::ast::node (*)(), bool>;
-  static constexpr std::array<callee_entry, 10> system_procedure_callee_map{
+  static constexpr std::array<callee_entry, 13> system_procedure_callee_map{
       std::pair{[]() { return env_name("sleep"); }, true} /* sleep */,
       std::pair{[]() { return env_name("print"); }, false} /* print */,
+      std::pair{[]() { return system_callee("array_utils", "append"); },
+                false} /* list_append */,
+      std::pair{[]() { return system_callee("array_utils", "insert"); },
+                false} /* list_insert */,
+      std::pair{[]() { return system_callee("array_utils", "remove"); },
+                false} /* list_remove */,
       std::pair{[]() { return system_callee("graphics", "drawLine"); },
                 true} /* draw_line */,
       std::pair{[]() { return system_callee("graphics", "setLineWidth"); },
@@ -117,90 +123,40 @@ struct generator {
       std::pair{[]() { return system_callee("logo", "penDown"); },
                 false} /* logo_pen_down */
   };
-  static constexpr std::array<callee_entry, 17> system_function_callee_map{
+  static constexpr std::array<callee_entry, 18> system_function_callee_map{
       std::pair{[]() { return env_name("range"); }, false} /* range1 */,
       std::pair{[]() { return env_name("range"); }, false} /* range2 */,
       std::pair{[]() { return env_name("range"); }, false} /* range3 */,
+      std::pair{[]() { return system_callee("array_utils", "length"); },
+                false} /* list_length */,
       std::pair{[]() { return env_name("time"); }, false} /* time */,
-      std::pair{[]() {
-                  return jsast::ast::node{jsast::ast::member_expression{
-                      env_name("math_extra"),
-                      jsast::ast::member_identifier{"abs"}}};
-                },
+      std::pair{[]() { return system_callee("math_utils", "abs"); },
                 false} /* abs */,
-      std::pair{[]() {
-                  return jsast::ast::node{jsast::ast::member_expression{
-                      env_name("math_extra"),
-                      jsast::ast::member_identifier{"sqrt"}}};
-                },
+      std::pair{[]() { return system_callee("math_utils", "sqrt"); },
                 false} /* sqrt */,
-      std::pair{[]() {
-                  return jsast::ast::node{jsast::ast::member_expression{
-                      env_name("math_extra"),
-                      jsast::ast::member_identifier{"sin"}}};
-                },
-                false} /* sin */
-      ,
-      std::pair{[]() {
-                  return jsast::ast::node{jsast::ast::member_expression{
-                      env_name("math_extra"),
-                      jsast::ast::member_identifier{"cos"}}};
-                },
+      std::pair{[]() { return system_callee("math_utils", "sin"); },
+                false} /* sin */,
+      std::pair{[]() { return system_callee("math_utils", "cos"); },
                 false} /* cos */,
-      std::pair{[]() {
-                  return jsast::ast::node{jsast::ast::member_expression{
-                      env_name("math_extra"),
-                      jsast::ast::member_identifier{"tan"}}};
-                },
+      std::pair{[]() { return system_callee("math_utils", "tan"); },
                 false} /* tan */,
-      std::pair{[]() {
-                  return jsast::ast::node{jsast::ast::member_expression{
-                      env_name("math_extra"),
-                      jsast::ast::member_identifier{"asin"}}};
-                },
+      std::pair{[]() { return system_callee("math_utils", "asin"); },
                 false} /* asin */,
-      std::pair{[]() {
-                  return jsast::ast::node{jsast::ast::member_expression{
-                      env_name("math_extra"),
-                      jsast::ast::member_identifier{"acos"}}};
-                },
+      std::pair{[]() { return system_callee("math_utils", "acos"); },
                 false} /* acos */,
-      std::pair{[]() {
-                  return jsast::ast::node{jsast::ast::member_expression{
-                      env_name("math_extra"),
-                      jsast::ast::member_identifier{"atan"}}};
-                },
+      std::pair{[]() { return system_callee("math_utils", "atan"); },
                 false} /* atan */,
-      std::pair{[]() {
-                  return jsast::ast::node{jsast::ast::member_expression{
-                      env_name("math_extra"),
-                      jsast::ast::member_identifier{"ln"}}};
-                },
+      std::pair{[]() { return system_callee("math_utils", "ln"); },
                 false} /* ln */,
-      std::pair{[]() {
-                  return jsast::ast::node{jsast::ast::member_expression{
-                      env_name("math_extra"),
-                      jsast::ast::member_identifier{"log"}}};
-                },
+      std::pair{[]() { return system_callee("math_utils", "log"); },
                 false} /* log */,
-      std::pair{[]() {
-                  return jsast::ast::node{jsast::ast::member_expression{
-                      env_name("math_extra"),
-                      jsast::ast::member_identifier{"round"}}};
-                },
+      std::pair{[]() { return system_callee("math_utils", "round"); },
                 false} /* round */,
-      std::pair{[]() {
-                  return jsast::ast::node{jsast::ast::member_expression{
-                      env_name("math_extra"),
-                      jsast::ast::member_identifier{"floor"}}};
-                },
+      std::pair{[]() { return system_callee("math_utils", "floor"); },
                 false} /* floor */,
-      std::pair{[]() {
-                  return jsast::ast::node{jsast::ast::member_expression{
-                      env_name("math_extra"),
-                      jsast::ast::member_identifier{"ceil"}}};
-                },
-                false} /* ceil */};
+      std::pair{[]() { return system_callee("math_utils", "ceil"); },
+                false} /* ceil */
+  };
 
   std::unordered_set<ast::base*> _async_blocks;
   std::unordered_map<std::string_view, ast::base*> _user_functions;
@@ -498,6 +454,25 @@ struct generator {
     }
   }
 
+  template <typename subscript_type, typename wrapper_type>
+  auto get_subscript(subscript_type& subscript, wrapper_type&& wrapper) {
+    auto list{get_node(*subscript.list())};
+    auto index{get_node(*subscript.index())};
+    return wrapper(jsast::ast::member_expression{
+        jsast::ast::call_expression{env_name("as_array"), {std::move(list)}},
+        std::move(index)});
+  }
+
+  template <typename wrapper_type>
+  auto get_jsast(ast::subscript_set& subscript, wrapper_type&& wrapper) {
+    return get_subscript(subscript, wrapper);
+  }
+
+  template <typename wrapper_type>
+  auto get_jsast(ast::subscript_get& subscript, wrapper_type&& wrapper) {
+    return get_subscript(subscript, wrapper);
+  }
+
   template <typename wrapper_type>
   auto get_jsast(ast::new_array& init, wrapper_type&& wrapper) {
     jsast::utils::move_vector<std::optional<jsast::ast::node>> elems;
@@ -567,13 +542,13 @@ struct generator {
   }
 
   template <typename wrapper_type>
-  auto get_jsast(ast::identifier& identifier, wrapper_type&& wrapper) {
-    return get_identifier(identifier.name, std::forward<wrapper_type>(wrapper));
+  auto get_jsast(ast::variable_name& variable, wrapper_type&& wrapper) {
+    return get_identifier(variable.name, std::forward<wrapper_type>(wrapper));
   }
 
   template <typename wrapper_type>
-  auto get_jsast(ast::variable_name& variable, wrapper_type&& wrapper) {
-    return get_identifier(variable.name, std::forward<wrapper_type>(wrapper));
+  auto get_jsast(ast::identifier& identifier, wrapper_type&& wrapper) {
+    return get_identifier(identifier.name, std::forward<wrapper_type>(wrapper));
   }
 
   template <typename wrapper_type>

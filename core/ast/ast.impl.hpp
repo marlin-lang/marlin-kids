@@ -196,6 +196,18 @@ struct variable_name : base::impl<variable_name>, lvalue {
   explicit variable_name(std::string _name) : name{std::move(_name)} {}
 };
 
+struct subscript_set
+    : base::impl<subscript_set, subnode::concrete, subnode::concrete>,
+      lvalue {
+  [[nodiscard]] decltype(auto) list() { return get_subnode<0>(); }
+  [[nodiscard]] decltype(auto) list() const { return get_subnode<0>(); }
+
+  [[nodiscard]] decltype(auto) index() { return get_subnode<1>(); }
+  [[nodiscard]] decltype(auto) index() const { return get_subnode<1>(); }
+
+  using base_type::impl;
+};
+
 struct expression_placeholder : base::impl<expression_placeholder> {
   std::string name;
 
@@ -226,6 +238,18 @@ struct binary_expression
 
   explicit binary_expression(node _l, binary_op _op, node _r)
       : base_type{std::move(_l), std::move(_r)}, op{_op} {}
+};
+
+struct subscript_get
+    : base::impl<subscript_get, subnode::concrete, subnode::concrete>,
+      expression {
+  [[nodiscard]] decltype(auto) list() { return get_subnode<0>(); }
+  [[nodiscard]] decltype(auto) list() const { return get_subnode<0>(); }
+
+  [[nodiscard]] decltype(auto) index() { return get_subnode<1>(); }
+  [[nodiscard]] decltype(auto) index() const { return get_subnode<1>(); }
+
+  using base_type::impl;
 };
 
 struct new_array : base::impl<new_array, subnode::vector>, expression {

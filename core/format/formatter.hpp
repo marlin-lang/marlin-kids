@@ -342,6 +342,13 @@ struct formatter {
     emit_string(variable.name);
   }
 
+  void emit_ast(node_type<ast::subscript_set>& subscript, size_t) {
+    emit_node(*subscript.list());
+    emit_string("[");
+    emit_node(*subscript.index());
+    emit_string("]");
+  }
+
   void emit_ast(node_type<ast::expression_placeholder>& placeholder, size_t) {
     emit_placeholder(placeholder.name);
   }
@@ -381,6 +388,13 @@ struct formatter {
     if (op_precedence <= paren_precedence) {
       emit_string(")");
     }
+  }
+
+  void emit_ast(node_type<ast::subscript_get>& subscript, size_t) {
+    emit_node(*subscript.list());
+    emit_string("[");
+    emit_node(*subscript.index());
+    emit_string("]");
   }
 
   void emit_ast(node_type<ast::new_array>& init, size_t) {

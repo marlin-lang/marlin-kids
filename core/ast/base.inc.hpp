@@ -47,9 +47,11 @@ struct type_map {
   X(return_result_statement) \
   X(variable_placeholder)    \
   X(variable_name)           \
+  X(subscript_set)           \
   X(expression_placeholder)  \
   X(unary_expression)        \
   X(binary_expression)       \
+  X(subscript_get)           \
   X(new_array)               \
   X(system_function_call)    \
   X(user_function_call)      \
