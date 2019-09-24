@@ -10,11 +10,7 @@ using ToolIndex = std::pair<NSInteger, NSInteger>;
 @interface ToolboxViewController () <CollectionViewDelegateFlowLayout>
 
 @property(weak) IBOutlet View *duplicateView;
-@property(weak) IBOutlet NSLayoutConstraint *duplicateViewHeightConstraint;
-
 @property(weak) IBOutlet View *editorView;
-@property(weak) IBOutlet NSLayoutConstraint *editorViewHeightConstraint;
-
 @property(weak) IBOutlet StackView *categoryStackView;
 
 @end
@@ -54,9 +50,7 @@ using ToolIndex = std::pair<NSInteger, NSInteger>;
   DuplicateViewController *vc =
       [self.storyboard instantiateControllerWithIdentifier:@"DuplicateViewController"];
   vc.delegate = view;
-  [self addChildViewController:vc
-                        inView:self.duplicateView
-              heightConstraint:self.duplicateViewHeightConstraint];
+  [self addChildViewController:vc inView:self.duplicateView];
   vc.sourceString = string;
   vc.draggingData = draggingData;
   _duplicateViewController = vc;
@@ -70,9 +64,7 @@ using ToolIndex = std::pair<NSInteger, NSInteger>;
       [self.storyboard instantiateControllerWithIdentifier:@"EditorViewController"];
   vc.delegate = view;
 
-  [self addChildViewController:vc
-                        inView:self.editorView
-              heightConstraint:self.editorViewHeightConstraint];
+  [self addChildViewController:vc inView:self.editorView];
 
   vc.type = type;
   vc.editorTextField.stringValue = [NSString stringWithStringView:data];
@@ -86,9 +78,7 @@ using ToolIndex = std::pair<NSInteger, NSInteger>;
       [self.storyboard instantiateControllerWithIdentifier:@"FunctionViewController"];
   vc.delegate = view;
 
-  [self addChildViewController:vc
-                        inView:self.editorView
-              heightConstraint:self.editorViewHeightConstraint];
+  [self addChildViewController:vc inView:self.editorView];
 
   [vc setFunctionSignature:std::move(signature)];
   _editorViewController = vc;
@@ -96,16 +86,14 @@ using ToolIndex = std::pair<NSInteger, NSInteger>;
 
 - (void)dismissDuplicateViewController {
   if (_duplicateViewController) {
-    [self removeChildViewController:_duplicateViewController
-                   heightConstraint:self.duplicateViewHeightConstraint];
+    [self removeChildViewController:_duplicateViewController];
     _duplicateViewController = nil;
   }
 }
 
 - (void)dismissEditorViewController {
   if (_editorViewController) {
-    [self removeChildViewController:_editorViewController
-                   heightConstraint:self.editorViewHeightConstraint];
+    [self removeChildViewController:_editorViewController];
     _editorViewController = nil;
   }
 }
@@ -120,13 +108,10 @@ using ToolIndex = std::pair<NSInteger, NSInteger>;
 
 #pragma mark - Private Methods
 
-- (void)addChildViewController:(ViewController *)vc
-                        inView:(View *)view
-              heightConstraint:(NSLayoutConstraint *)heightConstraint {
+- (void)addChildViewController:(ViewController *)vc inView:(View *)view {
   [self addChildViewController:vc];
   [view addSubview:vc.view];
   vc.view.translatesAutoresizingMaskIntoConstraints = NO;
-  heightConstraint.constant = vc.view.bounds.size.height;
   [vc.view.leftAnchor constraintEqualToAnchor:view.leftAnchor].active = YES;
   [vc.view.rightAnchor constraintEqualToAnchor:view.rightAnchor].active = YES;
   [vc.view.topAnchor constraintEqualToAnchor:view.topAnchor].active = YES;
@@ -136,14 +121,12 @@ using ToolIndex = std::pair<NSInteger, NSInteger>;
 #endif
 }
 
-- (void)removeChildViewController:(ViewController *)vc
-                 heightConstraint:(NSLayoutConstraint *)heightConstraint {
+- (void)removeChildViewController:(ViewController *)vc {
 #ifdef IOS
   [vc willMoveToParentViewController:nil];
 #endif
   [vc.view removeFromSuperview];
   [vc removeFromParentViewController];
-  heightConstraint.constant = 0;
 }
 
 - (void)sectionButtonPressed:(Button *)sender {
