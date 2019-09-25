@@ -1,6 +1,7 @@
 set(HEADERS
     document.hpp
     expr_inserter.hpp
+    literal_content.hpp
     placeholders.hpp
     prototypes.hpp
     source_update.hpp

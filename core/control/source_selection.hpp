@@ -10,6 +10,7 @@
 #include "expr_inserter.hpp"
 #include "formatter.hpp"
 #include "function_definition.hpp"
+#include "literal_content.hpp"
 #include "placeholders.hpp"
 #include "store.hpp"
 
@@ -82,14 +83,6 @@ struct line_update {
 struct document_update;
 
 struct source_selection {
-  struct literal_content {
-    literal_data_type type;
-    std::string content;
-
-    literal_content(literal_data_type _type, std::string _content)
-        : type{_type}, content{std::move(_content)} {}
-  };
-
   source_selection(document& doc, source_loc loc,
                    selection_specialization_rule rule = default_rule)
       : source_selection{doc, doc.locate(loc), rule} {}
@@ -105,7 +98,7 @@ struct source_selection {
   [[nodiscard]] store::data_vector get_data(
       bool erase_function_names = false) const {
     if (erase_function_names) {
-      return store::write({_selection}, placeholder::get<ast::function>(0));
+      return store::write({_selection}, placeholder::get<ast::function>({0}));
     } else {
       return store::write({_selection});
     }
@@ -285,49 +278,49 @@ struct document_update {
 };
 
 template <>
-[[nodiscard]] inline source_selection::literal_content
+[[nodiscard]] inline literal_content
 source_selection::get_literal_content<ast::parameter>(
     const ast::parameter& param) const {
   return {literal_data_type::parameter, param.name};
 }
 
 template <>
-[[nodiscard]] inline source_selection::literal_content
+[[nodiscard]] inline literal_content
 source_selection::get_literal_content<ast::variable_placeholder>(
     const ast::variable_placeholder& node) const {
   return {literal_data_type::variable_name, ""};
 }
 
 template <>
-[[nodiscard]] inline source_selection::literal_content
+[[nodiscard]] inline literal_content
 source_selection::get_literal_content<ast::variable_name>(
     const ast::variable_name& node) const {
   return {literal_data_type::variable_name, node.name};
 }
 
 template <>
-[[nodiscard]] inline source_selection::literal_content
+[[nodiscard]] inline literal_content
 source_selection::get_literal_content<ast::expression_placeholder>(
     const ast::expression_placeholder& node) const {
-  return {literal_data_type::number, ""};
+  return {literal_content::get_default_type_for_node(node), ""};
 }
 
 template <>
-[[nodiscard]] inline source_selection::literal_content
+[[nodiscard]] inline literal_content
 source_selection::get_literal_content<ast::number_literal>(
     const ast::number_literal& node) const {
   return {literal_data_type::number, node.value};
 }
 
 template <>
-[[nodiscard]] inline source_selection::literal_content
+[[nodiscard]] inline literal_content
 source_selection::get_literal_content<ast::string_literal>(
     const ast::string_literal& node) const {
   return {literal_data_type::string, node.value};
 }
 
 template <>
-[[nodiscard]] inline source_selection::literal_content
+[[nodiscard]] inline literal_content
 source_selection::get_literal_content<ast::identifier>(
     const ast::identifier& node) const {
   return {literal_data_type::identifier, node.name};

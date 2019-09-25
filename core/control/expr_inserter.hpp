@@ -9,6 +9,7 @@
 #include "byte_span.hpp"
 #include "document.hpp"
 #include "formatter.hpp"
+#include "literal_content.hpp"
 #include "prototypes.hpp"
 
 namespace marlin::control {
@@ -19,14 +20,6 @@ template <pasteboard_t node_type>
 struct dependent_false : std::false_type {};
 
 }  // namespace details
-
-enum struct literal_data_type {
-  parameter,
-  variable_name,
-  identifier,
-  number,
-  string
-};
 
 struct document_update;
 struct source_selection;

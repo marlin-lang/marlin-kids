@@ -15,7 +15,7 @@ std::vector<source_update> source_selection::set_new_array_elements_count(
   if (elements.size() < count) {
     for (auto i{elements.size()}; i < count; i++) {
       elements.emplace_back(ast::make<ast::expression_placeholder>(
-          placeholder::get<ast::new_array>(0, i)));
+          placeholder::get<ast::new_array>({0, i})));
     }
   } else if (elements.size() > count) {
     for (auto i{elements.size() - 1}; elements.size() > count; i--) {
@@ -180,7 +180,7 @@ document_update source_selection::replace_function_signature(
           ast::make<ast::function_signature>(signature.name, std::move(params));
     } else {
       node = ast::make<ast::function_placeholder>(
-          placeholder::get<ast::function>(0), std::move(params));
+          placeholder::get<ast::function>({0}), std::move(params));
     }
     result.selection_update = source_selection{*_doc, *node, dropping_rule};
 

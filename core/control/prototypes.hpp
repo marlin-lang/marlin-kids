@@ -23,7 +23,7 @@ inline prototype function_prototype() {
       "function", pasteboard_t::block, []() {
         const auto node{ast::make<ast::function>(
             ast::make<ast::function_placeholder>(
-                placeholder::get<ast::function>(0), std::vector<ast::node>{}),
+                placeholder::get<ast::function>({0}), std::vector<ast::node>{}),
             std::vector<ast::node>{})};
         return store::write({node.get()});
       }()};
@@ -33,7 +33,7 @@ inline prototype eval_prototype() {
   return {"eval", pasteboard_t::statement, []() {
             const auto node{ast::make<ast::eval_statement>(
                 ast::make<ast::expression_placeholder>(
-                    placeholder::get<ast::eval_statement>(0)))};
+                    placeholder::get<ast::eval_statement>({0})))};
             return store::write({node.get()});
           }()};
 }
@@ -42,9 +42,9 @@ inline prototype assignment_prototype() {
   return {"assign", pasteboard_t::statement, []() {
             const auto node{ast::make<ast::assignment>(
                 ast::make<ast::variable_placeholder>(
-                    placeholder::get<ast::assignment>(0)),
+                    placeholder::get<ast::assignment>({0})),
                 ast::make<ast::expression_placeholder>(
-                    placeholder::get<ast::assignment>(1)))};
+                    placeholder::get<ast::assignment>({1})))};
             return store::write({node.get()});
           }()};
 }
@@ -53,7 +53,7 @@ inline prototype use_global_prototype() {
   return {"global", pasteboard_t::statement, []() {
             const auto node{
                 ast::make<ast::use_global>(ast::make<ast::variable_placeholder>(
-                    placeholder::get<ast::use_global>(0)))};
+                    placeholder::get<ast::use_global>({0})))};
             return store::write({node.get()});
           }()};
 }
@@ -78,7 +78,7 @@ inline prototype if_prototype() {
   return {"if", pasteboard_t::statement, []() {
             const auto node{ast::make<ast::if_statement>(
                 ast::make<ast::expression_placeholder>(
-                    placeholder::get<ast::if_statement>(0)),
+                    placeholder::get<ast::if_statement>({0})),
                 std::vector<ast::node>{})};
             return store::write({node.get()});
           }()};
@@ -98,7 +98,7 @@ inline prototype while_prototype() {
   return {"while", pasteboard_t::statement, []() {
             const auto node{ast::make<ast::while_statement>(
                 ast::make<ast::expression_placeholder>(
-                    placeholder::get<ast::while_statement>(0)),
+                    placeholder::get<ast::while_statement>({0})),
                 std::vector<ast::node>{})};
             return store::write({node.get()});
           }()};
@@ -108,9 +108,9 @@ inline prototype for_prototype() {
   return {"for", pasteboard_t::statement, []() {
             const auto node{ast::make<ast::for_statement>(
                 ast::make<ast::variable_placeholder>(
-                    placeholder::get<ast::for_statement>(0)),
+                    placeholder::get<ast::for_statement>({0})),
                 ast::make<ast::expression_placeholder>(
-                    placeholder::get<ast::for_statement>(1)),
+                    placeholder::get<ast::for_statement>({1})),
                 std::vector<ast::node>{})};
             return store::write({node.get()});
           }()};
@@ -141,7 +141,7 @@ inline prototype return_result_prototype() {
   return {"return1", pasteboard_t::statement, []() {
             const auto node{ast::make<ast::return_result_statement>(
                 ast::make<ast::expression_placeholder>(
-                    placeholder::get<ast::return_result_statement>(0)))};
+                    placeholder::get<ast::return_result_statement>({0})))};
             return store::write({node.get()});
           }()};
 }
@@ -150,7 +150,7 @@ inline prototype unary_prototype(ast::unary_op op) {
   return {symbol_for(op), pasteboard_t::expression, [&op]() {
             const auto node{ast::make<ast::unary_expression>(
                 op, ast::make<ast::expression_placeholder>(
-                        placeholder::get<ast::unary_expression>(0)))};
+                        placeholder::get<ast::unary_expression>({0})))};
             return store::write({node.get()});
           }()};
 }
@@ -159,10 +159,10 @@ inline prototype binary_prototype(ast::binary_op op) {
   return {symbol_for(op), pasteboard_t::expression, [&op]() {
             const auto node{ast::make<ast::binary_expression>(
                 ast::make<ast::expression_placeholder>(
-                    placeholder::get<ast::binary_expression>(0)),
+                    placeholder::get<ast::binary_expression>({0})),
                 op,
                 ast::make<ast::expression_placeholder>(
-                    placeholder::get<ast::binary_expression>(1)))};
+                    placeholder::get<ast::binary_expression>({1})))};
             return store::write({node.get()});
           }()};
 }
@@ -171,9 +171,9 @@ inline prototype subscript_prototype() {
   return {"subscript", pasteboard_t::reference, []() {
             const auto node{ast::make<ast::subscript_get>(
                 ast::make<ast::expression_placeholder>(
-                    placeholder::get<ast::subscript_get>(0)),
+                    placeholder::get<ast::subscript_get>({0})),
                 ast::make<ast::expression_placeholder>(
-                    placeholder::get<ast::subscript_get>(1)))};
+                    placeholder::get<ast::subscript_get>({1})))};
             return store::write({node.get()});
           }()};
 }

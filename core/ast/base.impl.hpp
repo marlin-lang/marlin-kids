@@ -28,6 +28,14 @@ struct base {
   template <typename node_type, typename... subnode_types>
   struct impl;
 
+  struct child_index {
+    size_t subnode_index;
+    size_t node_index;
+
+    child_index(size_t _subnode_index, size_t _node_index = 0)
+        : subnode_index{_subnode_index}, node_index{_node_index} {}
+  };
+
   source_range source_code_range;
 
   // Only work with heap allocation and pointers
@@ -97,6 +105,11 @@ struct base {
       assert(false);
       return replacement;
     }
+  }
+
+  child_index index_for_child(const ast::base &child) const {
+    return apply<child_index>(
+        [&child](auto &n) { return n.index_for_child(child); });
   }
 
  private:
@@ -190,6 +203,10 @@ struct base::impl : base {
     return get_subnode_by_ref(std::get<index>(_subs));
   }
 
+  child_index index_for_child(const ast::base &child) const {
+    return test_subsequent_child_indices<0>(child);
+  }
+
  private:
   std::tuple<subnode_types...> _subs;
 
@@ -237,6 +254,40 @@ struct base::impl : base {
     init<index + 1>(std::move(stores)...);
   }
 
+  template <size_t index>
+  child_index test_subsequent_child_indices(const ast::base &child) const {
+    if constexpr (index < sizeof...(subnode_types)) {
+      if (auto result{test_child_index(get_subnode<index>(), child)}) {
+        return {index, *std::move(result)};
+      } else {
+        return test_subsequent_child_indices<index + 1>(child);
+      }
+    } else {
+      assert(false);
+      return {0, 0};
+    }
+  }
+
+  static std::optional<size_t> test_child_index(
+      ast::subnode::const_concrete_view<ast::base> view,
+      const ast::base &child) {
+    if (view.get() == &child) {
+      return 0;
+    } else {
+      return std::nullopt;
+    }
+  }
+
+  static std::optional<size_t> test_child_index(
+      ast::subnode::const_vector_view<ast::base> view, const ast::base &child) {
+    for (size_t i{0}; i < view.size(); i++) {
+      if (view[i].get() == &child) {
+        return i;
+      }
+    }
+    return std::nullopt;
+  }
+
   void update_subnode_refs() noexcept {
     if constexpr (base_utils::update_checker<subnode_types...>::needs_update) {
       update_subnodes<0>(0);
@@ -250,11 +301,13 @@ struct base::impl : base {
           update_subnode(std::get<index>(_subs), target));
     }
   }
-  size_t update_subnode(subnode::concrete &var, size_t target) noexcept {
+
+  static size_t update_subnode(subnode::concrete &var, size_t target) noexcept {
     var.index = target;
     return target + 1;
   }
-  size_t update_subnode(subnode::vector &var, size_t target) noexcept {
+
+  static size_t update_subnode(subnode::vector &var, size_t target) noexcept {
     var.index = target;
     return target + var.size;
   }
