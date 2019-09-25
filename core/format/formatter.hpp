@@ -423,6 +423,11 @@ struct formatter {
   void emit_ast(node_type<ast::string_literal>& literal, size_t) {
     emit_highlight(quoted(literal.value), highlight_token_type::string);
   }
+
+  void emit_ast(node_type<ast::bool_literal>& literal, size_t) {
+    emit_highlight(literal.value ? "true" : "false",
+                   highlight_token_type::boolean);
+  }
 };
 
 using in_place_formatter = formatter<false>;

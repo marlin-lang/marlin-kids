@@ -216,6 +216,13 @@ inline prototype user_function_prototype(const function_definition& func) {
           }()};
 }
 
+inline prototype bool_literal_prototype(bool value) {
+  return {value ? "true" : "false", pasteboard_t::expression, [&value]() {
+            const auto node{ast::make<ast::bool_literal>(value)};
+            return store::write({node.get()});
+          }()};
+}
+
 }  // namespace marlin::control
 
 #endif  // marlin_control_prototypes_hpp

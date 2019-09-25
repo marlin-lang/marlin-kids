@@ -57,7 +57,8 @@ struct type_map {
   X(user_function_call)      \
   X(identifier)              \
   X(number_literal)          \
-  X(string_literal)
+  X(string_literal)          \
+  X(bool_literal)
 
 #define _LIST_TEMPLATE(NAME) NAME,
 

@@ -560,6 +560,11 @@ struct generator {
   auto get_jsast(ast::string_literal& literal, wrapper_type&& wrapper) {
     return wrapper(jsast::ast::string_literal{literal.value});
   }
+
+  template <typename wrapper_type>
+  auto get_jsast(ast::bool_literal& literal, wrapper_type&& wrapper) {
+    return wrapper(jsast::ast::bool_literal{literal.value});
+  }
 };
 
 }  // namespace marlin::exec

@@ -307,6 +307,12 @@ struct string_literal : base::impl<string_literal>, expression {
   explicit string_literal(std::string _value) : value{std::move(_value)} {}
 };
 
+struct bool_literal : base::impl<bool_literal>, expression {
+  bool value;
+
+  explicit bool_literal(bool _value) : value{std::move(_value)} {}
+};
+
 }  // namespace marlin::ast
 
 #endif  // marlin_ast_ast_impl

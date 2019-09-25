@@ -52,6 +52,7 @@ inline const std::string_view user_function{"user_func"};
 
 inline const std::string_view number{"number"};
 inline const std::string_view string{"string"};
+inline const std::string_view boolean{"boolean"};
 
 }  // namespace key
 
@@ -210,7 +211,8 @@ struct store : base_store::impl<store> {
             {key::system_function, &store::read_system_function},
             {key::user_function, &store::read_user_function},
             {key::number, &store::read_number_literal},
-            {key::string, &store::read_string_literal}};
+            {key::string, &store::read_string_literal},
+            {key::boolean, &store::read_bool_literal}};
 
     const auto it{read_node_map.find(read_zero_terminated())};
     if (it == read_node_map.end()) {
@@ -518,6 +520,12 @@ struct store : base_store::impl<store> {
     return ast::make<ast::string_literal>(std::string{read_string()});
   }
 
+  ast::node read_bool_literal(type_expectation type) {
+    assert_type<type_expectation::rvalue>(type, "Unexpected literal!");
+
+    return ast::make<ast::bool_literal>(read_bool());
+  }
+
   void write_byte(uint8_t byte) { _data_buffer.emplace_back(std::byte{byte}); }
 
   template <typename byte_type,
@@ -751,6 +759,11 @@ struct store : base_store::impl<store> {
   void write_node(const ast::string_literal& literal) {
     write_key(key::string);
     write_string(literal.value);
+  }
+
+  void write_node(const ast::bool_literal& literal) {
+    write_key(key::boolean);
+    write_bool(literal.value);
   }
 };  // namespace v1
 
