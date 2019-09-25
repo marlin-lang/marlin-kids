@@ -11,10 +11,6 @@
   self.editorTextField.delegate = self;
 }
 
-- (void)controlTextDidChange:(NSNotification*)obj {
-  return [self validate];
-}
-
 - (void)setupSegmentControlWithTitles:(NSArray<NSString*>*)titles selection:(NSUInteger)selection {
   self.typeSegmentControl.segmentCount = titles.count;
   auto index = 0;
@@ -23,6 +19,20 @@
     ++index;
   }
   [self.typeSegmentControl setSelected:YES forSegment:selection];
+}
+
+#pragma mark - NSTextFieldDelegate
+
+- (void)controlTextDidChange:(NSNotification*)obj {
+  [self validate];
+}
+
+- (void)controlTextDidEndEditing:(NSNotification*)obj {
+  if (self.isValid) {
+    [self.delegate editorViewController:self
+                   finishEditWithString:self.editorTextField.stringValue
+                                 ofType:self.type];
+  }
 }
 
 @end

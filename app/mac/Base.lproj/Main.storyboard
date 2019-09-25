@@ -968,41 +968,25 @@
                                 </connections>
                             </segmentedControl>
                             <textField verticalHuggingPriority="750" translatesAutoresizingMaskIntoConstraints="NO" id="qmm-Wt-gtk">
-                                <rect key="frame" x="8" y="8" width="129" height="21"/>
+                                <rect key="frame" x="8" y="8" width="184" height="21"/>
                                 <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" selectable="YES" editable="YES" sendsActionOnEndEditing="YES" borderStyle="bezel" drawsBackground="YES" id="OQN-pQ-L4F">
                                     <font key="font" metaFont="system"/>
                                     <color key="textColor" name="controlTextColor" catalog="System" colorSpace="catalog"/>
                                     <color key="backgroundColor" name="textBackgroundColor" catalog="System" colorSpace="catalog"/>
                                 </textFieldCell>
                             </textField>
-                            <button verticalHuggingPriority="750" translatesAutoresizingMaskIntoConstraints="NO" id="xyi-eb-Mef">
-                                <rect key="frame" x="139" y="1" width="59" height="32"/>
-                                <buttonCell key="cell" type="push" title="OK" bezelStyle="rounded" alignment="center" borderStyle="border" imageScaling="proportionallyDown" inset="2" id="xrW-tL-mbE">
-                                    <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
-                                    <font key="font" metaFont="system"/>
-                                    <string key="keyEquivalent" base64-UTF8="YES">
-DQ
-</string>
-                                </buttonCell>
-                                <connections>
-                                    <action selector="okButtonPressed:" target="4i3-Bv-Vby" id="HR9-cs-ZHt"/>
-                                </connections>
-                            </button>
                         </subviews>
                         <constraints>
-                            <constraint firstItem="qmm-Wt-gtk" firstAttribute="centerY" secondItem="xyi-eb-Mef" secondAttribute="centerY" id="2jh-gT-v3V"/>
-                            <constraint firstAttribute="trailing" secondItem="xyi-eb-Mef" secondAttribute="trailing" constant="8" id="Ayy-ve-oXj"/>
                             <constraint firstItem="qmm-Wt-gtk" firstAttribute="top" secondItem="SYm-sg-hJ1" secondAttribute="bottom" constant="8" symbolic="YES" id="Cqj-Wp-dbE"/>
                             <constraint firstItem="SYm-sg-hJ1" firstAttribute="centerX" secondItem="VRC-G5-jHx" secondAttribute="centerX" id="MBM-0g-Vvj"/>
-                            <constraint firstItem="xyi-eb-Mef" firstAttribute="leading" secondItem="qmm-Wt-gtk" secondAttribute="trailing" constant="8" symbolic="YES" id="OWQ-wP-hSk"/>
                             <constraint firstItem="SYm-sg-hJ1" firstAttribute="top" secondItem="VRC-G5-jHx" secondAttribute="top" constant="8" id="WXg-SU-8Rg"/>
                             <constraint firstItem="qmm-Wt-gtk" firstAttribute="leading" secondItem="VRC-G5-jHx" secondAttribute="leading" constant="8" id="bUO-Jh-AWS"/>
+                            <constraint firstAttribute="trailing" secondItem="qmm-Wt-gtk" secondAttribute="trailing" constant="8" id="uph-f3-QLt"/>
                             <constraint firstAttribute="bottom" secondItem="qmm-Wt-gtk" secondAttribute="bottom" constant="8" id="vcF-3Y-mon"/>
                         </constraints>
                     </view>
                     <connections>
                         <outlet property="editorTextField" destination="qmm-Wt-gtk" id="Wsf-6F-0dt"/>
-                        <outlet property="okButton" destination="xyi-eb-Mef" id="Lg6-eZ-XdH"/>
                         <outlet property="typeSegmentControl" destination="SYm-sg-hJ1" id="gg7-a2-RL3"/>
                     </connections>
                 </viewController>

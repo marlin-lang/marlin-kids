@@ -27,12 +27,6 @@
   [self touchDownAtLocation:location];
 }
 
-- (void)mouseUp:(NSEvent*)event {
-  [super mouseDown:event];
-
-  [self touchUp];
-}
-
 - (void)mouseDragged:(NSEvent*)event {
   [super mouseDragged:event];
 

@@ -337,12 +337,11 @@ struct DocumentGetter {
 
 - (void)touchDownAtLocation:(CGPoint)location {
   NSAssert(self.dataSource.document != nil, @"");
-  _selection = {self.dataSource.document.content, [self sourceLocationOfPoint:location]};
-  [self setNeedsDisplay:YES];
-}
-
-- (void)touchUp {
+  _selection.reset();
   [self updateDuplicateAndEditorViewControllersForSelection];
+  _selection = {self.dataSource.document.content, [self sourceLocationOfPoint:location]};
+  [self updateDuplicateAndEditorViewControllersForSelection];
+  [self setNeedsDisplay:YES];
 }
 
 - (void)updateDuplicateAndEditorViewControllersForSelection {

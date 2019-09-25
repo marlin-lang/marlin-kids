@@ -82,7 +82,7 @@ using ToolIndex = std::pair<NSInteger, NSInteger>;
   [self addChildViewController:vc inView:self.editorView];
 
   vc.type = type;
-  vc.editorTextField.stringValue = [NSString stringWithStringView:data];
+  vc.editorString = [NSString stringWithStringView:data];
   _editorViewController = vc;
 }
 
