@@ -8,8 +8,8 @@
 #include "function_definition.hpp"
 #include "prototypes.hpp"
 
-#import "Document.h"
 #import "ArrayViewController.h"
+#import "Document.h"
 #import "DuplicateViewController.h"
 #import "EditorViewController.h"
 #import "FunctionViewController.h"
@@ -29,7 +29,9 @@ NS_ASSUME_NONNULL_BEGIN
 
 - (void)sourceViewChanged:(SourceView *)view;
 
-- (void)showArrayViewControllerForSourceView:(SourceView *)view withCount:(NSUInteger)count minimalCount:(NSUInteger)minimalCount;
+- (void)showArrayViewControllerForSourceView:(SourceView *)view
+                                   withCount:(NSUInteger)count
+                                minimalCount:(NSUInteger)minimalCount;
 
 - (void)showDuplicateViewControllerForSourceView:(SourceView *)view
                                       withString:(NSString *)string
@@ -48,10 +50,8 @@ NS_ASSUME_NONNULL_BEGIN
 
 @end
 
-@interface SourceView : View <ArrayViewControllerDelegate,
-                            DuplicateViewControllerDelegate,
-                              EditorViewControllerDelegate,
-                              FunctionViewControllerDelegate>
+@interface SourceView : View<ArrayViewControllerDelegate, DuplicateViewControllerDelegate,
+                             EditorViewControllerDelegate, FunctionViewControllerDelegate>
 
 @property(weak) id<SourceViewDataSource> dataSource;
 @property(weak) id<SourceViewDelegate> delegate;
@@ -71,8 +71,6 @@ NS_ASSUME_NONNULL_BEGIN
 - (void)clearErrors;
 
 - (void)touchDownAtLocation:(CGPoint)location;
-
-- (void)touchUp;
 
 - (std::optional<DraggingData>)startDraggingAtLocation:(CGPoint)location;
 

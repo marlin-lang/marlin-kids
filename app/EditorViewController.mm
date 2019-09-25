@@ -2,6 +2,12 @@
 
 #import "Formatter.h"
 
+@interface EditorViewController ()
+
+@property(weak) IBOutlet NSButton *okButton;
+
+@end
+
 @implementation EditorViewController {
   NSFormatter *_formatter;
 
@@ -13,6 +19,7 @@
 - (void)viewDidLoad {
   [super viewDidLoad];
 
+  self.okButton.enabled = NO;
   _numberStr = @"";
   _stringStr = @"";
   _identifierStr = @"";
@@ -61,12 +68,16 @@
   if ([_formatter getObjectValue:nil
                        forString:self.editorTextField.stringValue
                 errorDescription:nil]) {
-    self.editorTextField.backgroundColor = Color.whiteColor;
-    self.valid = YES;
+    self.okButton.enabled = YES;
   } else {
-    self.editorTextField.backgroundColor = Color.redColor;
-    self.valid = NO;
+    self.okButton.enabled = NO;
   }
+}
+
+- (IBAction)okButtonPressed:(id)sender {
+  [self.delegate editorViewController:self
+                 finishEditWithString:self.editorTextField.stringValue
+                               ofType:self.type];
 }
 
 - (IBAction)typeSegmentControlChanged:(id)sender {

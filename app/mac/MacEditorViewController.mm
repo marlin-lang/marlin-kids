@@ -28,11 +28,6 @@
 }
 
 - (void)controlTextDidEndEditing:(NSNotification*)obj {
-  if (self.isValid) {
-    [self.delegate editorViewController:self
-                   finishEditWithString:self.editorTextField.stringValue
-                                 ofType:self.type];
-  }
 }
 
 @end

@@ -25,8 +25,6 @@ using EditorType = marlin::control::literal_data_type;
 
 @property(weak) id<EditorViewControllerDelegate> delegate;
 
-@property(getter=isValid) BOOL valid;
-
 - (void)setEditorString:(NSString *)string;
 
 - (void)validate;
