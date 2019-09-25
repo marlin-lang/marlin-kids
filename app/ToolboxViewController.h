@@ -15,6 +15,10 @@ NS_ASSUME_NONNULL_BEGIN
 
 - (void)registerModelToDocument:(marlin::control::document &)document;
 
+- (void)showArrayViewControllerForSourceView:(SourceView *)view
+                                   withCount:(NSUInteger)count
+                                minimalCount:(NSUInteger)count;
+
 - (void)showDuplicateViewControllerForSourceView:(SourceView *)view
                                       withString:(NSString *)string
                                     draggingData:(const DraggingData &)draggingData;

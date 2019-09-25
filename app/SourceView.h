@@ -9,6 +9,7 @@
 #include "prototypes.hpp"
 
 #import "Document.h"
+#import "ArrayViewController.h"
 #import "DuplicateViewController.h"
 #import "EditorViewController.h"
 #import "FunctionViewController.h"
@@ -28,6 +29,8 @@ NS_ASSUME_NONNULL_BEGIN
 
 - (void)sourceViewChanged:(SourceView *)view;
 
+- (void)showArrayViewControllerForSourceView:(SourceView *)view withCount:(NSUInteger)count minimalCount:(NSUInteger)minimalCount;
+
 - (void)showDuplicateViewControllerForSourceView:(SourceView *)view
                                       withString:(NSString *)string
                                     draggingData:(const DraggingData &)draggingData;
@@ -45,7 +48,8 @@ NS_ASSUME_NONNULL_BEGIN
 
 @end
 
-@interface SourceView : View <DuplicateViewControllerDelegate,
+@interface SourceView : View <ArrayViewControllerDelegate,
+                            DuplicateViewControllerDelegate,
                               EditorViewControllerDelegate,
                               FunctionViewControllerDelegate>
 

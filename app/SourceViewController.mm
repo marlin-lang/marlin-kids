@@ -75,6 +75,14 @@
   [self.document updateChangeCount:NSChangeDone];
 }
 
+- (void)showArrayViewControllerForSourceView:(SourceView *)view
+                                   withCount:(NSUInteger)count
+                                minimalCount:(NSUInteger)minmalCount {
+  [self.toolboxViewController showArrayViewControllerForSourceView:view
+                                                         withCount:count
+                                                      minimalCount:minmalCount];
+}
+
 - (void)showDuplicateViewControllerForSourceView:(SourceView *)view
                                       withString:(NSString *)string
                                     draggingData:(const DraggingData &)draggingData {
