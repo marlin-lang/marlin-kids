@@ -88,7 +88,9 @@ struct toolbox {
             system_function_prototype(ast::system_function::log),
             system_function_prototype(ast::system_function::round),
             system_function_prototype(ast::system_function::floor),
-            system_function_prototype(ast::system_function::ceil)}};
+            system_function_prototype(ast::system_function::ceil),
+            new_color_prototype(ast::color_mode::rgb),
+            new_color_prototype(ast::color_mode::rgba)}};
     static const std::array<
         std::string_view, std::tuple_size<decltype(_default_prototypes)>::value>
         _default_names{"control flow", "statement", "expression", "function"};

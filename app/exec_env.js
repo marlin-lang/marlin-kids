@@ -1,3 +1,23 @@
+class Color {
+  constructor(text) {
+    this.text = text;
+  }
+
+  toString() {
+    return this.text;
+  }
+}
+
+function restrict(value, min, max) {
+  if (value < min) {
+    return min;
+  } else if (value > max) {
+    return max;
+  } else {
+    return value;
+  }
+}
+
 function as_number(value) {
   const result = Number(value);
   if (isNaN(result)) {
@@ -12,6 +32,14 @@ function assert_array(value) {
     return value;
   } else {
     throw new TypeError("Expecting an array");
+  }
+}
+
+function assert_color(value) {
+  if (value instanceof Color) {
+    return value;
+  } else {
+    throw new TypeError("Expecting a color");
   }
 }
 
@@ -162,6 +190,25 @@ window.env = {
     ceil(value) {
       value = as_number(value);
       return Math.ceil(value);
+    }
+  },
+
+  color_utils: {
+    rgb(red, green, blue) {
+      red = restrict(as_number(red), 0, 255);
+      green = restrict(as_number(green), 0, 255);
+      blue = restrict(as_number(blue), 0, 255);
+      return new Color("rgb(" + red + ", " + green + ", " + blue + ")");
+    },
+
+    rgba(red, green, blue, alpha) {
+      red = restrict(as_number(red), 0, 255);
+      green = restrict(as_number(green), 0, 255);
+      blue = restrict(as_number(blue), 0, 255);
+      alpha = restrict(as_number(alpha), 0, 1);
+      return new Color(
+        "rgba(" + red + ", " + green + ", " + blue + ", " + alpha + ")"
+      );
     }
   },
 

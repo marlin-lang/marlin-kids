@@ -270,6 +270,16 @@ struct system_function_call : base::impl<system_function_call, subnode::vector>,
       : base_type{std::move(_args)}, func{_func} {}
 };
 
+struct new_color : base::impl<new_color, subnode::vector>, expression {
+  color_mode mode;
+
+  [[nodiscard]] decltype(auto) arguments() { return get_subnode<0>(); }
+  [[nodiscard]] decltype(auto) arguments() const { return get_subnode<0>(); }
+
+  explicit new_color(color_mode _mode, std::vector<node> _args)
+      : base_type{std::move(_args)}, mode{_mode} {}
+};
+
 struct user_function_call : base::impl<user_function_call, subnode::vector>,
                             expression {
   std::string name;

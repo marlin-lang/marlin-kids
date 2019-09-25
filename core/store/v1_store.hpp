@@ -47,6 +47,8 @@ inline const std::string_view binary{"binary"};
 inline const std::string_view subscript{"sub"};
 inline const std::string_view new_array{"new_array"};
 
+inline const std::string_view new_color{"new_color"};
+
 inline const std::string_view system_function{"sys_func"};
 inline const std::string_view user_function{"user_func"};
 
@@ -208,6 +210,7 @@ struct store : base_store::impl<store> {
             {key::binary, &store::read_binary_expression},
             {key::subscript, &store::read_subscript},
             {key::new_array, &store::read_new_array},
+            {key::new_color, &store::read_new_color},
             {key::system_function, &store::read_system_function},
             {key::user_function, &store::read_user_function},
             {key::number, &store::read_number_literal},
@@ -297,7 +300,8 @@ struct store : base_store::impl<store> {
 
     static const auto system_procedure_inverse_name_map{[]() {
       std::unordered_map<std::string_view, ast::system_procedure> map;
-      for (size_t i{0}; i < ast::system_procedure_name_map.size(); i++) {
+      for (std::underlying_type_t<ast::system_procedure> i{0};
+           i < ast::system_procedure_name_map.size(); i++) {
         map[ast::system_procedure_name_map[i]] = {i};
       }
       return map;
@@ -421,7 +425,8 @@ struct store : base_store::impl<store> {
 
     static const auto unary_inverse_op_symbol_map{[]() {
       std::unordered_map<std::string_view, ast::unary_op> map;
-      for (uint8_t i{0}; i < ast::unary_op_symbol_map.size(); i++) {
+      for (std::underlying_type_t<ast::unary_op> i{0};
+           i < ast::unary_op_symbol_map.size(); i++) {
         map[ast::unary_op_symbol_map[i]] = {i};
       }
       return map;
@@ -443,7 +448,8 @@ struct store : base_store::impl<store> {
 
     static const auto binary_inverse_op_symbol_map{[]() {
       std::unordered_map<std::string_view, ast::binary_op> map;
-      for (uint8_t i{0}; i < ast::binary_op_symbol_map.size(); i++) {
+      for (std::underlying_type_t<ast::binary_op> i{0};
+           i < ast::binary_op_symbol_map.size(); i++) {
         map[ast::binary_op_symbol_map[i]] = {i};
       }
       return map;
@@ -474,7 +480,8 @@ struct store : base_store::impl<store> {
 
     static const auto system_function_inverse_name_map{[]() {
       std::unordered_map<std::string_view, ast::system_function> map;
-      for (size_t i{0}; i < ast::system_function_name_map.size(); i++) {
+      for (std::underlying_type_t<ast::system_function> i{0};
+           i < ast::system_function_name_map.size(); i++) {
         map[ast::system_function_name_map[i]] = {i};
       }
       return map;
@@ -488,6 +495,29 @@ struct store : base_store::impl<store> {
       const auto func{it->second};
       auto args{read_vector(type_expectation::rvalue)};
       return ast::make<ast::system_function_call>(func, std::move(args));
+    }
+  }
+
+  ast::node read_new_color(type_expectation type) {
+    assert_type<type_expectation::rvalue>(type, "Unexpected expression!");
+
+    static const auto color_mode_inverse_name_map{[]() {
+      std::unordered_map<std::string_view, ast::color_mode> map;
+      for (std::underlying_type_t<ast::color_mode> i{0};
+           i < ast::color_mode_name_map.size(); i++) {
+        map[ast::color_mode_name_map[i]] = {i};
+      }
+      return map;
+    }()};
+
+    auto name{read_zero_terminated()};
+    auto it{color_mode_inverse_name_map.find(name)};
+    if (it == color_mode_inverse_name_map.end()) {
+      throw read_error{"Unknown system function encountered!"};
+    } else {
+      const auto mode{it->second};
+      auto args{read_vector(type_expectation::rvalue)};
+      return ast::make<ast::new_color>(mode, std::move(args));
     }
   }
 
@@ -738,6 +768,12 @@ struct store : base_store::impl<store> {
     write_key(key::system_function);
     write_symbol(ast::name_for(call.func));
     write_vector(call.arguments());
+  }
+
+  void write_node(const ast::new_color& init) {
+    write_key(key::new_color);
+    write_symbol(ast::name_for(init.mode));
+    write_vector(init.arguments());
   }
 
   void write_node(const ast::user_function_call& call) {

@@ -202,6 +202,20 @@ inline prototype system_function_prototype(ast::system_function func) {
       }()};
 }
 
+inline prototype new_color_prototype(ast::color_mode mode) {
+  return {name_for(mode), pasteboard_t::expression, [&mode]() {
+            const auto& placeholders{placeholder_new_color_args::args(mode)};
+            std::vector<ast::node> args;
+            args.reserve(placeholders.size());
+            for (const auto& arg : placeholders) {
+              args.emplace_back(
+                  ast::make<ast::expression_placeholder>(std::string{arg}));
+            }
+            const auto node{ast::make<ast::new_color>(mode, std::move(args))};
+            return store::write({node.get()});
+          }()};
+}
+
 inline prototype user_function_prototype(const function_definition& func) {
   return {func.name, pasteboard_t::expression, [&func]() {
             std::vector<ast::node> args;

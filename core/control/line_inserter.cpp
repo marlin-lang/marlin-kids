@@ -54,8 +54,7 @@ std::optional<typename line_inserter<node_type, enable_type>::location>
 line_inserter<node_type, enable_type>::find_insert_location_in_vector(
     size_t line, ast::base& parent, ast::subnode::vector_view<ast::base> vector,
     size_t current_indent) {
-  if constexpr (static_cast<uint8_t>(node_type) >=
-                static_cast<uint8_t>(element_type)) {
+  if constexpr (raw_value(node_type) >= raw_value(element_type)) {
     for (size_t i{0}; i < vector.size(); i++) {
       if (line <= vector[i]->source_code_range.begin.line) {
         if constexpr (node_type == element_type) {

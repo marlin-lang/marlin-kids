@@ -407,6 +407,11 @@ struct formatter {
     emit_arguments(call.arguments());
   }
 
+  void emit_ast(node_type<ast::new_color>& init, size_t) {
+    emit_string(display_for(init.mode));
+    emit_arguments(init.arguments());
+  }
+
   void emit_ast(node_type<ast::user_function_call>& call, size_t) {
     emit_string(call.name);
     emit_arguments(call.arguments());

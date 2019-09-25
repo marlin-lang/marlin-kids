@@ -6,6 +6,7 @@
 
 #include "ast.hpp"
 #include "node.hpp"
+#include "placeholders.hpp"
 
 namespace marlin::control {
 
@@ -91,7 +92,7 @@ literal_content::get_default_type<ast::unary_expression>(
       literal_content::boolean_default_type /* logical_not */
   };
   assert(index.subnode_index == 0 && index.node_index == 0);
-  return unary_op_literal_type_map[static_cast<uint8_t>(parent.op)];
+  return unary_op_literal_type_map[raw_value(parent.op)];
 }
 
 template <>
@@ -113,7 +114,7 @@ literal_content::get_default_type<ast::binary_expression>(
       literal_content::boolean_default_type /* logical_or */
   };
   assert(index.subnode_index < 2 && index.node_index == 0);
-  return binary_op_literal_type_map[static_cast<uint8_t>(parent.op)];
+  return binary_op_literal_type_map[raw_value(parent.op)];
 }
 
 inline literal_data_type _get_subscript_default_type(
@@ -164,7 +165,7 @@ struct system_procedure_args_literal_type {
 
  public:
   static const auto& args(ast::system_procedure func) {
-    return literal_types()[static_cast<size_t>(func)];
+    return literal_types()[raw_value(func)];
   }
 };
 
@@ -207,7 +208,7 @@ struct system_function_args_literal_type {
 
  public:
   static const auto& args(ast::system_function func) {
-    return literal_types()[static_cast<size_t>(func)];
+    return literal_types()[raw_value(func)];
   }
 };
 
@@ -218,6 +219,14 @@ literal_content::get_default_type<ast::system_function_call>(
   const auto& args{system_function_args_literal_type::args(parent.func)};
   assert(index.subnode_index == 0 && index.node_index < args.size());
   return args[index.node_index];
+}
+
+template <>
+inline literal_data_type literal_content::get_default_type<ast::new_color>(
+    const ast::new_color& init, ast::base::child_index index) {
+  assert(index.subnode_index == 0 &&
+         index.node_index < placeholder_new_color_args::args(init.mode).size());
+  return number_default_type;
 }
 
 };  // namespace marlin::control

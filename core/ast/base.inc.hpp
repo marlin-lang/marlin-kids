@@ -54,6 +54,7 @@ struct type_map {
   X(subscript_get)           \
   X(new_array)               \
   X(system_function_call)    \
+  X(new_color)               \
   X(user_function_call)      \
   X(identifier)              \
   X(number_literal)          \

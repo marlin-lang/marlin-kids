@@ -176,7 +176,7 @@ struct placeholder_system_procedure_args {
 
  public:
   static const auto& args(ast::system_procedure func) {
-    return placeholders()[static_cast<size_t>(func)];
+    return placeholders()[raw_value(func)];
   }
 };
 
@@ -215,7 +215,7 @@ struct placeholder_system_function_args {
 
  public:
   static const auto& args(ast::system_function func) {
-    return placeholders()[static_cast<size_t>(func)];
+    return placeholders()[raw_value(func)];
   }
 };
 
@@ -223,6 +223,30 @@ template <>
 inline std::string placeholder::get<ast::system_function_call>(
     const ast::system_function_call& parent, ast::base::child_index index) {
   const auto& args{placeholder_system_function_args::args(parent.func)};
+  assert(index.subnode_index == 0 && index.node_index < args.size());
+  return std::string{args[index.node_index]};
+}
+
+struct placeholder_new_color_args {
+ private:
+  static const auto& placeholders() {
+    static const std::array _placeholders{
+        std::vector<std::string_view>{"red", "green", "blue"} /* rgb */,
+        std::vector<std::string_view>{"red", "green", "blue",
+                                      "alpha"} /* rgba */};
+    return _placeholders;
+  }
+
+ public:
+  static const auto& args(ast::color_mode mode) {
+    return placeholders()[raw_value(mode)];
+  }
+};
+
+template <>
+inline std::string placeholder::get<ast::new_color>(
+    const ast::new_color& init, ast::base::child_index index) {
+  const auto& args{placeholder_new_color_args::args(init.mode)};
   assert(index.subnode_index == 0 && index.node_index < args.size());
   return std::string{args[index.node_index]};
 }
