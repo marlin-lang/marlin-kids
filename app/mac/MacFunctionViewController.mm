@@ -9,7 +9,6 @@
                                          NSCollectionViewDelegateFlowLayout,
                                          NSTextFieldDelegate>
 
-@property(weak) IBOutlet NSButton *okButton;
 @property(weak) IBOutlet NSTextField *nameTextField;
 @property(weak) IBOutlet NSCollectionView *parametersCollectionView;
 
@@ -18,39 +17,38 @@
 @implementation MacFunctionViewController {
   VariableFormatter *_formatter;
   NSMutableArray<NSString *> *_parameters;
-  bool _isNameValidated;
-  std::vector<bool> _isParametersValidated;
+  BOOL _isValid;
+  BOOL _isNameValid;
+  std::vector<bool> _isParameterValid;
 }
 
 - (void)viewDidLoad {
-  self.okButton.enabled = NO;
   self.nameTextField.delegate = self;
   self.nameTextField.tag = -1;
   _formatter = [[VariableFormatter alloc] init];
   _parameters = [[NSMutableArray alloc] init];
 }
 
+- (void)viewDidAppear {
+  [super viewDidAppear];
+  [self.nameTextField becomeFirstResponder];
+}
+
 - (void)setFunctionSignature:(marlin::function_definition)signature {
   _nameTextField.stringValue = [NSString stringWithStringView:signature.name];
-  _isNameValidated = true;
+  _isNameValid = true;
   for (auto &parameter : signature.parameters) {
     [_parameters addObject:[NSString stringWithStringView:parameter]];
-    _isParametersValidated.push_back(true);
+    _isParameterValid.push_back(true);
   }
   [self.parametersCollectionView reloadData];
   [self validateForTextField:_nameTextField];
 }
 
-- (IBAction)okButtonPressed:(id)sender {
-  [self.delegate functionViewController:self
-                  finishEditingWithName:self.nameTextField.stringValue
-                             parameters:_parameters];
-}
-
 - (IBAction)addButtonPressed:(id)sender {
   [_parameters addObject:@""];
-  _isParametersValidated.push_back(false);
-  self.okButton.enabled = NO;
+  _isParameterValid.push_back(false);
+  _isValid = NO;
   [self.parametersCollectionView reloadData];
 }
 
@@ -58,20 +56,19 @@
   auto index = textField.tag;
   if ([_formatter getObjectValue:nil forString:textField.stringValue errorDescription:nil]) {
     if (index >= 0) {
-      _isParametersValidated[index] = true;
+      _isParameterValid[index] = true;
     } else {
-      _isNameValidated = true;
+      _isNameValid = YES;
     }
-    self.okButton.enabled =
-        _isNameValidated && std::find(_isParametersValidated.begin(), _isParametersValidated.end(),
-                                      false) == _isParametersValidated.end();
+    _isValid = _isNameValid && std::find(_isParameterValid.begin(), _isParameterValid.end(),
+                                         false) == _isParameterValid.end();
   } else {
     if (index >= 0) {
-      _isParametersValidated[index] = false;
+      _isParameterValid[index] = false;
     } else {
-      _isNameValidated = false;
+      _isNameValid = false;
     }
-    self.okButton.enabled = NO;
+    _isValid = NO;
   }
 }
 
@@ -119,6 +116,14 @@
     [_parameters replaceObjectAtIndex:textField.tag withObject:[textField.stringValue copy]];
   }
   [self validateForTextField:textField];
+}
+
+- (void)controlTextDidEndEditing:(NSNotification *)obj {
+  if (_isValid) {
+    [self.delegate functionViewController:self
+                    finishEditingWithName:self.nameTextField.stringValue
+                               parameters:_parameters];
+  }
 }
 
 @end

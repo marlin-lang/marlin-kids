@@ -886,7 +886,7 @@
                 </viewController>
                 <customObject id="h6O-pr-zzx" userLabel="First Responder" customClass="NSResponder" sceneMemberID="firstResponder"/>
             </objects>
-            <point key="canvasLocation" x="1064" y="-81"/>
+            <point key="canvasLocation" x="971" y="-81"/>
         </scene>
         <!--Duplicate View Controller-->
         <scene sceneID="jz6-AA-CjJ">
@@ -943,7 +943,7 @@
                 </viewController>
                 <customObject id="99o-2Y-cwe" userLabel="First Responder" customClass="NSResponder" sceneMemberID="firstResponder"/>
             </objects>
-            <point key="canvasLocation" x="987" y="108"/>
+            <point key="canvasLocation" x="894" y="115"/>
         </scene>
         <!--Mac Editor View Controller-->
         <scene sceneID="lhX-jc-yF0">
@@ -1008,11 +1008,11 @@
             <objects>
                 <viewController storyboardIdentifier="FunctionViewController" id="QAI-D9-tXQ" customClass="MacFunctionViewController" sceneMemberID="viewController">
                     <view key="view" id="gNP-RQ-1cB">
-                        <rect key="frame" x="0.0" y="0.0" width="200" height="203"/>
+                        <rect key="frame" x="0.0" y="0.0" width="200" height="198"/>
                         <autoresizingMask key="autoresizingMask"/>
                         <subviews>
                             <textField horizontalHuggingPriority="251" verticalHuggingPriority="750" translatesAutoresizingMaskIntoConstraints="NO" id="Mbx-u2-p2b">
-                                <rect key="frame" x="6" y="177" width="61" height="16"/>
+                                <rect key="frame" x="6" y="174" width="61" height="16"/>
                                 <textFieldCell key="cell" lineBreakMode="clipping" title="Function" id="ZsX-WQ-faU">
                                     <font key="font" metaFont="systemBold"/>
                                     <color key="textColor" name="labelColor" catalog="System" colorSpace="catalog"/>
@@ -1085,51 +1085,35 @@
                                     <autoresizingMask key="autoresizingMask"/>
                                 </scroller>
                             </scrollView>
-                            <button verticalHuggingPriority="750" translatesAutoresizingMaskIntoConstraints="NO" id="A5L-4d-DRT">
-                                <rect key="frame" x="139" y="167" width="59" height="32"/>
-                                <buttonCell key="cell" type="push" title="OK" bezelStyle="rounded" alignment="center" borderStyle="border" imageScaling="proportionallyDown" inset="2" id="lWY-AA-un4">
-                                    <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
-                                    <font key="font" metaFont="system"/>
-                                    <string key="keyEquivalent" base64-UTF8="YES">
-DQ
-</string>
-                                </buttonCell>
-                                <connections>
-                                    <action selector="okButtonPressed:" target="QAI-D9-tXQ" id="Tak-ac-Upi"/>
-                                </connections>
-                            </button>
                         </subviews>
                         <constraints>
                             <constraint firstItem="9rp-g9-nvX" firstAttribute="top" secondItem="mah-DF-mva" secondAttribute="bottom" constant="8" symbolic="YES" id="161-4F-RA0"/>
                             <constraint firstItem="Swe-IB-aOI" firstAttribute="centerY" secondItem="9rp-g9-nvX" secondAttribute="centerY" id="2TC-Yv-dQx"/>
-                            <constraint firstItem="mah-DF-mva" firstAttribute="top" secondItem="A5L-4d-DRT" secondAttribute="bottom" constant="8" symbolic="YES" id="33j-Qy-r3x"/>
                             <constraint firstItem="HUo-Xg-aKN" firstAttribute="top" secondItem="9rp-g9-nvX" secondAttribute="bottom" constant="8" id="3vm-t4-rd0"/>
                             <constraint firstItem="U2w-Fc-Tyf" firstAttribute="leading" secondItem="gNP-RQ-1cB" secondAttribute="leading" constant="8" id="4OZ-Sb-JDW"/>
                             <constraint firstItem="mah-DF-mva" firstAttribute="leading" secondItem="U2w-Fc-Tyf" secondAttribute="trailing" constant="8" symbolic="YES" id="84B-WN-lLZ"/>
                             <constraint firstItem="HUo-Xg-aKN" firstAttribute="leading" secondItem="gNP-RQ-1cB" secondAttribute="leading" constant="8" id="B6F-vM-CgB"/>
                             <constraint firstAttribute="bottom" secondItem="HUo-Xg-aKN" secondAttribute="bottom" constant="8" id="Iga-49-lrC"/>
-                            <constraint firstAttribute="trailing" secondItem="A5L-4d-DRT" secondAttribute="trailing" constant="8" id="LAC-Rl-hHf"/>
                             <constraint firstAttribute="trailing" secondItem="9rp-g9-nvX" secondAttribute="trailing" constant="8" id="LIZ-Xj-JO1"/>
-                            <constraint firstItem="A5L-4d-DRT" firstAttribute="top" secondItem="gNP-RQ-1cB" secondAttribute="top" constant="8" id="RmN-m2-0xB"/>
+                            <constraint firstItem="mah-DF-mva" firstAttribute="top" secondItem="Mbx-u2-p2b" secondAttribute="bottom" constant="8" id="WH5-7Z-6ab"/>
                             <constraint firstItem="U2w-Fc-Tyf" firstAttribute="centerY" secondItem="mah-DF-mva" secondAttribute="centerY" id="Z73-Du-nfe"/>
                             <constraint firstAttribute="trailing" secondItem="mah-DF-mva" secondAttribute="trailing" constant="8" id="aNO-qI-V6F"/>
                             <constraint firstItem="Swe-IB-aOI" firstAttribute="leading" secondItem="gNP-RQ-1cB" secondAttribute="leading" constant="8" id="b7W-2y-L7d"/>
-                            <constraint firstItem="A5L-4d-DRT" firstAttribute="leading" relation="greaterThanOrEqual" secondItem="Mbx-u2-p2b" secondAttribute="trailing" constant="8" symbolic="YES" id="btm-Aq-Kwd"/>
+                            <constraint firstItem="Mbx-u2-p2b" firstAttribute="top" secondItem="gNP-RQ-1cB" secondAttribute="top" constant="8" id="bjE-XM-p5T"/>
                             <constraint firstItem="9rp-g9-nvX" firstAttribute="leading" relation="greaterThanOrEqual" secondItem="Swe-IB-aOI" secondAttribute="trailing" constant="8" symbolic="YES" id="fK4-oz-fEw"/>
                             <constraint firstAttribute="trailing" secondItem="HUo-Xg-aKN" secondAttribute="trailing" constant="8" id="mLf-lw-wFL"/>
-                            <constraint firstItem="Mbx-u2-p2b" firstAttribute="centerY" secondItem="A5L-4d-DRT" secondAttribute="centerY" id="nkd-lV-XBf"/>
+                            <constraint firstAttribute="trailing" relation="greaterThanOrEqual" secondItem="Mbx-u2-p2b" secondAttribute="trailing" constant="20" symbolic="YES" id="ofv-UP-O80"/>
                             <constraint firstItem="Mbx-u2-p2b" firstAttribute="leading" secondItem="gNP-RQ-1cB" secondAttribute="leading" constant="8" id="uXE-bt-hUa"/>
                         </constraints>
                     </view>
                     <connections>
                         <outlet property="nameTextField" destination="mah-DF-mva" id="Akj-8G-456"/>
-                        <outlet property="okButton" destination="A5L-4d-DRT" id="whR-pj-FKA"/>
                         <outlet property="parametersCollectionView" destination="Lkg-dh-hhY" id="CYe-Vs-WcV"/>
                     </connections>
                 </viewController>
                 <customObject id="ENS-aX-JLj" userLabel="First Responder" customClass="NSResponder" sceneMemberID="firstResponder"/>
             </objects>
-            <point key="canvasLocation" x="894" y="585"/>
+            <point key="canvasLocation" x="894" y="587"/>
         </scene>
         <!--Execute View Controller-->
         <scene sceneID="IsG-yF-NLp">
@@ -1246,7 +1230,7 @@ DQ
                 </viewController>
                 <customObject id="AXQ-vm-Ktq" userLabel="First Responder" customClass="NSResponder" sceneMemberID="firstResponder"/>
             </objects>
-            <point key="canvasLocation" x="1185" y="653"/>
+            <point key="canvasLocation" x="1185" y="657"/>
         </scene>
     </scenes>
 </document>
