@@ -9,6 +9,8 @@
 #import "Pasteboard.h"
 #import "Theme.h"
 
+using optional_source_selection = std::optional<marlin::control::source_selection>;
+
 struct DocumentGetter {
   DocumentGetter(SourceView* sourceView) : _sourceView{sourceView} {}
 
@@ -28,8 +30,8 @@ struct DocumentGetter {
 
   std::optional<marlin::control::source_inserters<DocumentGetter>> _inserter;
 
-  std::optional<marlin::control::source_selection> _selection;
-  std::optional<marlin::control::source_selection> _draggingSelection;
+  optional_source_selection _selection;
+  optional_source_selection _draggingSelection;
 
   std::vector<marlin::source_range> _errors;
 }
@@ -182,14 +184,17 @@ struct DocumentGetter {
     auto updates = _selection->set_new_array_elements_count(count);
     [self performUpdates:std::move(updates)];
   }
-  [self updateDuplicateAndEditorViewControllersForSelection];
 }
 
 #pragma mark - DuplicateViewControllerDelegate
 
 - (void)performDeleteForDuplicateViewController:(DuplicateViewController*)vc {
-  [self removeSelection:_selection retainSelection:YES];
-  [self updateDuplicateAndEditorViewControllersForSelection];
+  if (_selection.has_value()) {
+    NSAssert(_selection->is_removable(), @"");
+    auto updates = (*std::move(_selection)).remove_from_document();
+    [self performUpdates:std::move(updates.source_updates)];
+    self.selection = std::move(updates.selection_update);
+  }
 }
 
 #pragma mark - EditorViewControllerDelegate
@@ -199,10 +204,9 @@ struct DocumentGetter {
                       ofType:(EditorType)type {
   if (_selection.has_value()) {
     auto update = (*std::move(_selection)).insert_literal(type, string.stringView);
-    _selection = std::move(update.selection_update);
     [self performUpdates:std::move(update.source_updates)];
+    self.selection = std::move(update.selection_update);
   }
-  [self updateDuplicateAndEditorViewControllersForSelection];
 }
 
 #pragma mark - FunctionViewControllerDelegate
@@ -218,16 +222,22 @@ struct DocumentGetter {
       }
     }
     auto updates = (*std::move(_selection)).replace_function_signature(signature);
-    _selection = std::move(updates.selection_update);
     [self performUpdates:std::move(updates.source_updates)];
+    self.selection = std::move(updates.selection_update);
   }
-  [self updateDuplicateAndEditorViewControllersForSelection];
 }
 
 #pragma mark - Private methods
 
 - (BOOL)isFlipped {
   return YES;
+}
+
+- (void)setSelection:(optional_source_selection)selection {
+  _selection = std::nullopt;
+  [self updateDuplicateAndEditorViewControllersForSelection];
+  _selection = std::move(selection);
+  [self updateDuplicateAndEditorViewControllersForSelection];
 }
 
 - (CGSize)currentSize {
@@ -337,10 +347,7 @@ struct DocumentGetter {
 
 - (void)touchDownAtLocation:(CGPoint)location {
   NSAssert(self.dataSource.document != nil, @"");
-  _selection.reset();
-  [self updateDuplicateAndEditorViewControllersForSelection];
-  _selection = {self.dataSource.document.content, [self sourceLocationOfPoint:location]};
-  [self updateDuplicateAndEditorViewControllersForSelection];
+  self.selection = {{self.dataSource.document.content, [self sourceLocationOfPoint:location]}};
   [self setNeedsDisplay:YES];
 }
 
@@ -439,13 +446,14 @@ struct DocumentGetter {
   if (_selection.has_value()) {
     if (const auto rect = [self rectOfSourceRange:_selection->get_range()];
         !CGRectContainsPoint(rect, location)) {
-      _draggingSelection = (*std::exchange(_selection, std::nullopt)).as_dragging_selection();
+      _draggingSelection = (*std::move(_selection)).as_dragging_selection();
+      self.selection = std::nullopt;
       if (const auto type = _draggingSelection->dragging_type(false)) {
         data = DraggingData(*type, [NSData dataWithDataView:_draggingSelection->get_data()]);
       } else {
-        std::swap(_selection, _draggingSelection);
+        _draggingSelection = std::move(_selection);
+        self.selection = std::nullopt;
       }
-      [self updateDuplicateAndEditorViewControllersForSelection];
     }
   }
   return data;
@@ -453,8 +461,7 @@ struct DocumentGetter {
 
 - (BOOL)draggingPasteboardOfType:(marlin::control::pasteboard_t)type toLocation:(CGPoint)location {
   if (_selection.has_value()) {
-    _selection.reset();
-    [self updateDuplicateAndEditorViewControllersForSelection];
+    self.selection = std::nullopt;
   }
 
   NSAssert(_inserter.has_value(), @"");
@@ -467,39 +474,27 @@ struct DocumentGetter {
        removingCurrentSource:(BOOL)removing {
   NSAssert(_inserter.has_value(), @"");
   if (removing) {
-    auto lineUpdate = [self removeSelection:_draggingSelection retainSelection:NO];
+    auto lineUpdate = [self removeDraggingSelection];
     _inserter->update_lines(std::move(lineUpdate));
   }
   auto update = _inserter->insert(type, data.dataView);
-  _selection = std::move(update.selection_update);
   const bool result = update.source_updates.size() > 0;
   [self performUpdates:std::move(update.source_updates)];
-  [self updateDuplicateAndEditorViewControllersForSelection];
+  self.selection = std::move(update.selection_update);
   return result;
 }
 
 - (BOOL)removeDraggingSource {
-  return [self removeSelection:_draggingSelection retainSelection:NO].start_line > 0;
+  return [self removeDraggingSelection].start_line > 0;
 }
 
-- (marlin::control::line_update)removeSelection:
-                                    (std::optional<marlin::control::source_selection>&)selection
-                                retainSelection:(bool)retain {
-  if (selection.has_value()) {
-    if (selection->is_removable()) {
-      auto line_update = selection->removal_line_update();
-      if (retain) {
-        auto updates = (*std::move(selection)).remove_from_document();
-        selection = std::move(updates.selection_update);
-        [self performUpdates:std::move(updates.source_updates)];
-      } else {
-        auto updates = (*std::exchange(selection, std::nullopt)).remove_from_document();
-        [self performUpdates:std::move(updates.source_updates)];
-      }
-      return line_update;
-    } else {
-      assert(false);
-    }
+- (marlin::control::line_update)removeDraggingSelection {
+  if (_draggingSelection.has_value()) {
+    NSAssert(_draggingSelection->is_removable(), @"");
+    auto line_update = _draggingSelection->removal_line_update();
+    auto updates = (*std::exchange(_draggingSelection, std::nullopt)).remove_from_document();
+    [self performUpdates:std::move(updates.source_updates)];
+    return line_update;
   }
   return {};
 }
