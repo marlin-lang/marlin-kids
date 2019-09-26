@@ -37,6 +37,29 @@ std::vector<source_update> source_selection::set_new_array_elements_count(
   return result;
 }
 
+std::vector<source_update> source_selection::set_color_literal(
+    color_literal literal) {
+  assert(is_color_literal());
+
+  std::vector<source_update> result;
+  _doc->start_recording_side_effects();
+
+  _selection->as<ast::new_color>().mode = literal.mode;
+  auto args{_selection->as<ast::new_color>().arguments()};
+  args.clear();
+  for (size_t i{0}; i < literal.data_dimension(); i++) {
+    std::ostringstream os;
+    os << literal[i];
+    args.emplace_back(ast::make<ast::number_literal>(os.str()));
+  }
+
+  assert(args.size() == literal.data_dimension());
+  result.emplace_back(_doc->refresh_node_display(*_selection));
+
+  _doc->gather_side_effects(result);
+  return result;
+}
+
 document_update source_selection::remove_from_document() && {
   assert(is_removable());
 

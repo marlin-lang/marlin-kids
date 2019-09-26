@@ -98,7 +98,7 @@ struct generator {
 
   using callee_maker = jsast::ast::node (*)();
   using callee_entry = std::pair<callee_maker, bool>;
-  static constexpr std::array<callee_entry, 13> system_procedure_callee_map{
+  static constexpr auto system_procedure_callee_map{make_array<callee_entry>(
       std::pair{[]() { return env_name("sleep"); }, true} /* sleep */,
       std::pair{[]() { return env_name("print"); }, false} /* print */,
       std::pair{[]() { return system_callee("array_utils", "append"); },
@@ -122,9 +122,8 @@ struct generator {
       std::pair{[]() { return system_callee("logo", "penUp"); },
                 false} /* logo_pen_up */,
       std::pair{[]() { return system_callee("logo", "penDown"); },
-                false} /* logo_pen_down */
-  };
-  static constexpr std::array<callee_entry, 18> system_function_callee_map{
+                false} /* logo_pen_down */)};
+  static constexpr auto system_function_callee_map{make_array<callee_entry>(
       std::pair{[]() { return env_name("range"); }, false} /* range1 */,
       std::pair{[]() { return env_name("range"); }, false} /* range2 */,
       std::pair{[]() { return env_name("range"); }, false} /* range3 */,
@@ -156,8 +155,7 @@ struct generator {
       std::pair{[]() { return system_callee("math_utils", "floor"); },
                 false} /* floor */,
       std::pair{[]() { return system_callee("math_utils", "ceil"); },
-                false} /* ceil */
-  };
+                false} /* ceil */)};
 
   std::unordered_set<ast::base*> _async_blocks;
   std::unordered_map<std::string_view, ast::base*> _user_functions;
@@ -413,10 +411,9 @@ struct generator {
 
   template <typename wrapper_type>
   auto get_jsast(ast::unary_expression& unary, wrapper_type&& wrapper) {
-    static constexpr std::array symbol_map{
-        jsast::unary_op::negative /* negative */,
-        jsast::unary_op::logical_not /* logical_not */,
-    };
+    static constexpr auto symbol_map{
+        make_array(jsast::unary_op::negative /* negative */,
+                   jsast::unary_op::logical_not /* logical_not */)};
     return wrapper(jsast::ast::unary_expression{symbol_map[raw_value(unary.op)],
                                                 get_node(*unary.argument())});
   }
@@ -432,18 +429,17 @@ struct generator {
           get_node(*binary.left()), jsast::logical_op::logical_or,
           get_node(*binary.right())});
     } else {
-      static constexpr std::array symbol_map{
-          jsast::binary_op::add /* add */,
-          jsast::binary_op::subtract /* subtract */,
-          jsast::binary_op::multiply /* multiply */,
-          jsast::binary_op::divide /* divide */,
-          jsast::binary_op::strict_equal /* equal */,
-          jsast::binary_op::strict_not_equal /* not_equal */,
-          jsast::binary_op::less /* less */,
-          jsast::binary_op::less_equal /* less_equal */,
-          jsast::binary_op::greater /* greater */,
-          jsast::binary_op::greater_equal /* greater_equal */
-      };
+      static constexpr auto symbol_map{
+          make_array(jsast::binary_op::add /* add */,
+                     jsast::binary_op::subtract /* subtract */,
+                     jsast::binary_op::multiply /* multiply */,
+                     jsast::binary_op::divide /* divide */,
+                     jsast::binary_op::strict_equal /* equal */,
+                     jsast::binary_op::strict_not_equal /* not_equal */,
+                     jsast::binary_op::less /* less */,
+                     jsast::binary_op::less_equal /* less_equal */,
+                     jsast::binary_op::greater /* greater */,
+                     jsast::binary_op::greater_equal /* greater_equal */)};
       return wrapper(jsast::ast::binary_expression{
           get_node(*binary.left()), symbol_map[raw_value(binary.op)],
           get_node(*binary.right())});
@@ -496,10 +492,9 @@ struct generator {
 
   template <typename wrapper_type>
   auto get_jsast(ast::new_color& init, wrapper_type&& wrapper) {
-    static constexpr std::array<callee_maker, 18> new_color_callee_map{
+    static constexpr auto new_color_callee_map{make_array(
         []() { return system_callee("color_utils", "rgb"); } /* rgb */,
-        []() { return system_callee("color_utils", "rgba"); } /* rgba */
-    };
+        []() { return system_callee("color_utils", "rgba"); } /* rgba */)};
 
     jsast::utils::move_vector<jsast::ast::node> args;
     for (auto& arg : init.arguments()) {

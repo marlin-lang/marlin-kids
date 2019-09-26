@@ -1,5 +1,6 @@
 set(HEADERS
     document.hpp
+    color_literal.hpp
     expr_inserter.hpp
     literal_content.hpp
     placeholders.hpp

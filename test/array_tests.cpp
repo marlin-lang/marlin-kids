@@ -5,7 +5,7 @@
 #include "source_selection.hpp"
 #include "store.hpp"
 
-auto make_test_document() {
+static auto make_test_document() {
   std::vector<marlin::ast::node> array_elements;
   array_elements.emplace_back(
       marlin::ast::make<marlin::ast::number_literal>("1"));

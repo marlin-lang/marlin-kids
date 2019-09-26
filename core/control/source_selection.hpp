@@ -2,10 +2,13 @@
 #define marlin_control_source_selection_hpp
 
 #include <algorithm>
+#include <string>
+#include <tuple>
 #include <utility>
 #include <vector>
 
 #include "ast.hpp"
+#include "color_literal.hpp"
 #include "document.hpp"
 #include "expr_inserter.hpp"
 #include "formatter.hpp"
@@ -127,6 +130,20 @@ struct source_selection {
            _selection->is<ast::identifier>();
   }
 
+  [[nodiscard]] bool is_color_literal() const {
+    if (_selection->is<ast::new_color>()) {
+      for (auto& arg : _selection->as<ast::new_color>().arguments()) {
+        if (!arg->is<ast::number_literal>() &&
+            !arg->is<ast::expression_placeholder>()) {
+          return false;
+        }
+      }
+      return true;
+    } else {
+      return false;
+    }
+  }
+
   [[nodiscard]] bool is_removable() const {
     return _selection->is<ast::parameter>() || dragging_type(false).has_value();
   }
@@ -169,8 +186,22 @@ struct source_selection {
     return count;
   }
 
-  [[nodiscard]] source_selection as_dragging_selection() && {
-    return {*_doc, *_selection, dragging_rule};
+  [[nodiscard]] color_literal get_color_literal() const {
+    assert(is_color_literal());
+
+    color_literal literal{_selection->as<ast::new_color>().mode};
+    auto args{_selection->as<ast::new_color>().arguments()};
+    for (size_t i{0}; i < args.size(); i++) {
+      if (args[i]->is<ast::number_literal>()) {
+        literal.set(i, std::stod(args[i]->as<ast::number_literal>().value));
+      } else if (args[i]->is<ast::expression_placeholder>()) {
+        literal.set(i, 0);
+      } else {
+        assert(false);
+        return {};
+      }
+    }
+    return literal;
   }
 
   [[nodiscard]] std::optional<pasteboard_t> dragging_type(bool copying) const {
@@ -192,6 +223,10 @@ struct source_selection {
     return std::nullopt;
   }
 
+  [[nodiscard]] source_selection as_dragging_selection() && {
+    return {*_doc, *_selection, dragging_rule};
+  }
+
   template <pasteboard_t node_type, typename = expr_enable_t<node_type>>
   [[nodiscard]] expr_inserter<node_type> as_inserter() && {
     if constexpr (node_type == pasteboard_t::expression) {
@@ -209,6 +244,14 @@ struct source_selection {
     return {*_doc, {}, *_selection};
   }
 
+  std::vector<source_update> set_new_array_elements_count(size_t count);
+  std::vector<source_update> set_color_literal(color_literal literal);
+
+  document_update remove_from_document() &&;
+  document_update insert_literal(literal_data_type type,
+                                 std::string_view literal) &&;
+  document_update replace_function_signature(function_definition signature) &&;
+
   // Use this to update source_inserters, so that we can remove first and then
   // insert when moving parts of the code
   [[nodiscard]] line_update removal_line_update() const {
@@ -221,13 +264,6 @@ struct source_selection {
       return {};
     }
   }
-
-  std::vector<source_update> set_new_array_elements_count(size_t count);
-
-  document_update remove_from_document() &&;
-  document_update insert_literal(literal_data_type type,
-                                 std::string_view literal) &&;
-  document_update replace_function_signature(function_definition signature) &&;
 
  private:
   document* _doc;

@@ -3,6 +3,7 @@ include(catch2)
 set(SOURCES
     main.cpp
     array_tests.cpp
+    color_tests.cpp
     inserter_tests.cpp
     removal_tests.cpp
     store_tests.cpp)

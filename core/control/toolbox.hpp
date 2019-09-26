@@ -33,7 +33,7 @@ struct toolbox {
   };
 
   toolbox() {
-    static const std::array _default_prototypes{
+    static const auto _default_prototypes{make_array(
         std::vector{function_prototype(), if_prototype(), if_else_prototype(),
                     while_prototype(), for_prototype(), break_prototype(),
                     continue_prototype(), return_prototype(),
@@ -90,10 +90,10 @@ struct toolbox {
             system_function_prototype(ast::system_function::floor),
             system_function_prototype(ast::system_function::ceil),
             new_color_prototype(ast::color_mode::rgb),
-            new_color_prototype(ast::color_mode::rgba)}};
-    static const std::array<
-        std::string_view, std::tuple_size<decltype(_default_prototypes)>::value>
-        _default_names{"control flow", "statement", "expression", "function"};
+            new_color_prototype(ast::color_mode::rgba)})};
+    static const auto _default_names{make_array<std::string_view>(
+        "control flow", "statement", "expression", "function")};
+    static_assert(_default_prototypes.size() == _default_names.size());
 
     _categories.emplace_back("recent", category::category_type::recent);
     for (size_t i{0}; i < _default_prototypes.size(); i++) {

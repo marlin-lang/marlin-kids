@@ -87,10 +87,9 @@ template <>
 inline literal_data_type
 literal_content::get_default_type<ast::unary_expression>(
     const ast::unary_expression& parent, ast::base::child_index index) {
-  static constexpr std::array unary_op_literal_type_map{
-      literal_content::number_default_type /* negative */,
-      literal_content::boolean_default_type /* logical_not */
-  };
+  static constexpr auto unary_op_literal_type_map{
+      make_array(literal_content::number_default_type /* negative */,
+                 literal_content::boolean_default_type /* logical_not */)};
   assert(index.subnode_index == 0 && index.node_index == 0);
   return unary_op_literal_type_map[raw_value(parent.op)];
 }
@@ -99,28 +98,28 @@ template <>
 inline literal_data_type
 literal_content::get_default_type<ast::binary_expression>(
     const ast::binary_expression& parent, ast::base::child_index index) {
-  static constexpr std::array binary_op_literal_type_map{
-      literal_content::number_default_type /* add */,
-      literal_content::number_default_type /* subtract */,
-      literal_content::number_default_type /* multiply */,
-      literal_content::number_default_type /* divide */,
-      literal_content::any_default_type /* equal */,
-      literal_content::any_default_type /* not_equal */,
-      literal_content::number_default_type /* less */,
-      literal_content::number_default_type /* less_equal */,
-      literal_content::number_default_type /* greater */,
-      literal_content::number_default_type /* greater_equal */,
-      literal_content::boolean_default_type /* logical_and */,
-      literal_content::boolean_default_type /* logical_or */
-  };
+  static constexpr auto binary_op_literal_type_map{
+      make_array(literal_content::number_default_type /* add */,
+                 literal_content::number_default_type /* subtract */,
+                 literal_content::number_default_type /* multiply */,
+                 literal_content::number_default_type /* divide */,
+                 literal_content::any_default_type /* equal */,
+                 literal_content::any_default_type /* not_equal */,
+                 literal_content::number_default_type /* less */,
+                 literal_content::number_default_type /* less_equal */,
+                 literal_content::number_default_type /* greater */,
+                 literal_content::number_default_type /* greater_equal */,
+                 literal_content::boolean_default_type /* logical_and */,
+                 literal_content::boolean_default_type /* logical_or */)};
   assert(index.subnode_index < 2 && index.node_index == 0);
   return binary_op_literal_type_map[raw_value(parent.op)];
 }
 
 inline literal_data_type _get_subscript_default_type(
     ast::base::child_index index) {
-  static constexpr std::array subnodes{literal_content::array_default_type,
-                                       literal_content::number_default_type};
+  static constexpr auto subnodes{
+      make_array(literal_content::array_default_type,
+                 literal_content::number_default_type)};
   assert(index.subnode_index < subnodes.size() && index.node_index == 0);
   return subnodes[index.subnode_index];
 }
@@ -138,7 +137,7 @@ inline literal_data_type literal_content::get_default_type<ast::subscript_get>(
 struct system_procedure_args_literal_type {
  private:
   static const auto& literal_types() {
-    static const std::array _literal_types{
+    static const auto _literal_types{make_array(
         std::vector{literal_content::any_default_type} /* sleep */,
         std::vector{literal_content::any_default_type} /* print */,
         std::vector{literal_content::array_default_type,
@@ -158,8 +157,7 @@ struct system_procedure_args_literal_type {
         std::vector{literal_content::number_default_type} /* logo_turn_left */,
         std::vector{literal_content::number_default_type} /* logo_turn_right */,
         std::vector<literal_data_type>{} /* logo_pen_up */,
-        std::vector<literal_data_type>{} /* logo_pen_down */
-    };
+        std::vector<literal_data_type>{} /* logo_pen_down */)};
     return _literal_types;
   }
 
@@ -181,7 +179,7 @@ literal_content::get_default_type<ast::system_procedure_call>(
 struct system_function_args_literal_type {
  private:
   static const auto& literal_types() {
-    static const std::array _literal_types{
+    static const auto _literal_types{make_array(
         std::vector{literal_content::number_default_type} /* range1 */,
         std::vector{literal_content::number_default_type,
                     literal_content::number_default_type} /* range2 */,
@@ -202,7 +200,7 @@ struct system_function_args_literal_type {
         std::vector{literal_content::number_default_type} /* log */,
         std::vector{literal_content::number_default_type} /* round */,
         std::vector{literal_content::number_default_type} /* floor */,
-        std::vector{literal_content::number_default_type} /* ceil */};
+        std::vector{literal_content::number_default_type} /* ceil */)};
     return _literal_types;
   }
 

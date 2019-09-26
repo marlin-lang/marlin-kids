@@ -133,6 +133,14 @@ struct vector_view {
     return item;
   }
 
+  void clear() const {
+    if (size() > 0) {
+      _data().erase(begin(), end());
+      _vec->size = 0;
+      _base->apply_update_subnode_refs();
+    }
+  }
+
  private:
   base_type* _base;
   vector* _vec;

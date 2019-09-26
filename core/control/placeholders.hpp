@@ -62,8 +62,8 @@ inline std::string placeholder::get<ast::eval_statement>(
 template <>
 inline std::string placeholder::get<ast::assignment>(
     ast::base::child_index index) {
-  static constexpr std::array<std::string_view, 2> subnodes{"variable",
-                                                            "value"};
+  static constexpr auto subnodes{
+      make_array<std::string_view>("variable", "value")};
   assert(index.node_index == 0);
   return std::string{subnodes[index.subnode_index]};
 }
@@ -100,8 +100,8 @@ inline std::string placeholder::get<ast::while_statement>(
 template <>
 inline std::string placeholder::get<ast::for_statement>(
     ast::base::child_index index) {
-  static constexpr std::array<std::string_view, 2> subnodes{"variable",
-                                                            "array"};
+  static constexpr auto subnodes{
+      make_array<std::string_view>("variable", "array")};
   assert(index.subnode_index < 2 && index.node_index == 0);
   return std::string{subnodes[index.subnode_index]};
 }
@@ -123,13 +123,14 @@ inline std::string placeholder::get<ast::unary_expression>(
 template <>
 inline std::string placeholder::get<ast::binary_expression>(
     ast::base::child_index index) {
-  static constexpr std::array<std::string_view, 2> subnodes{"left", "right"};
+  static constexpr auto subnodes{make_array<std::string_view>("left", "right")};
   assert(index.subnode_index < subnodes.size() && index.node_index == 0);
   return std::string{subnodes[index.subnode_index]};
 }
 
 inline std::string _get_subscript_placeholder(ast::base::child_index index) {
-  static constexpr std::array<std::string_view, 2> subnodes{"array", "index"};
+  static constexpr auto subnodes{
+      make_array<std::string_view>("array", "index")};
   assert(index.subnode_index < subnodes.size() && index.node_index == 0);
   return std::string{subnodes[index.subnode_index]};
 }
@@ -154,7 +155,7 @@ inline std::string placeholder::get<ast::new_array>(
 struct placeholder_system_procedure_args {
  private:
   static const auto& placeholders() {
-    static const std::array _placeholders{
+    static const auto _placeholders{make_array(
         std::vector<std::string_view>{"seconds"} /* sleep */,
         std::vector<std::string_view>{"message"} /* print */,
         std::vector<std::string_view>{"array", "element"} /* list_append */,
@@ -169,8 +170,7 @@ struct placeholder_system_procedure_args {
         std::vector<std::string_view>{"degree"} /* logo_turn_left */,
         std::vector<std::string_view>{"degree"} /* logo_turn_right */,
         std::vector<std::string_view>{} /* logo_pen_up */,
-        std::vector<std::string_view>{} /* logo_pen_down */
-    };
+        std::vector<std::string_view>{} /* logo_pen_down */)};
     return _placeholders;
   }
 
@@ -191,7 +191,7 @@ inline std::string placeholder::get<ast::system_procedure_call>(
 struct placeholder_system_function_args {
  private:
   static const auto& placeholders() {
-    static const std::array _placeholders{
+    static const auto _placeholders{make_array(
         std::vector<std::string_view>{"end"} /* range1 */,
         std::vector<std::string_view>{"begin", "end"} /* range2 */,
         std::vector<std::string_view>{"begin", "end", "step"} /* range3 */,
@@ -209,7 +209,7 @@ struct placeholder_system_function_args {
         std::vector<std::string_view>{"value"} /* log */,
         std::vector<std::string_view>{"value"} /* round */,
         std::vector<std::string_view>{"value"} /* floor */,
-        std::vector<std::string_view>{"value"} /* ceil */};
+        std::vector<std::string_view>{"value"} /* ceil */)};
     return _placeholders;
   }
 
@@ -230,10 +230,10 @@ inline std::string placeholder::get<ast::system_function_call>(
 struct placeholder_new_color_args {
  private:
   static const auto& placeholders() {
-    static const std::array _placeholders{
+    static const auto _placeholders{make_array(
         std::vector<std::string_view>{"red", "green", "blue"} /* rgb */,
         std::vector<std::string_view>{"red", "green", "blue",
-                                      "alpha"} /* rgba */};
+                                      "alpha"} /* rgba */)};
     return _placeholders;
   }
 
