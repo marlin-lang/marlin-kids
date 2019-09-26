@@ -1001,7 +1001,7 @@
                 </viewController>
                 <customObject id="hQs-OE-asr" userLabel="First Responder" customClass="NSResponder" sceneMemberID="firstResponder"/>
             </objects>
-            <point key="canvasLocation" x="987" y="342"/>
+            <point key="canvasLocation" x="894" y="331"/>
         </scene>
         <!--Mac Function View Controller-->
         <scene sceneID="sQh-R1-erl">
@@ -1200,11 +1200,11 @@ DQ
             <objects>
                 <viewController storyboardIdentifier="ArrayViewController" id="6As-TM-h0o" customClass="ArrayViewController" sceneMemberID="viewController">
                     <view key="view" id="erL-lt-fdE">
-                        <rect key="frame" x="0.0" y="0.0" width="200" height="66"/>
+                        <rect key="frame" x="0.0" y="0.0" width="200" height="59"/>
                         <autoresizingMask key="autoresizingMask"/>
                         <subviews>
                             <textField horizontalHuggingPriority="251" verticalHuggingPriority="750" translatesAutoresizingMaskIntoConstraints="NO" id="vfX-L0-YhE">
-                                <rect key="frame" x="6" y="40" width="40" height="16"/>
+                                <rect key="frame" x="6" y="35" width="40" height="16"/>
                                 <textFieldCell key="cell" lineBreakMode="clipping" title="Array" id="UdM-Io-b8U">
                                     <font key="font" metaFont="systemBold"/>
                                     <color key="textColor" name="labelColor" catalog="System" colorSpace="catalog"/>
@@ -1227,37 +1227,21 @@ DQ
                                     <color key="backgroundColor" name="textBackgroundColor" catalog="System" colorSpace="catalog"/>
                                 </textFieldCell>
                             </textField>
-                            <button verticalHuggingPriority="750" translatesAutoresizingMaskIntoConstraints="NO" id="fE6-1X-R5I">
-                                <rect key="frame" x="139" y="30" width="59" height="32"/>
-                                <buttonCell key="cell" type="push" title="OK" bezelStyle="rounded" alignment="center" borderStyle="border" imageScaling="proportionallyDown" inset="2" id="VEc-6O-lXq">
-                                    <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
-                                    <font key="font" metaFont="system"/>
-                                    <string key="keyEquivalent" base64-UTF8="YES">
-DQ
-</string>
-                                </buttonCell>
-                                <connections>
-                                    <action selector="okButtonPressed:" target="6As-TM-h0o" id="vef-Y3-Hm6"/>
-                                </connections>
-                            </button>
                         </subviews>
                         <constraints>
                             <constraint firstItem="2dC-59-mHg" firstAttribute="centerY" secondItem="POJ-uD-4v1" secondAttribute="centerY" id="8v4-cL-3C6"/>
                             <constraint firstAttribute="trailing" secondItem="POJ-uD-4v1" secondAttribute="trailing" constant="8" id="MnY-41-MUu"/>
-                            <constraint firstItem="vfX-L0-YhE" firstAttribute="centerY" secondItem="fE6-1X-R5I" secondAttribute="centerY" id="OAM-1a-Aqv"/>
                             <constraint firstItem="POJ-uD-4v1" firstAttribute="leading" secondItem="2dC-59-mHg" secondAttribute="trailing" constant="8" symbolic="YES" id="Ptn-bF-ejq"/>
-                            <constraint firstAttribute="trailing" secondItem="fE6-1X-R5I" secondAttribute="trailing" constant="8" id="SR5-OA-Tnj"/>
                             <constraint firstItem="vfX-L0-YhE" firstAttribute="leading" secondItem="erL-lt-fdE" secondAttribute="leading" constant="8" id="Sub-bf-hUl"/>
+                            <constraint firstItem="2dC-59-mHg" firstAttribute="top" secondItem="vfX-L0-YhE" secondAttribute="bottom" constant="8" id="UpH-I8-mGS"/>
                             <constraint firstAttribute="bottom" secondItem="POJ-uD-4v1" secondAttribute="bottom" constant="8" id="VWx-Fu-8Zm"/>
-                            <constraint firstItem="fE6-1X-R5I" firstAttribute="leading" relation="greaterThanOrEqual" secondItem="vfX-L0-YhE" secondAttribute="trailing" constant="8" symbolic="YES" id="XYB-BT-hWl"/>
-                            <constraint firstItem="POJ-uD-4v1" firstAttribute="top" secondItem="fE6-1X-R5I" secondAttribute="bottom" constant="8" symbolic="YES" id="e9s-Hq-MKg"/>
-                            <constraint firstItem="fE6-1X-R5I" firstAttribute="top" secondItem="erL-lt-fdE" secondAttribute="top" constant="8" id="j6s-XK-5dB"/>
+                            <constraint firstItem="vfX-L0-YhE" firstAttribute="top" secondItem="erL-lt-fdE" secondAttribute="top" constant="8" id="clI-Oh-Z2G"/>
+                            <constraint firstAttribute="trailing" relation="greaterThanOrEqual" secondItem="vfX-L0-YhE" secondAttribute="trailing" constant="20" symbolic="YES" id="vcu-Gk-1d2"/>
                             <constraint firstItem="2dC-59-mHg" firstAttribute="leading" secondItem="erL-lt-fdE" secondAttribute="leading" constant="8" id="zkN-w6-8nb"/>
                         </constraints>
                     </view>
                     <connections>
                         <outlet property="countTextField" destination="POJ-uD-4v1" id="gt5-gu-W8F"/>
-                        <outlet property="okButton" destination="fE6-1X-R5I" id="VcP-oV-fSD"/>
                     </connections>
                 </viewController>
                 <customObject id="AXQ-vm-Ktq" userLabel="First Responder" customClass="NSResponder" sceneMemberID="firstResponder"/>

@@ -4,13 +4,14 @@
 
 @interface ArrayViewController () <NSTextFieldDelegate>
 
-@property(weak) IBOutlet Button *okButton;
+@property(weak) IBOutlet NSTextField *countTextField;
 
 @end
 
 @implementation ArrayViewController {
   ArrayCountFormatter *_formater;
   NSUInteger _minimalCount;
+  BOOL _isValid;
 }
 
 - (void)viewDidLoad {
@@ -18,7 +19,15 @@
 
   self.countTextField.delegate = self;
   _formater = [ArrayCountFormatter new];
-  self.okButton.enabled = NO;
+}
+
+- (void)viewDidAppear {
+  [super viewDidAppear];
+  [self.countTextField becomeFirstResponder];
+}
+
+- (void)setCount:(NSUInteger)count {
+  self.countTextField.stringValue = [NSString stringWithFormat:@"%lu", count];
 }
 
 - (void)setMinimalCount:(NSUInteger)minimalCount {
@@ -27,17 +36,15 @@
   [self validate];
 }
 
-- (IBAction)okButtonPressed:(id)sender {
-  [self.delegate arrayViewController:self finishEditingWithCount:self.countTextField.integerValue];
-}
-
 - (void)validate {
   if ([_formater getObjectValue:nil
                       forString:self.countTextField.stringValue
                errorDescription:nil]) {
-    self.okButton.enabled = YES;
+    self.countTextField.textColor = Color.blackColor;
+    _isValid = YES;
   } else {
-    self.okButton.enabled = NO;
+    self.countTextField.textColor = Color.redColor;
+    _isValid = NO;
   }
 }
 
@@ -45,6 +52,13 @@
 
 - (void)controlTextDidChange:(NSNotification *)obj {
   [self validate];
+}
+
+- (void)controlTextDidEndEditing:(NSNotification *)obj {
+  if (_isValid) {
+    [self.delegate arrayViewController:self
+                finishEditingWithCount:self.countTextField.integerValue];
+  }
 }
 
 @end

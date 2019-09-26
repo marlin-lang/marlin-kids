@@ -6,8 +6,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 @protocol ArrayViewControllerDelegate
 
-- (void)arrayViewController:(ArrayViewController *)vc
-     finishEditingWithCount:(NSUInteger)count;
+- (void)arrayViewController:(ArrayViewController *)vc finishEditingWithCount:(NSUInteger)count;
 
 @end
 
@@ -15,11 +14,10 @@ NS_ASSUME_NONNULL_BEGIN
 
 @property(weak) id<ArrayViewControllerDelegate> delegate;
 
-@property (weak) IBOutlet NSTextField *countTextField;
+- (void)setCount:(NSUInteger)count;
 
 - (void)setMinimalCount:(NSUInteger)minimalCount;
 
 @end
 
 NS_ASSUME_NONNULL_END
-

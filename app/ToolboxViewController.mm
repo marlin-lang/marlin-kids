@@ -53,8 +53,8 @@ using ToolIndex = std::pair<NSInteger, NSInteger>;
 
   [self addChildViewController:vc inView:self.editorView];
 
+  vc.count = count;
   vc.minimalCount = minimalCount;
-  vc.countTextField.stringValue = [NSString stringWithFormat:@"%lu", count];
   _editorViewController = vc;
 }
 

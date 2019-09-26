@@ -61,8 +61,10 @@
   if ([_formatter getObjectValue:nil
                        forString:self.editorTextField.stringValue
                 errorDescription:nil]) {
+    self.editorTextField.textColor = Color.blackColor;
     self.valid = YES;
   } else {
+    self.editorTextField.textColor = Color.redColor;
     self.valid = NO;
   }
 }

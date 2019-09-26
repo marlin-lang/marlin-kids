@@ -183,6 +183,7 @@ struct DocumentGetter {
   if (_selection.has_value()) {
     auto updates = _selection->set_new_array_elements_count(count);
     [self performUpdates:std::move(updates)];
+    [self updateDuplicateAndEditorViewControllersForSelection];
   }
 }
 
