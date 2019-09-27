@@ -98,15 +98,16 @@ struct generator {
 
   using callee_maker = jsast::ast::node (*)();
   using callee_entry = std::pair<callee_maker, bool>;
+  static constexpr auto array_modification_callee_map{make_array<callee_entry>(
+      std::pair{[]() { return system_callee("array_utils", "append"); },
+                false} /* append */,
+      std::pair{[]() { return system_callee("array_utils", "insert"); },
+                false} /* insert */,
+      std::pair{[]() { return system_callee("array_utils", "remove"); },
+                false} /* remove */)};
   static constexpr auto system_procedure_callee_map{make_array<callee_entry>(
       std::pair{[]() { return env_name("sleep"); }, true} /* sleep */,
       std::pair{[]() { return env_name("print"); }, false} /* print */,
-      std::pair{[]() { return system_callee("array_utils", "append"); },
-                false} /* list_append */,
-      std::pair{[]() { return system_callee("array_utils", "insert"); },
-                false} /* list_insert */,
-      std::pair{[]() { return system_callee("array_utils", "remove"); },
-                false} /* list_remove */,
       std::pair{[]() { return system_callee("graphics", "drawLine"); },
                 true} /* draw_line */,
       std::pair{[]() { return system_callee("graphics", "setLineWidth"); },
@@ -175,6 +176,13 @@ struct generator {
   template <typename node_type>
   void record_if_is_call(node_type&, ast::base&) {}
 
+  void record_if_is_call(ast::modify_array& call, ast::base& block) {
+    auto [node_maker,
+          async]{array_modification_callee_map[raw_value(call.mod)]};
+    if (async) {
+      _async_blocks.emplace(&block);
+    }
+  }
   void record_if_is_call(ast::system_procedure_call& call, ast::base& block) {
     auto [node_maker, async]{system_procedure_callee_map[raw_value(call.proc)]};
     if (async) {
@@ -337,6 +345,24 @@ struct generator {
   }
 
   template <typename wrapper_type>
+  auto get_jsast(ast::modify_array& call, wrapper_type&& wrapper) {
+    jsast::utils::move_vector<jsast::ast::node> args{get_node(*call.array())};
+    for (auto& arg : call.arguments()) {
+      args.emplace_back(get_node(*arg));
+    }
+    auto [node_maker,
+          async]{array_modification_callee_map[raw_value(call.mod)]};
+    if (async) {
+      return wrapper(
+          jsast::ast::expression_statement{jsast::ast::await_expression{
+              jsast::ast::call_expression{node_maker(), std::move(args)}}});
+    } else {
+      return wrapper(jsast::ast::expression_statement{
+          jsast::ast::call_expression{node_maker(), std::move(args)}});
+    }
+  }
+
+  template <typename wrapper_type>
   auto get_jsast(ast::system_procedure_call& call, wrapper_type&& wrapper) {
     jsast::utils::move_vector<jsast::ast::node> args;
     for (auto& arg : call.arguments()) {
@@ -457,12 +483,12 @@ struct generator {
 
   template <typename wrapper_type>
   auto get_jsast(ast::subscript_set& subscript, wrapper_type&& wrapper) {
-    return get_subscript(subscript, wrapper);
+    return get_subscript(subscript, std::forward<wrapper_type>(wrapper));
   }
 
   template <typename wrapper_type>
   auto get_jsast(ast::subscript_get& subscript, wrapper_type&& wrapper) {
-    return get_subscript(subscript, wrapper);
+    return get_subscript(subscript, std::forward<wrapper_type>(wrapper));
   }
 
   template <typename wrapper_type>
@@ -472,6 +498,20 @@ struct generator {
       elems.emplace_back(get_node(*elem));
     }
     return wrapper(jsast::ast::array_expression{std::move(elems)});
+  }
+
+  template <typename wrapper_type>
+  auto get_jsast(ast::new_color& init, wrapper_type&& wrapper) {
+    static constexpr auto new_color_callee_map{make_array(
+        []() { return system_callee("color_utils", "rgb"); } /* rgb */,
+        []() { return system_callee("color_utils", "rgba"); } /* rgba */)};
+
+    jsast::utils::move_vector<jsast::ast::node> args;
+    for (auto& arg : init.arguments()) {
+      args.emplace_back(get_node(*arg));
+    }
+    auto node_maker{new_color_callee_map[raw_value(init.mode)]};
+    return wrapper(jsast::ast::call_expression{node_maker(), std::move(args)});
   }
 
   template <typename wrapper_type>
@@ -488,20 +528,6 @@ struct generator {
       return wrapper(
           jsast::ast::call_expression{node_maker(), std::move(args)});
     }
-  }
-
-  template <typename wrapper_type>
-  auto get_jsast(ast::new_color& init, wrapper_type&& wrapper) {
-    static constexpr auto new_color_callee_map{make_array(
-        []() { return system_callee("color_utils", "rgb"); } /* rgb */,
-        []() { return system_callee("color_utils", "rgba"); } /* rgba */)};
-
-    jsast::utils::move_vector<jsast::ast::node> args;
-    for (auto& arg : init.arguments()) {
-      args.emplace_back(get_node(*arg));
-    }
-    auto node_maker{new_color_callee_map[raw_value(init.mode)]};
-    return wrapper(jsast::ast::call_expression{node_maker(), std::move(args)});
   }
 
   template <typename wrapper_type>

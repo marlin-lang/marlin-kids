@@ -243,6 +243,17 @@ struct formatter {
     emit_string(";");
   }
 
+  void emit_ast(node_type<ast::modify_array>& call, size_t) {
+    emit_string(display_for(call.mod));
+    emit_string("(");
+    emit_node(*call.array());
+    for (auto& arg : call.arguments()) {
+      emit_string(", ");
+      emit_node(*arg);
+    }
+    emit_string(");");
+  }
+
   void emit_ast(node_type<ast::system_procedure_call>& call, size_t) {
     emit_string(display_for(call.proc));
     emit_arguments(call.arguments());
@@ -402,14 +413,14 @@ struct formatter {
     emit_arguments(init.elements());
   }
 
-  void emit_ast(node_type<ast::system_function_call>& call, size_t) {
-    emit_string(display_for(call.func));
-    emit_arguments(call.arguments());
-  }
-
   void emit_ast(node_type<ast::new_color>& init, size_t) {
     emit_string(display_for(init.mode));
     emit_arguments(init.arguments());
+  }
+
+  void emit_ast(node_type<ast::system_function_call>& call, size_t) {
+    emit_string(display_for(call.func));
+    emit_arguments(call.arguments());
   }
 
   void emit_ast(node_type<ast::user_function_call>& call, size_t) {

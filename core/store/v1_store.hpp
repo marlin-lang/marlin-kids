@@ -28,6 +28,7 @@ inline const std::string_view eval_statement{"eval"};
 inline const std::string_view assignment{"assign"};
 inline const std::string_view use_global{"global"};
 
+inline const std::string_view modify_array{"mod_array"};
 inline const std::string_view system_procedure{"sys_proc"};
 
 inline const std::string_view if_else{"if"};
@@ -45,8 +46,8 @@ inline const std::string_view unary{"unary"};
 inline const std::string_view binary{"binary"};
 
 inline const std::string_view subscript{"sub"};
-inline const std::string_view new_array{"new_array"};
 
+inline const std::string_view new_array{"new_array"};
 inline const std::string_view new_color{"new_color"};
 
 inline const std::string_view system_function{"sys_func"};
@@ -197,6 +198,7 @@ struct store : base_store::impl<store> {
             {key::eval_statement, &store::read_eval},
             {key::assignment, &store::read_assignment},
             {key::use_global, &store::read_use_global},
+            {key::modify_array, &store::read_array_modification},
             {key::system_procedure, &store::read_system_procedure},
             {key::if_else, &store::read_if_else},
             {key::while_loop, &store::read_while},
@@ -293,6 +295,31 @@ struct store : base_store::impl<store> {
 
     auto variable{read_node(type_expectation::lvalue)};
     return ast::make<ast::use_global>(std::move(variable));
+  }
+
+  ast::node read_array_modification(type_expectation type) {
+    assert_type<type_expectation::statement>(type, "Unexpected statement!");
+
+    static const auto array_modification_inverse_name_map{[]() {
+      std::unordered_map<std::string_view, ast::array_modification> map;
+      for (std::underlying_type_t<ast::array_modification> i{0};
+           i < ast::array_modification_name_map.size(); i++) {
+        map[ast::array_modification_name_map[i]] = {i};
+      }
+      return map;
+    }()};
+
+    auto name{read_zero_terminated()};
+    auto it{array_modification_inverse_name_map.find(name)};
+    if (it == array_modification_inverse_name_map.end()) {
+      throw read_error{"Unknown system function encountered!"};
+    } else {
+      const auto mod{it->second};
+      auto array{read_node(type_expectation::lvalue)};
+      auto args{read_vector(type_expectation::rvalue)};
+      return ast::make<ast::modify_array>(mod, std::move(array),
+                                          std::move(args));
+    }
   }
 
   ast::node read_system_procedure(type_expectation type) {
@@ -666,6 +693,13 @@ struct store : base_store::impl<store> {
     write_base(*use_global.variable());
   }
 
+  void write_node(const ast::modify_array& call) {
+    write_key(key::modify_array);
+    write_symbol(ast::name_for(call.mod));
+    write_base(*call.array());
+    write_vector(call.arguments());
+  }
+
   void write_node(const ast::system_procedure_call& call) {
     write_key(key::system_procedure);
     write_symbol(ast::name_for(call.proc));
@@ -764,16 +798,16 @@ struct store : base_store::impl<store> {
     write_vector(init.elements());
   }
 
-  void write_node(const ast::system_function_call& call) {
-    write_key(key::system_function);
-    write_symbol(ast::name_for(call.func));
-    write_vector(call.arguments());
-  }
-
   void write_node(const ast::new_color& init) {
     write_key(key::new_color);
     write_symbol(ast::name_for(init.mode));
     write_vector(init.arguments());
+  }
+
+  void write_node(const ast::system_function_call& call) {
+    write_key(key::system_function);
+    write_symbol(ast::name_for(call.func));
+    write_vector(call.arguments());
   }
 
   void write_node(const ast::user_function_call& call) {

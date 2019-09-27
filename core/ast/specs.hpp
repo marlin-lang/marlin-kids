@@ -103,12 +103,27 @@ static constexpr auto binary_op_precedence_map{make_array<size_t>(
   return binary_op_precedence_map[raw_value(op)];
 }
 
+enum struct array_modification : size_t { append, insert, remove };
+
+static constexpr auto array_modification_name_map{make_array<std::string_view>(
+    "append" /* append */, "insert" /* insert */, "remove" /* remove */)};
+[[nodiscard]] inline constexpr std::string_view name_for(
+    array_modification mod) noexcept {
+  return array_modification_name_map[raw_value(mod)];
+}
+
+static constexpr auto array_modification_display_map{
+    make_array<std::string_view>("array.append" /* append */,
+                                 "array.insert" /* insert */,
+                                 "array.remove" /* remove */)};
+[[nodiscard]] inline constexpr std::string_view display_for(
+    array_modification mod) noexcept {
+  return array_modification_display_map[raw_value(mod)];
+}
+
 enum struct system_procedure : size_t {
   sleep,
   print,
-  list_append,
-  list_insert,
-  list_remove,
   draw_line,
   set_line_width,
   logo_forward,
@@ -120,11 +135,9 @@ enum struct system_procedure : size_t {
 };
 
 static constexpr auto system_procedure_name_map{make_array<std::string_view>(
-    "sleep" /* sleep */, "print" /* print */, "append" /* list_append */,
-    "insert" /* list_insert */, "remove" /* list_remove */,
-    "draw_line" /* draw_line */, "set_line_width" /* set_line_width */,
-    "logo_forward" /* logo_forward */, "logo_backward" /* logo_backward */,
-    "logo_turn_left" /* logo_turn_left */,
+    "sleep" /* sleep */, "print" /* print */, "draw_line" /* draw_line */,
+    "set_line_width" /* set_line_width */, "logo_forward" /* logo_forward */,
+    "logo_backward" /* logo_backward */, "logo_turn_left" /* logo_turn_left */,
     "logo_turn_right" /* logo_turn_right */, "logo_pen_up" /* logo_pen_up */,
     "logo_pen_down" /* logo_pen_down */)};
 [[nodiscard]] inline constexpr std::string_view name_for(
@@ -133,11 +146,9 @@ static constexpr auto system_procedure_name_map{make_array<std::string_view>(
 }
 
 static constexpr auto system_procedure_display_map{make_array<std::string_view>(
-    "sleep" /* sleep */, "print" /* print */, "append" /* list_append */,
-    "insert" /* list_insert */, "remove" /* list_remove */,
-    "draw_line" /* draw_line */, "set_line_width" /* set_line_width */,
-    "logo.forward" /* logo_forward */, "logo.backward" /* logo_backward */,
-    "logo.turn_left" /* logo_turn_left */,
+    "sleep" /* sleep */, "print" /* print */, "draw_line" /* draw_line */,
+    "set_line_width" /* set_line_width */, "logo.forward" /* logo_forward */,
+    "logo.backward" /* logo_backward */, "logo.turn_left" /* logo_turn_left */,
     "logo.turn_right" /* logo_turn_right */, "logo.pen_up" /* logo_pen_up */,
     "logo.pen_down" /* logo_pen_down */)};
 [[nodiscard]] inline constexpr std::string_view display_for(

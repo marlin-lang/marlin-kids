@@ -94,6 +94,22 @@ struct use_global : base::impl<use_global, subnode::concrete>, statement {
   using base_type::impl;
 };
 
+struct modify_array
+    : base::impl<modify_array, subnode::concrete, subnode::vector>,
+      statement {
+  array_modification mod;
+
+  [[nodiscard]] decltype(auto) array() { return get_subnode<0>(); }
+  [[nodiscard]] decltype(auto) array() const { return get_subnode<0>(); }
+
+  [[nodiscard]] decltype(auto) arguments() { return get_subnode<1>(); }
+  [[nodiscard]] decltype(auto) arguments() const { return get_subnode<1>(); }
+
+  explicit modify_array(array_modification _mod, node _array,
+                        std::vector<node> _args)
+      : base_type{std::move(_array), std::move(_args)}, mod{_mod} {}
+};
+
 struct system_procedure_call
     : base::impl<system_procedure_call, subnode::vector>,
       statement {
@@ -259,6 +275,16 @@ struct new_array : base::impl<new_array, subnode::vector>, expression {
   using base_type::impl;
 };
 
+struct new_color : base::impl<new_color, subnode::vector>, expression {
+  color_mode mode;
+
+  [[nodiscard]] decltype(auto) arguments() { return get_subnode<0>(); }
+  [[nodiscard]] decltype(auto) arguments() const { return get_subnode<0>(); }
+
+  explicit new_color(color_mode _mode, std::vector<node> _args)
+      : base_type{std::move(_args)}, mode{_mode} {}
+};
+
 struct system_function_call : base::impl<system_function_call, subnode::vector>,
                               expression {
   system_function func;
@@ -268,16 +294,6 @@ struct system_function_call : base::impl<system_function_call, subnode::vector>,
 
   explicit system_function_call(system_function _func, std::vector<node> _args)
       : base_type{std::move(_args)}, func{_func} {}
-};
-
-struct new_color : base::impl<new_color, subnode::vector>, expression {
-  color_mode mode;
-
-  [[nodiscard]] decltype(auto) arguments() { return get_subnode<0>(); }
-  [[nodiscard]] decltype(auto) arguments() const { return get_subnode<0>(); }
-
-  explicit new_color(color_mode _mode, std::vector<node> _args)
-      : base_type{std::move(_args)}, mode{_mode} {}
 };
 
 struct user_function_call : base::impl<user_function_call, subnode::vector>,

@@ -152,16 +152,41 @@ inline std::string placeholder::get<ast::new_array>(
   return "elem" + std::to_string(index.node_index);
 }
 
+struct placeholder_array_modification_args {
+ private:
+  static const auto& placeholders() {
+    static const auto _placeholders{make_array(
+        std::vector<std::string_view>{"element"} /* append */,
+        std::vector<std::string_view>{"index", "element"} /* insert */,
+        std::vector<std::string_view>{"index"} /* remove */)};
+    return _placeholders;
+  }
+
+ public:
+  static const auto& args(ast::array_modification mod) {
+    return placeholders()[raw_value(mod)];
+  }
+};
+
+template <>
+inline std::string placeholder::get<ast::modify_array>(
+    const ast::modify_array& parent, ast::base::child_index index) {
+  if (index.subnode_index == 0) {
+    assert(index.node_index == 0);
+    return "array";
+  } else {
+    const auto& args{placeholder_array_modification_args::args(parent.mod)};
+    assert(index.subnode_index == 1 && index.node_index < args.size());
+    return std::string{args[index.node_index]};
+  }
+}
+
 struct placeholder_system_procedure_args {
  private:
   static const auto& placeholders() {
     static const auto _placeholders{make_array(
         std::vector<std::string_view>{"seconds"} /* sleep */,
         std::vector<std::string_view>{"message"} /* print */,
-        std::vector<std::string_view>{"array", "element"} /* list_append */,
-        std::vector<std::string_view>{"array", "index",
-                                      "element"} /* list_insert */,
-        std::vector<std::string_view>{"array", "index"} /* list_remove */,
         std::vector<std::string_view>{"start_x", "start_y", "end_x",
                                       "end_y"} /* draw_line */,
         std::vector<std::string_view>{"width"} /* set_line_width */,
@@ -184,6 +209,30 @@ template <>
 inline std::string placeholder::get<ast::system_procedure_call>(
     const ast::system_procedure_call& parent, ast::base::child_index index) {
   const auto& args{placeholder_system_procedure_args::args(parent.proc)};
+  assert(index.subnode_index == 0 && index.node_index < args.size());
+  return std::string{args[index.node_index]};
+}
+
+struct placeholder_new_color_args {
+ private:
+  static const auto& placeholders() {
+    static const auto _placeholders{make_array(
+        std::vector<std::string_view>{"red", "green", "blue"} /* rgb */,
+        std::vector<std::string_view>{"red", "green", "blue",
+                                      "alpha"} /* rgba */)};
+    return _placeholders;
+  }
+
+ public:
+  static const auto& args(ast::color_mode mode) {
+    return placeholders()[raw_value(mode)];
+  }
+};
+
+template <>
+inline std::string placeholder::get<ast::new_color>(
+    const ast::new_color& init, ast::base::child_index index) {
+  const auto& args{placeholder_new_color_args::args(init.mode)};
   assert(index.subnode_index == 0 && index.node_index < args.size());
   return std::string{args[index.node_index]};
 }
@@ -223,30 +272,6 @@ template <>
 inline std::string placeholder::get<ast::system_function_call>(
     const ast::system_function_call& parent, ast::base::child_index index) {
   const auto& args{placeholder_system_function_args::args(parent.func)};
-  assert(index.subnode_index == 0 && index.node_index < args.size());
-  return std::string{args[index.node_index]};
-}
-
-struct placeholder_new_color_args {
- private:
-  static const auto& placeholders() {
-    static const auto _placeholders{make_array(
-        std::vector<std::string_view>{"red", "green", "blue"} /* rgb */,
-        std::vector<std::string_view>{"red", "green", "blue",
-                                      "alpha"} /* rgba */)};
-    return _placeholders;
-  }
-
- public:
-  static const auto& args(ast::color_mode mode) {
-    return placeholders()[raw_value(mode)];
-  }
-};
-
-template <>
-inline std::string placeholder::get<ast::new_color>(
-    const ast::new_color& init, ast::base::child_index index) {
-  const auto& args{placeholder_new_color_args::args(init.mode)};
   assert(index.subnode_index == 0 && index.node_index < args.size());
   return std::string{args[index.node_index]};
 }

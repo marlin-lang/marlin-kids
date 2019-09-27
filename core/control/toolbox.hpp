@@ -42,9 +42,9 @@ struct toolbox {
         std::vector{
             eval_prototype(), assignment_prototype(), use_global_prototype(),
             system_procedure_prototype(ast::system_procedure::print),
-            system_procedure_prototype(ast::system_procedure::list_append),
-            system_procedure_prototype(ast::system_procedure::list_insert),
-            system_procedure_prototype(ast::system_procedure::list_remove),
+            array_modification_prototype(ast::array_modification::append),
+            array_modification_prototype(ast::array_modification::insert),
+            array_modification_prototype(ast::array_modification::remove),
             system_procedure_prototype(ast::system_procedure::draw_line),
             system_procedure_prototype(ast::system_procedure::set_line_width),
             system_procedure_prototype(ast::system_procedure::logo_forward),

@@ -36,6 +36,7 @@ struct type_map {
   X(eval_statement)          \
   X(assignment)              \
   X(use_global)              \
+  X(modify_array)            \
   X(system_procedure_call)   \
   X(if_statement)            \
   X(if_else_statement)       \
@@ -53,8 +54,8 @@ struct type_map {
   X(binary_expression)       \
   X(subscript_get)           \
   X(new_array)               \
-  X(system_function_call)    \
   X(new_color)               \
+  X(system_function_call)    \
   X(user_function_call)      \
   X(identifier)              \
   X(number_literal)          \

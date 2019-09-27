@@ -58,6 +58,25 @@ inline prototype use_global_prototype() {
           }()};
 }
 
+inline prototype array_modification_prototype(ast::array_modification mod) {
+  return {name_for(mod), pasteboard_t::statement, [&mod]() {
+            const auto& placeholders{
+                placeholder_array_modification_args::args(mod)};
+            std::vector<ast::node> args;
+            args.reserve(placeholders.size());
+            for (const auto& arg : placeholders) {
+              args.emplace_back(
+                  ast::make<ast::expression_placeholder>(std::string{arg}));
+            }
+            const auto node{ast::make<ast::modify_array>(
+                mod,
+                ast::make<ast::variable_placeholder>(
+                    placeholder::get<ast::modify_array>({0})),
+                std::move(args))};
+            return store::write({node.get()});
+          }()};
+}
+
 inline prototype system_procedure_prototype(ast::system_procedure proc) {
   return {
       name_for(proc), pasteboard_t::statement, [&proc]() {
@@ -186,6 +205,20 @@ inline prototype new_array_prototype() {
       }()};
 }
 
+inline prototype new_color_prototype(ast::color_mode mode) {
+  return {name_for(mode), pasteboard_t::expression, [&mode]() {
+            const auto& placeholders{placeholder_new_color_args::args(mode)};
+            std::vector<ast::node> args;
+            args.reserve(placeholders.size());
+            for (const auto& arg : placeholders) {
+              args.emplace_back(
+                  ast::make<ast::expression_placeholder>(std::string{arg}));
+            }
+            const auto node{ast::make<ast::new_color>(mode, std::move(args))};
+            return store::write({node.get()});
+          }()};
+}
+
 inline prototype system_function_prototype(ast::system_function func) {
   return {
       name_for(func), pasteboard_t::expression, [&func]() {
@@ -200,20 +233,6 @@ inline prototype system_function_prototype(ast::system_function func) {
             ast::make<ast::system_function_call>(func, std::move(args))};
         return store::write({node.get()});
       }()};
-}
-
-inline prototype new_color_prototype(ast::color_mode mode) {
-  return {name_for(mode), pasteboard_t::expression, [&mode]() {
-            const auto& placeholders{placeholder_new_color_args::args(mode)};
-            std::vector<ast::node> args;
-            args.reserve(placeholders.size());
-            for (const auto& arg : placeholders) {
-              args.emplace_back(
-                  ast::make<ast::expression_placeholder>(std::string{arg}));
-            }
-            const auto node{ast::make<ast::new_color>(mode, std::move(args))};
-            return store::write({node.get()});
-          }()};
 }
 
 inline prototype user_function_prototype(const function_definition& func) {

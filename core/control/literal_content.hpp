@@ -134,19 +134,37 @@ inline literal_data_type literal_content::get_default_type<ast::subscript_get>(
   return _get_subscript_default_type(index);
 }
 
+struct array_modification_args_literal_type {
+ private:
+  static const auto& literal_types() {
+    static const auto _literal_types{make_array(
+        std::vector{literal_content::any_default_type} /* append */,
+        std::vector{literal_content::number_default_type,
+                    literal_content::any_default_type} /* insert */,
+        std::vector{literal_content::number_default_type} /* remove */)};
+    return _literal_types;
+  }
+
+ public:
+  static const auto& args(ast::array_modification mod) {
+    return literal_types()[raw_value(mod)];
+  }
+};
+
+template <>
+inline literal_data_type literal_content::get_default_type<ast::modify_array>(
+    const ast::modify_array& parent, ast::base::child_index index) {
+  const auto& args{array_modification_args_literal_type::args(parent.mod)};
+  assert(index.subnode_index == 1 && index.node_index < args.size());
+  return args[index.node_index];
+}
+
 struct system_procedure_args_literal_type {
  private:
   static const auto& literal_types() {
     static const auto _literal_types{make_array(
         std::vector{literal_content::any_default_type} /* sleep */,
         std::vector{literal_content::any_default_type} /* print */,
-        std::vector{literal_content::array_default_type,
-                    literal_content::any_default_type} /* list_append */,
-        std::vector{literal_content::array_default_type,
-                    literal_content::number_default_type,
-                    literal_content::any_default_type} /* list_insert */,
-        std::vector{literal_content::array_default_type,
-                    literal_content::number_default_type} /* list_remove */,
         std::vector{literal_content::number_default_type,
                     literal_content::number_default_type,
                     literal_content::number_default_type,
@@ -174,6 +192,14 @@ literal_content::get_default_type<ast::system_procedure_call>(
   const auto& args{system_procedure_args_literal_type::args(parent.proc)};
   assert(index.subnode_index == 0 && index.node_index < args.size());
   return args[index.node_index];
+}
+
+template <>
+inline literal_data_type literal_content::get_default_type<ast::new_color>(
+    const ast::new_color& init, ast::base::child_index index) {
+  assert(index.subnode_index == 0 &&
+         index.node_index < placeholder_new_color_args::args(init.mode).size());
+  return number_default_type;
 }
 
 struct system_function_args_literal_type {
@@ -217,14 +243,6 @@ literal_content::get_default_type<ast::system_function_call>(
   const auto& args{system_function_args_literal_type::args(parent.func)};
   assert(index.subnode_index == 0 && index.node_index < args.size());
   return args[index.node_index];
-}
-
-template <>
-inline literal_data_type literal_content::get_default_type<ast::new_color>(
-    const ast::new_color& init, ast::base::child_index index) {
-  assert(index.subnode_index == 0 &&
-         index.node_index < placeholder_new_color_args::args(init.mode).size());
-  return number_default_type;
 }
 
 };  // namespace marlin::control
