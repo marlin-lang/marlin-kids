@@ -99,63 +99,79 @@ struct generator {
   using callee_maker = jsast::ast::node (*)();
   using callee_entry = std::pair<callee_maker, bool>;
   static constexpr auto array_modification_callee_map{make_array<callee_entry>(
-      std::pair{[]() { return system_callee("array_utils", "append"); },
+      std::pair{[]() { return system_callee("ArrayUtils", "append"); },
                 false} /* append */,
-      std::pair{[]() { return system_callee("array_utils", "insert"); },
+      std::pair{[]() { return system_callee("ArrayUtils", "insert"); },
                 false} /* insert */,
-      std::pair{[]() { return system_callee("array_utils", "remove"); },
+      std::pair{[]() { return system_callee("ArrayUtils", "remove"); },
                 false} /* remove */)};
   static constexpr auto system_procedure_callee_map{make_array<callee_entry>(
       std::pair{[]() { return env_name("sleep"); }, true} /* sleep */,
       std::pair{[]() { return env_name("print"); }, false} /* print */,
-      std::pair{[]() { return system_callee("graphics", "drawLine"); },
+      std::pair{[]() { return system_callee("Graphics", "drawLine"); },
                 true} /* draw_line */,
-      std::pair{[]() { return system_callee("graphics", "setLineWidth"); },
+      std::pair{[]() { return system_callee("Graphics", "drawArc"); },
+                true} /* draw_arc */,
+      std::pair{[]() { return system_callee("Graphics", "drawRect"); },
+                true} /* draw_rect */,
+      std::pair{[]() { return system_callee("Graphics", "drawEllipse"); },
+                true} /* draw_ellipse */,
+      std::pair{[]() { return system_callee("Graphics", "clearCanvas"); },
+                false} /* clear_canvas */,
+      std::pair{[]() { return system_callee("Graphics", "setLineWidth"); },
                 false} /* set_line_width */,
-      std::pair{[]() { return system_callee("logo", "forward"); },
+      std::pair{[]() { return system_callee("Graphics", "setLineColor"); },
+                false} /* set_line_color */,
+      std::pair{[]() { return system_callee("Graphics", "setFillColor"); },
+                false} /* set_fill_color */,
+      std::pair{[]() { return system_callee("Logo", "forward"); },
                 true} /* logo_forward */,
-      std::pair{[]() { return system_callee("logo", "backward"); },
+      std::pair{[]() { return system_callee("Logo", "backward"); },
                 true} /* logo_backward */,
-      std::pair{[]() { return system_callee("logo", "turnLeft"); },
+      std::pair{[]() { return system_callee("Logo", "turnLeft"); },
                 false} /* logo_turn_left */,
-      std::pair{[]() { return system_callee("logo", "turnRight"); },
+      std::pair{[]() { return system_callee("Logo", "turnRight"); },
                 false} /* logo_turn_right */,
-      std::pair{[]() { return system_callee("logo", "penUp"); },
+      std::pair{[]() { return system_callee("Logo", "penUp"); },
                 false} /* logo_pen_up */,
-      std::pair{[]() { return system_callee("logo", "penDown"); },
-                false} /* logo_pen_down */)};
+      std::pair{[]() { return system_callee("Logo", "penDown"); },
+                false} /* logo_pen_down */,
+      std::pair{[]() { return system_callee("Logo", "goHome"); },
+                true} /* logo_go_home */)};
   static constexpr auto system_function_callee_map{make_array<callee_entry>(
       std::pair{[]() { return env_name("range"); }, false} /* range1 */,
       std::pair{[]() { return env_name("range"); }, false} /* range2 */,
       std::pair{[]() { return env_name("range"); }, false} /* range3 */,
-      std::pair{[]() { return system_callee("array_utils", "length"); },
+      std::pair{[]() { return system_callee("MathUtils", "random"); },
+                false} /* random */,
+      std::pair{[]() { return system_callee("ArrayUtils", "length"); },
                 false} /* list_length */,
       std::pair{[]() { return env_name("time"); }, false} /* time */,
-      std::pair{[]() { return system_callee("math_utils", "abs"); },
+      std::pair{[]() { return system_callee("MathUtils", "abs"); },
                 false} /* abs */,
-      std::pair{[]() { return system_callee("math_utils", "sqrt"); },
+      std::pair{[]() { return system_callee("MathUtils", "sqrt"); },
                 false} /* sqrt */,
-      std::pair{[]() { return system_callee("math_utils", "sin"); },
+      std::pair{[]() { return system_callee("MathUtils", "sin"); },
                 false} /* sin */,
-      std::pair{[]() { return system_callee("math_utils", "cos"); },
+      std::pair{[]() { return system_callee("MathUtils", "cos"); },
                 false} /* cos */,
-      std::pair{[]() { return system_callee("math_utils", "tan"); },
+      std::pair{[]() { return system_callee("MathUtils", "tan"); },
                 false} /* tan */,
-      std::pair{[]() { return system_callee("math_utils", "asin"); },
+      std::pair{[]() { return system_callee("MathUtils", "asin"); },
                 false} /* asin */,
-      std::pair{[]() { return system_callee("math_utils", "acos"); },
+      std::pair{[]() { return system_callee("MathUtils", "acos"); },
                 false} /* acos */,
-      std::pair{[]() { return system_callee("math_utils", "atan"); },
+      std::pair{[]() { return system_callee("MathUtils", "atan"); },
                 false} /* atan */,
-      std::pair{[]() { return system_callee("math_utils", "ln"); },
+      std::pair{[]() { return system_callee("MathUtils", "ln"); },
                 false} /* ln */,
-      std::pair{[]() { return system_callee("math_utils", "log"); },
+      std::pair{[]() { return system_callee("MathUtils", "log"); },
                 false} /* log */,
-      std::pair{[]() { return system_callee("math_utils", "round"); },
+      std::pair{[]() { return system_callee("MathUtils", "round"); },
                 false} /* round */,
-      std::pair{[]() { return system_callee("math_utils", "floor"); },
+      std::pair{[]() { return system_callee("MathUtils", "floor"); },
                 false} /* floor */,
-      std::pair{[]() { return system_callee("math_utils", "ceil"); },
+      std::pair{[]() { return system_callee("MathUtils", "ceil"); },
                 false} /* ceil */)};
 
   std::unordered_set<ast::base*> _async_blocks;
@@ -477,7 +493,7 @@ struct generator {
     auto list{get_node(*subscript.list())};
     auto index{get_node(*subscript.index())};
     return wrapper(jsast::ast::member_expression{
-        jsast::ast::call_expression{env_name("as_array"), {std::move(list)}},
+        jsast::ast::call_expression{env_name("asArray"), {std::move(list)}},
         std::move(index)});
   }
 
@@ -503,8 +519,10 @@ struct generator {
   template <typename wrapper_type>
   auto get_jsast(ast::new_color& init, wrapper_type&& wrapper) {
     static constexpr auto new_color_callee_map{make_array(
-        []() { return system_callee("color_utils", "rgb"); } /* rgb */,
-        []() { return system_callee("color_utils", "rgba"); } /* rgba */)};
+        []() { return system_callee("ColorUtils", "rgb"); } /* rgb */,
+        []() { return system_callee("ColorUtils", "rgba"); } /* rgba */,
+        []() { return system_callee("ColorUtils", "hsl"); } /* hsl */,
+        []() { return system_callee("ColorUtils", "hsla"); } /* hsla */)};
 
     jsast::utils::move_vector<jsast::ast::node> args;
     for (auto& arg : init.arguments()) {

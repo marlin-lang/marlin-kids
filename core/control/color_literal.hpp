@@ -38,7 +38,11 @@ struct color_literal {
       make_array(restriction_t{{0, 255}}, restriction_t{{0, 255}},
                  restriction_t{{0, 255}}, std::nullopt) /* rgb */,
       make_array(restriction_t{{0, 255}}, restriction_t{{0, 255}},
-                 restriction_t{{0, 255}}, restriction_t{{0, 1}}) /* rgba */)};
+                 restriction_t{{0, 255}}, restriction_t{{0, 1}}) /* rgba */,
+      make_array(restriction_t{{0, 255}}, restriction_t{{0, 1}},
+                 restriction_t{{0, 1}}, std::nullopt) /* hsl */,
+      make_array(restriction_t{{0, 255}}, restriction_t{{0, 1}},
+                 restriction_t{{0, 1}}, restriction_t{{0, 1}}) /* hsla */)};
 
   static constexpr auto _data_dimension{details::make_counts(
       std::make_index_sequence<_data_restrictions.size()>{},

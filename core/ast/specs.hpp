@@ -125,21 +125,32 @@ enum struct system_procedure : size_t {
   sleep,
   print,
   draw_line,
+  draw_arc,
+  draw_rect,
+  draw_ellipse,
+  clear_canvas,
   set_line_width,
+  set_line_color,
+  set_fill_color,
   logo_forward,
   logo_backward,
   logo_turn_left,
   logo_turn_right,
   logo_pen_up,
-  logo_pen_down
+  logo_pen_down,
+  logo_go_home
 };
 
 static constexpr auto system_procedure_name_map{make_array<std::string_view>(
     "sleep" /* sleep */, "print" /* print */, "draw_line" /* draw_line */,
-    "set_line_width" /* set_line_width */, "logo_forward" /* logo_forward */,
+    "draw_arc" /* draw_arc */, "draw_rect" /* draw_rect */,
+    "draw_ellipse" /* draw_ellipse */, "clear_canvas" /* clear_canvas */,
+    "set_line_width" /* set_line_width */,
+    "set_line_color" /* set_line_color */,
+    "set_fill_color" /* set_fill_color */, "logo_forward" /* logo_forward */,
     "logo_backward" /* logo_backward */, "logo_turn_left" /* logo_turn_left */,
     "logo_turn_right" /* logo_turn_right */, "logo_pen_up" /* logo_pen_up */,
-    "logo_pen_down" /* logo_pen_down */)};
+    "logo_pen_down" /* logo_pen_down */, "logo_go_home" /* logo_go_home */)};
 [[nodiscard]] inline constexpr std::string_view name_for(
     system_procedure proc) noexcept {
   return system_procedure_name_map[raw_value(proc)];
@@ -147,10 +158,14 @@ static constexpr auto system_procedure_name_map{make_array<std::string_view>(
 
 static constexpr auto system_procedure_display_map{make_array<std::string_view>(
     "sleep" /* sleep */, "print" /* print */, "draw_line" /* draw_line */,
-    "set_line_width" /* set_line_width */, "logo.forward" /* logo_forward */,
+    "draw_arc" /* draw_arc */, "draw_rect" /* draw_rect */,
+    "draw_ellipse" /* draw_ellipse */, "clear_canvas" /* clear_canvas */,
+    "set_line_width" /* set_line_width */,
+    "set_line_color" /* set_line_color */,
+    "set_fill_color" /* set_fill_color */, "logo.forward" /* logo_forward */,
     "logo.backward" /* logo_backward */, "logo.turn_left" /* logo_turn_left */,
     "logo.turn_right" /* logo_turn_right */, "logo.pen_up" /* logo_pen_up */,
-    "logo.pen_down" /* logo_pen_down */)};
+    "logo.pen_down" /* logo_pen_down */, "logo.go_home" /* logo_go_home */)};
 [[nodiscard]] inline constexpr std::string_view display_for(
     system_procedure proc) noexcept {
   return system_procedure_display_map[raw_value(proc)];
@@ -160,6 +175,7 @@ enum struct system_function : size_t {
   range1,
   range2,
   range3,
+  random,
   list_length,
   time,
   abs,
@@ -179,10 +195,10 @@ enum struct system_function : size_t {
 
 static constexpr auto system_function_name_map{make_array<std::string_view>(
     "range1" /* range1 */, "range2" /* range2 */, "range3" /* range3 */,
-    "length" /* list_length */, "time" /* time */, "abs" /* abs */,
-    "sqrt" /* sqrt */, "sin" /* sin */, "cos" /* cos */, "tan" /* tan */,
-    "asin" /* asin */, "acos" /* acos */, "atan" /* atan */, "ln" /* ln */,
-    "log" /* log */, "round" /* round */, "floor" /* floor */,
+    "random" /* random */, "length" /* list_length */, "time" /* time */,
+    "abs" /* abs */, "sqrt" /* sqrt */, "sin" /* sin */, "cos" /* cos */,
+    "tan" /* tan */, "asin" /* asin */, "acos" /* acos */, "atan" /* atan */,
+    "ln" /* ln */, "log" /* log */, "round" /* round */, "floor" /* floor */,
     "ceil" /* ceil */)};
 [[nodiscard]] inline constexpr std::string_view name_for(
     system_function func) noexcept {
@@ -191,27 +207,27 @@ static constexpr auto system_function_name_map{make_array<std::string_view>(
 
 static constexpr auto system_function_display_map{make_array<std::string_view>(
     "range" /* range1 */, "range" /* range2 */, "range" /* range3 */,
-    "length" /* list_length */, "time" /* time */, "abs" /* abs */,
-    "sqrt" /* sqrt */, "sin" /* sin */, "cos" /* cos */, "tan" /* tan */,
-    "asin" /* asin */, "acos" /* acos */, "atan" /* atan */, "ln" /* ln */,
-    "log" /* log */, "round" /* round */, "floor" /* floor */,
+    "random" /* random */, "length" /* list_length */, "time" /* time */,
+    "abs" /* abs */, "sqrt" /* sqrt */, "sin" /* sin */, "cos" /* cos */,
+    "tan" /* tan */, "asin" /* asin */, "acos" /* acos */, "atan" /* atan */,
+    "ln" /* ln */, "log" /* log */, "round" /* round */, "floor" /* floor */,
     "ceil" /* ceil */)};
 [[nodiscard]] inline constexpr std::string_view display_for(
     system_function func) noexcept {
   return system_function_display_map[raw_value(func)];
 }
 
-enum struct color_mode : uint8_t { rgb, rgba };
+enum struct color_mode : uint8_t { rgb, rgba, hsl, hsla };
 
-static constexpr auto color_mode_name_map{
-    make_array<std::string_view>("rgb" /* rgb */, "rgba" /* rgba */)};
+static constexpr auto color_mode_name_map{make_array<std::string_view>(
+    "rgb" /* rgb */, "rgba" /* rgba */, "hsl" /* hsl */, "hsla" /* hsla */)};
 [[nodiscard]] inline constexpr std::string_view name_for(
     color_mode mode) noexcept {
   return color_mode_name_map[raw_value(mode)];
 }
 
-static constexpr auto color_mode_display_map{
-    make_array<std::string_view>("rgb" /* rgb */, "rgba" /* rgba */)};
+static constexpr auto color_mode_display_map{make_array<std::string_view>(
+    "rgb" /* rgb */, "rgba" /* rgba */, "hsl" /* hsl */, "hsla" /* hsla */)};
 [[nodiscard]] inline constexpr std::string_view display_for(
     color_mode mode) noexcept {
   return color_mode_display_map[raw_value(mode)];

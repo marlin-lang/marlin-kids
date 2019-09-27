@@ -23,6 +23,7 @@ struct literal_content {
   static constexpr auto number_default_type{literal_data_type::number};
   static constexpr auto boolean_default_type{literal_data_type::identifier};
   static constexpr auto array_default_type{literal_data_type::identifier};
+  static constexpr auto color_default_type{literal_data_type::identifier};
 
   template <typename node_type>
   static literal_data_type get_default_type(ast::base::child_index) {
@@ -169,13 +170,30 @@ struct system_procedure_args_literal_type {
                     literal_content::number_default_type,
                     literal_content::number_default_type,
                     literal_content::number_default_type} /* draw_line */,
+        std::vector{literal_content::number_default_type,
+                    literal_content::number_default_type,
+                    literal_content::number_default_type,
+                    literal_content::number_default_type,
+                    literal_content::number_default_type} /* draw_arc */,
+        std::vector{literal_content::number_default_type,
+                    literal_content::number_default_type,
+                    literal_content::number_default_type,
+                    literal_content::number_default_type} /* draw_rect */,
+        std::vector{literal_content::number_default_type,
+                    literal_content::number_default_type,
+                    literal_content::number_default_type,
+                    literal_content::number_default_type} /* draw_ellipse */,
+        std::vector{literal_content::color_default_type} /* clear_canvas */,
         std::vector{literal_content::number_default_type} /* set_line_width */,
+        std::vector{literal_content::color_default_type} /* set_line_color */,
+        std::vector{literal_content::color_default_type} /* set_fill_color */,
         std::vector{literal_content::number_default_type} /* logo_forward */,
         std::vector{literal_content::number_default_type} /* logo_backward */,
         std::vector{literal_content::number_default_type} /* logo_turn_left */,
         std::vector{literal_content::number_default_type} /* logo_turn_right */,
         std::vector<literal_data_type>{} /* logo_pen_up */,
-        std::vector<literal_data_type>{} /* logo_pen_down */)};
+        std::vector<literal_data_type>{} /* logo_pen_down */,
+        std::vector<literal_data_type>{} /* logo_go_home */)};
     return _literal_types;
   }
 
@@ -212,6 +230,8 @@ struct system_function_args_literal_type {
         std::vector{literal_content::number_default_type,
                     literal_content::number_default_type,
                     literal_content::number_default_type} /* range3 */,
+        std::vector{literal_content::number_default_type,
+                    literal_content::number_default_type} /* random */,
         std::vector{literal_content::array_default_type} /* list_length */,
         std::vector<literal_data_type>{} /* time */,
         std::vector{literal_content::number_default_type} /* abs */,

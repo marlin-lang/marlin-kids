@@ -189,13 +189,23 @@ struct placeholder_system_procedure_args {
         std::vector<std::string_view>{"message"} /* print */,
         std::vector<std::string_view>{"start_x", "start_y", "end_x",
                                       "end_y"} /* draw_line */,
+        std::vector<std::string_view>{"x", "y", "radius", "start_angle",
+                                      "end_angle"} /* draw_arc */,
+        std::vector<std::string_view>{"x", "y", "width",
+                                      "height"} /* draw_rect */,
+        std::vector<std::string_view>{"x", "y", "h_radius",
+                                      "v_radius"} /* draw_ellipse */,
+        std::vector<std::string_view>{"color"} /* clear_canvas */,
         std::vector<std::string_view>{"width"} /* set_line_width */,
+        std::vector<std::string_view>{"color"} /* set_line_color */,
+        std::vector<std::string_view>{"color"} /* set_fill_color */,
         std::vector<std::string_view>{"length"} /* logo_forward */,
         std::vector<std::string_view>{"length"} /* logo_backward */,
         std::vector<std::string_view>{"degree"} /* logo_turn_left */,
         std::vector<std::string_view>{"degree"} /* logo_turn_right */,
         std::vector<std::string_view>{} /* logo_pen_up */,
-        std::vector<std::string_view>{} /* logo_pen_down */)};
+        std::vector<std::string_view>{} /* logo_pen_down */,
+        std::vector<std::string_view>{} /* logo_go_home */)};
     return _placeholders;
   }
 
@@ -219,7 +229,11 @@ struct placeholder_new_color_args {
     static const auto _placeholders{make_array(
         std::vector<std::string_view>{"red", "green", "blue"} /* rgb */,
         std::vector<std::string_view>{"red", "green", "blue",
-                                      "alpha"} /* rgba */)};
+                                      "alpha"} /* rgba */,
+        std::vector<std::string_view>{"hue", "saturation",
+                                      "lightness"} /* hsl */,
+        std::vector<std::string_view>{"hue", "saturation", "lightness",
+                                      "alpha"} /* hsla */)};
     return _placeholders;
   }
 
@@ -244,6 +258,7 @@ struct placeholder_system_function_args {
         std::vector<std::string_view>{"end"} /* range1 */,
         std::vector<std::string_view>{"begin", "end"} /* range2 */,
         std::vector<std::string_view>{"begin", "end", "step"} /* range3 */,
+        std::vector<std::string_view>{"min", "max"} /* random */,
         std::vector<std::string_view>{"list"} /* list_length */,
         std::vector<std::string_view>{} /* time */,
         std::vector<std::string_view>{"value"} /* abs */,
