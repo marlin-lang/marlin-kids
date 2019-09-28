@@ -39,8 +39,8 @@
 - (NSCollectionViewItem *)collectionView:(NSCollectionView *)collectionView
      itemForRepresentedObjectAtIndexPath:(NSIndexPath *)indexPath {
   ToolboxItem *item = [collectionView makeItemWithIdentifier:@"ToolboxItem" forIndexPath:indexPath];
-  item.textField.stringValue =
-      [NSString stringWithStringView:self.model.current_category_prototype(indexPath.item).name];
+  item.textField.stringValue = [NSString
+      stringWithStringView:self.model.current_category_prototype(indexPath.item).display.source];
   return item;
 }
 

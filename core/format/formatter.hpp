@@ -284,7 +284,9 @@ struct formatter {
     _indent--;
     emit_indent();
     emit_string("} ");
-    statement.else_loc = _current_loc;
+    if constexpr (!is_const) {
+      statement.else_loc = _current_loc;
+    }
     emit_highlight("else", highlight_token_type::keyword);
     emit_string(" {");
     emit_new_line();
@@ -374,6 +376,9 @@ struct formatter {
       highlight = highlight_token_type::keyword;
     }
     emit_highlight(symbol_for(unary.op), highlight_token_type::op);
+    if (unary.op == ast::unary_op::logical_not) {
+      emit_string(" ");
+    }
     emit_node(*unary.argument(), ast::unary_op_precedence);
     if (ast::unary_op_precedence <= paren_precedence) {
       emit_string(")");
