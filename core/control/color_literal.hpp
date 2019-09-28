@@ -39,18 +39,14 @@ struct color_literal {
                  restriction_t{{0, 255}}, std::nullopt) /* rgb */,
       make_array(restriction_t{{0, 255}}, restriction_t{{0, 255}},
                  restriction_t{{0, 255}}, restriction_t{{0, 1}}) /* rgba */,
-      make_array(restriction_t{{0, 255}}, restriction_t{{0, 1}},
+      make_array(restriction_t{{0, 360}}, restriction_t{{0, 1}},
                  restriction_t{{0, 1}}, std::nullopt) /* hsl */,
-      make_array(restriction_t{{0, 255}}, restriction_t{{0, 1}},
+      make_array(restriction_t{{0, 360}}, restriction_t{{0, 1}},
                  restriction_t{{0, 1}}, restriction_t{{0, 1}}) /* hsla */)};
 
   static constexpr auto _data_dimension{details::make_counts(
       std::make_index_sequence<_data_restrictions.size()>{},
       _data_restrictions)};
-
-  static constexpr size_t get_data_dimension(ast::color_mode mode) {
-    return _data_dimension[raw_value(mode)];
-  }
 
  public:
   static constexpr size_t data_dimension_max{
@@ -59,11 +55,26 @@ struct color_literal {
   ast::color_mode mode;
 
   color_literal() {}
-  color_literal(ast::color_mode _mode) : mode{_mode} {}
+  color_literal(ast::color_mode _mode)
+      : mode{_mode} {}
 
-  [[nodiscard]] double operator[](size_t i) const { return _data[i]; }
+            [[nodiscard]] double
+            operator[](size_t i) const {
+    return _data[i];
+  }
 
-  constexpr size_t data_dimension() const { return get_data_dimension(mode); }
+  constexpr size_t data_dimension() const {
+    return _data_dimension[raw_value(mode)];
+  }
+
+  constexpr double data_max(size_t dimension) const {
+    assert(dimension < data_dimension());
+    return _data_restrictions[raw_value(mode)][dimension]->second;
+  }
+  constexpr double data_min(size_t dimension) const {
+    assert(dimension < data_dimension());
+    return _data_restrictions[raw_value(mode)][dimension]->first;
+  }
 
   void set(size_t index, double value) {
     assert(index < data_dimension());

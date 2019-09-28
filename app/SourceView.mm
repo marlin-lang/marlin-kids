@@ -187,6 +187,17 @@ struct DocumentGetter {
   }
 }
 
+#pragma mark - ColorViewControllerDelegate
+
+- (void)colorViewController:(ColorViewController*)vc finishEditingWithColor:(Color*)color {
+  if (_selection.has_value() && _selection->is_color_literal()) {
+    auto updates = _selection->set_color_literal(
+        [color colorLiteralWithMode:_selection->get_color_literal().mode]);
+    [self performUpdates:std::move(updates)];
+    [self updateDuplicateAndEditorViewControllersForSelection];
+  }
+}
+
 #pragma mark - DuplicateViewControllerDelegate
 
 - (void)performDeleteForDuplicateViewController:(DuplicateViewController*)vc {
@@ -374,6 +385,14 @@ struct DocumentGetter {
           showArrayViewControllerForSourceView:self
                                      withCount:_selection->get_new_array_element_count()
                                   minimalCount:_selection->get_new_array_minimum_count()];
+    } else if (_selection->is_color_literal()) {
+      auto colorLiteral = _selection->get_color_literal();
+      auto showAlpha = colorLiteral.mode == marlin::ast::color_mode::rgba ||
+                       colorLiteral.mode == marlin::ast::color_mode::hsla;
+      [self.delegate
+          showColorViewControllerForSourceView:self
+                                     withColor:[Color colorWithColorLiteral:std::move(colorLiteral)]
+                                     showAlpha:showAlpha];
     } else {
       [self.delegate dismissEditorViewControllerForSourceView:self];
     }

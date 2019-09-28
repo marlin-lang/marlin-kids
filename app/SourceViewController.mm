@@ -83,6 +83,14 @@
                                                       minimalCount:minmalCount];
 }
 
+- (void)showColorViewControllerForSourceView:(SourceView *)view
+                                   withColor:(Color *)color
+                                   showAlpha:(BOOL)showAlpha {
+  [self.toolboxViewController showColorViewControllerForSourceView:view
+                                                         withColor:color
+                                                         showAlpha:showAlpha];
+}
+
 - (void)showDuplicateViewControllerForSourceView:(SourceView *)view
                                       withString:(NSString *)string
                                     draggingData:(const DraggingData &)draggingData {

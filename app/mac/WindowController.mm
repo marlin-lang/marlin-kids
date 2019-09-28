@@ -11,6 +11,8 @@
 - (void)windowDidLoad {
   [super windowDidLoad];
 
+  self.windowFrameAutosaveName = @"MarlinWindow";
+
   auto *toolbar = [NSToolbar new];
   toolbar.delegate = self;
   self.window.toolbar = toolbar;

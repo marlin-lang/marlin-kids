@@ -58,6 +58,20 @@ using ToolIndex = std::pair<NSInteger, NSInteger>;
   _editorViewController = vc;
 }
 
+- (void)showColorViewControllerForSourceView:(SourceView *)view
+                                   withColor:(Color *)color
+                                   showAlpha:(BOOL)showAlpha {
+  [self dismissEditorViewController];
+  ColorViewController *vc =
+      [self.storyboard instantiateControllerWithIdentifier:@"ColorViewController"];
+  vc.delegate = view;
+
+  [self addChildViewController:vc inView:self.editorView];
+
+  [vc setColor:color showAlpha:showAlpha];
+  _editorViewController = vc;
+}
+
 - (void)showDuplicateViewControllerForSourceView:(SourceView *)view
                                       withString:(NSString *)string
                                     draggingData:(const DraggingData &)draggingData {

@@ -839,7 +839,7 @@
         <scene sceneID="R2V-B0-nI4">
             <objects>
                 <windowController storyboardIdentifier="WindowController" id="jGA-0Y-lOj" customClass="WindowController" sceneMemberID="viewController">
-                    <window key="window" title="Window" allowsToolTipsWhenApplicationIsInactive="NO" autorecalculatesKeyViewLoop="NO" releasedWhenClosed="NO" visibleAtLaunch="NO" frameAutosaveName="MarlinAppWindow" animationBehavior="default" tabbingMode="preferred" id="Ckk-yw-fiv">
+                    <window key="window" title="Window" allowsToolTipsWhenApplicationIsInactive="NO" autorecalculatesKeyViewLoop="NO" releasedWhenClosed="NO" visibleAtLaunch="NO" frameAutosaveName="" animationBehavior="default" tabbingMode="preferred" id="Ckk-yw-fiv">
                         <windowStyleMask key="styleMask" titled="YES" closable="YES" miniaturizable="YES" resizable="YES"/>
                         <windowPositionMask key="initialPositionMask" leftStrut="YES" rightStrut="YES" topStrut="YES" bottomStrut="YES"/>
                         <rect key="contentRect" x="196" y="240" width="480" height="270"/>
@@ -1002,6 +1002,66 @@
                 <customObject id="hQs-OE-asr" userLabel="First Responder" customClass="NSResponder" sceneMemberID="firstResponder"/>
             </objects>
             <point key="canvasLocation" x="894" y="331"/>
+        </scene>
+        <!--Color View Controller-->
+        <scene sceneID="OHY-5e-8IX">
+            <objects>
+                <viewController storyboardIdentifier="ColorViewController" id="CUX-KE-ydA" customClass="ColorViewController" sceneMemberID="viewController">
+                    <view key="view" id="jyb-8n-Pbo">
+                        <rect key="frame" x="0.0" y="0.0" width="200" height="75"/>
+                        <autoresizingMask key="autoresizingMask"/>
+                        <subviews>
+                            <textField horizontalHuggingPriority="251" verticalHuggingPriority="750" translatesAutoresizingMaskIntoConstraints="NO" id="ViP-b1-hzO">
+                                <rect key="frame" x="6" y="49" width="39" height="16"/>
+                                <textFieldCell key="cell" lineBreakMode="clipping" title="Color" id="HZZ-Iv-dFk">
+                                    <font key="font" metaFont="systemBold"/>
+                                    <color key="textColor" name="labelColor" catalog="System" colorSpace="catalog"/>
+                                    <color key="backgroundColor" name="textBackgroundColor" catalog="System" colorSpace="catalog"/>
+                                </textFieldCell>
+                            </textField>
+                            <colorWell verticalHuggingPriority="750" translatesAutoresizingMaskIntoConstraints="NO" id="lni-fQ-Kdj" customClass="ColorWell">
+                                <rect key="frame" x="8" y="8" width="184" height="30"/>
+                                <constraints>
+                                    <constraint firstAttribute="height" constant="30" id="iA0-lZ-6xh"/>
+                                </constraints>
+                                <color key="color" red="0.05813049898" green="0.055541899059999997" blue="1" alpha="1" colorSpace="calibratedRGB"/>
+                                <connections>
+                                    <action selector="colorChanged:" target="CUX-KE-ydA" id="ILg-Wc-NZU"/>
+                                </connections>
+                            </colorWell>
+                            <button verticalHuggingPriority="750" translatesAutoresizingMaskIntoConstraints="NO" id="yZL-ic-nHQ">
+                                <rect key="frame" x="139" y="39" width="59" height="32"/>
+                                <buttonCell key="cell" type="push" title="OK" bezelStyle="rounded" alignment="center" borderStyle="border" imageScaling="proportionallyDown" inset="2" id="L3W-Jx-fL4">
+                                    <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
+                                    <font key="font" metaFont="system"/>
+                                    <string key="keyEquivalent" base64-UTF8="YES">
+DQ
+</string>
+                                </buttonCell>
+                                <connections>
+                                    <action selector="okButtonPressed:" target="CUX-KE-ydA" id="5Hb-BS-ijw"/>
+                                </connections>
+                            </button>
+                        </subviews>
+                        <constraints>
+                            <constraint firstItem="lni-fQ-Kdj" firstAttribute="top" secondItem="yZL-ic-nHQ" secondAttribute="bottom" constant="8" id="0Bj-zP-geZ"/>
+                            <constraint firstItem="ViP-b1-hzO" firstAttribute="leading" secondItem="jyb-8n-Pbo" secondAttribute="leading" constant="8" id="4MZ-zt-rJ1"/>
+                            <constraint firstItem="yZL-ic-nHQ" firstAttribute="leading" relation="greaterThanOrEqual" secondItem="ViP-b1-hzO" secondAttribute="trailing" constant="8" symbolic="YES" id="9YM-2J-oDW"/>
+                            <constraint firstItem="yZL-ic-nHQ" firstAttribute="top" secondItem="jyb-8n-Pbo" secondAttribute="top" constant="8" id="9yG-qU-mD7"/>
+                            <constraint firstItem="lni-fQ-Kdj" firstAttribute="centerX" secondItem="jyb-8n-Pbo" secondAttribute="centerX" id="EHP-Ib-6bv"/>
+                            <constraint firstItem="lni-fQ-Kdj" firstAttribute="leading" secondItem="ViP-b1-hzO" secondAttribute="leading" id="OKv-QO-yrM"/>
+                            <constraint firstAttribute="trailing" secondItem="yZL-ic-nHQ" secondAttribute="trailing" constant="8" id="dU7-GE-xcO"/>
+                            <constraint firstAttribute="bottom" secondItem="lni-fQ-Kdj" secondAttribute="bottom" constant="8" id="kp4-iz-N4D"/>
+                            <constraint firstItem="ViP-b1-hzO" firstAttribute="centerY" secondItem="yZL-ic-nHQ" secondAttribute="centerY" id="mwO-bm-bA3"/>
+                        </constraints>
+                    </view>
+                    <connections>
+                        <outlet property="colorWall" destination="lni-fQ-Kdj" id="TXb-ed-jXF"/>
+                    </connections>
+                </viewController>
+                <customObject id="KZJ-Q9-7Tl" userLabel="First Responder" customClass="NSResponder" sceneMemberID="firstResponder"/>
+            </objects>
+            <point key="canvasLocation" x="1185" y="525"/>
         </scene>
         <!--Mac Function View Controller-->
         <scene sceneID="sQh-R1-erl">

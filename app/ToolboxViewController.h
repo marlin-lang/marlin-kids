@@ -19,6 +19,10 @@ NS_ASSUME_NONNULL_BEGIN
                                    withCount:(NSUInteger)count
                                 minimalCount:(NSUInteger)count;
 
+- (void)showColorViewControllerForSourceView:(SourceView *)view
+                                   withColor:(Color *)color
+                                   showAlpha:(BOOL)showAlpha;
+
 - (void)showDuplicateViewControllerForSourceView:(SourceView *)view
                                       withString:(NSString *)string
                                     draggingData:(const DraggingData &)draggingData;

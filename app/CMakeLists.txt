@@ -1,5 +1,6 @@
 set(HEADERS
     ArrayViewController.h
+    ColorViewController.h
     Document.h
     DrawHelper.h
     DuplicateSourceTextField.h
@@ -19,6 +20,7 @@ set(HEADERS
 
 set(SOURCES
     ArrayViewController.mm
+    ColorViewController.mm
     Document.mm
     DuplicateSourceTextField.mm
     DuplicateViewController.mm
@@ -72,6 +74,7 @@ else(IOS)
   set(HEADERS
       ${HEADERS}
       mac/AppDelegate.h
+      mac/ColorWell.h
       mac/MacDocument.h
       mac/MacEditorViewController.h
       mac/MacFunctionViewController.h
@@ -86,6 +89,7 @@ else(IOS)
   set(SOURCES
       ${SOURCES}
       mac/AppDelegate.mm
+      mac/ColorWell.mm
       mac/MacDocument.mm
       mac/MacEditorViewController.mm
       mac/MacFunctionViewController.mm

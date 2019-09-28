@@ -5,10 +5,12 @@
 #include <utility>
 #include <vector>
 
+#include "color_literal.hpp"
 #include "function_definition.hpp"
 #include "prototypes.hpp"
 
 #import "ArrayViewController.h"
+#import "ColorViewController.h"
 #import "Document.h"
 #import "DuplicateViewController.h"
 #import "EditorViewController.h"
@@ -33,6 +35,10 @@ NS_ASSUME_NONNULL_BEGIN
                                    withCount:(NSUInteger)count
                                 minimalCount:(NSUInteger)minimalCount;
 
+- (void)showColorViewControllerForSourceView:(SourceView *)view
+                                   withColor:(Color *)color
+                                   showAlpha:(BOOL)showAlpha;
+
 - (void)showDuplicateViewControllerForSourceView:(SourceView *)view
                                       withString:(NSString *)string
                                     draggingData:(const DraggingData &)draggingData;
@@ -50,8 +56,9 @@ NS_ASSUME_NONNULL_BEGIN
 
 @end
 
-@interface SourceView : View<ArrayViewControllerDelegate, DuplicateViewControllerDelegate,
-                             EditorViewControllerDelegate, FunctionViewControllerDelegate>
+@interface SourceView : View<ArrayViewControllerDelegate, ColorViewControllerDelegate,
+                             DuplicateViewControllerDelegate, EditorViewControllerDelegate,
+                             FunctionViewControllerDelegate>
 
 @property(weak) id<SourceViewDataSource> dataSource;
 @property(weak) id<SourceViewDelegate> delegate;

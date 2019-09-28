@@ -7,6 +7,7 @@
 #include <string_view>
 
 #include "byte_span.hpp"
+#include "color_literal.hpp"
 
 #ifdef IOS
 
@@ -89,6 +90,14 @@
 - (instancetype)initWithDataView:(marlin::store::data_view)data;
 
 - (marlin::store::data_view)dataView;
+
+@end
+
+@interface Color (ColorLiteral)
+
++ (instancetype)colorWithColorLiteral:(marlin::control::color_literal)colorLiteral;
+
+- (marlin::control::color_literal)colorLiteralWithMode:(marlin::ast::color_mode)mode;
 
 @end
 
