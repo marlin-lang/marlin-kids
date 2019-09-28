@@ -35,13 +35,9 @@
 }
 
 - (void)prepareForSegue:(StoryboardSegue *)segue sender:(id)sender {
-  auto *destinationViewController = [self destinationViewControllerOfSegue:segue];
-  if ([destinationViewController isKindOfClass:[ExecuteViewController class]]) {
-    assert(_executableCode != nil);
-
-    auto *vc = (ExecuteViewController *)destinationViewController;
-    vc.executable = _executableCode;
-  }
+  NSWindowController *windowController = segue.destinationController;
+  auto vc = [ExecuteViewController cast:windowController.window.contentViewController];
+  vc.executable = _executableCode;
 }
 
 - (void)execute {

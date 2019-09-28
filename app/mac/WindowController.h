@@ -2,7 +2,17 @@
 
 NS_ASSUME_NONNULL_BEGIN
 
-@interface WindowController : NSWindowController <NSToolbarDelegate>
+@interface WindowController : NSWindowController
+
+@property(strong, nonatomic) IBInspectable NSString *frameAutosaveIdentifier;
+
+@end
+
+@interface MainWindowController : WindowController<NSToolbarDelegate>
+
+@end
+
+@interface ExecuteWindowController : WindowController<NSToolbarDelegate>
 
 @end
 

@@ -2,16 +2,20 @@
 
 #import "SourceViewController.h"
 
-@interface WindowController ()
-
-@end
-
 @implementation WindowController
 
 - (void)windowDidLoad {
   [super windowDidLoad];
 
-  self.windowFrameAutosaveName = @"MarlinWindow";
+  self.windowFrameAutosaveName = self.frameAutosaveIdentifier;
+}
+
+@end
+
+@implementation MainWindowController
+
+- (void)windowDidLoad {
+  [super windowDidLoad];
 
   auto *toolbar = [NSToolbar new];
   toolbar.delegate = self;
@@ -44,5 +48,9 @@
     }
   }
 }
+
+@end
+
+@implementation ExecuteWindowController
 
 @end

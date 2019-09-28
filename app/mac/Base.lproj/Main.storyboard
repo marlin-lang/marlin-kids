@@ -828,7 +828,7 @@
                     </view>
                     <connections>
                         <outlet property="sourceView" destination="yO4-Am-GG9" id="0eI-wO-7Se"/>
-                        <segue destination="GTn-o1-zSJ" kind="modal" identifier="ExecuteViewController" id="VoL-kE-un7"/>
+                        <segue destination="ref-YZ-lNc" kind="modal" identifier="ExecuteViewController" id="5GZ-xg-xDr"/>
                     </connections>
                 </viewController>
                 <customObject id="WcM-pF-Vdu" userLabel="First Responder" customClass="NSResponder" sceneMemberID="firstResponder"/>
@@ -838,7 +838,7 @@
         <!--Window Controller-->
         <scene sceneID="R2V-B0-nI4">
             <objects>
-                <windowController storyboardIdentifier="WindowController" id="jGA-0Y-lOj" customClass="WindowController" sceneMemberID="viewController">
+                <windowController storyboardIdentifier="WindowController" id="jGA-0Y-lOj" customClass="MainWindowController" sceneMemberID="viewController">
                     <window key="window" title="Window" allowsToolTipsWhenApplicationIsInactive="NO" autorecalculatesKeyViewLoop="NO" releasedWhenClosed="NO" visibleAtLaunch="NO" frameAutosaveName="" animationBehavior="default" tabbingMode="preferred" id="Ckk-yw-fiv">
                         <windowStyleMask key="styleMask" titled="YES" closable="YES" miniaturizable="YES" resizable="YES"/>
                         <windowPositionMask key="initialPositionMask" leftStrut="YES" rightStrut="YES" topStrut="YES" bottomStrut="YES"/>
@@ -848,6 +848,9 @@
                             <outlet property="delegate" destination="jGA-0Y-lOj" id="98r-iN-zZc"/>
                         </connections>
                     </window>
+                    <userDefinedRuntimeAttributes>
+                        <userDefinedRuntimeAttribute type="string" keyPath="frameAutosaveIdentifier" value="MarlinMainWindow"/>
+                    </userDefinedRuntimeAttributes>
                     <connections>
                         <segue destination="c5S-ZR-PtR" kind="relationship" relationship="window.shadowedContentViewController" id="Mde-OS-WRm"/>
                     </connections>
@@ -1063,6 +1066,30 @@ DQ
             </objects>
             <point key="canvasLocation" x="1185" y="525"/>
         </scene>
+        <!--Window Controller-->
+        <scene sceneID="Qvq-3h-KEO">
+            <objects>
+                <windowController storyboardIdentifier="ExecuteWindowController" id="ref-YZ-lNc" customClass="ExecuteWindowController" sceneMemberID="viewController">
+                    <window key="window" title="Window" allowsToolTipsWhenApplicationIsInactive="NO" autorecalculatesKeyViewLoop="NO" releasedWhenClosed="NO" visibleAtLaunch="NO" frameAutosaveName="" animationBehavior="default" id="XOj-Rv-UD5">
+                        <windowStyleMask key="styleMask" titled="YES" closable="YES" miniaturizable="YES" resizable="YES"/>
+                        <windowPositionMask key="initialPositionMask" leftStrut="YES" rightStrut="YES" topStrut="YES" bottomStrut="YES"/>
+                        <rect key="contentRect" x="320" y="352" width="480" height="270"/>
+                        <rect key="screenRect" x="0.0" y="0.0" width="2048" height="1152"/>
+                        <connections>
+                            <outlet property="delegate" destination="ref-YZ-lNc" id="Qpk-SE-mms"/>
+                        </connections>
+                    </window>
+                    <userDefinedRuntimeAttributes>
+                        <userDefinedRuntimeAttribute type="string" keyPath="frameAutosaveIdentifier" value="MarlinExecuteWindow"/>
+                    </userDefinedRuntimeAttributes>
+                    <connections>
+                        <segue destination="GTn-o1-zSJ" kind="relationship" relationship="window.shadowedContentViewController" id="ig4-z2-flF"/>
+                    </connections>
+                </windowController>
+                <customObject id="dqq-XN-A5Y" userLabel="First Responder" customClass="NSResponder" sceneMemberID="firstResponder"/>
+            </objects>
+            <point key="canvasLocation" x="2120" y="420"/>
+        </scene>
         <!--Mac Function View Controller-->
         <scene sceneID="sQh-R1-erl">
             <objects>
@@ -1237,7 +1264,7 @@ DQ
                 </viewController>
                 <customObject id="HgP-j0-79P" userLabel="First Responder" customClass="NSResponder" sceneMemberID="firstResponder"/>
             </objects>
-            <point key="canvasLocation" x="1937" y="1217"/>
+            <point key="canvasLocation" x="2120" y="1217"/>
         </scene>
         <!--Array View Controller-->
         <scene sceneID="zOK-yf-4Xx">
