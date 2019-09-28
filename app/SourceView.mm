@@ -60,8 +60,8 @@ struct DocumentGetter {
 
 - (void)initializeWithDisplay:(marlin::format::display)display {
   [self insertLinesBeforeLine:1 withDisplay:std::move(display)];
-    self.frameSize = self.currentSize;
-    [self setNeedsDisplay:YES];
+  self.frameSize = self.currentSize;
+  [self setNeedsDisplay:YES];
 }
 
 - (void)performUpdates:(std::vector<marlin::control::source_update>)updates {
@@ -74,9 +74,7 @@ struct DocumentGetter {
           update.range.end.line, update.range.end.column,
           [NSString stringWithStringView:update.display.source]);
     if (update.range.begin == update.range.end) {
-      [self insertLinesBeforeLine:update.range.begin.line
-                      withDisplay:std::move(update.display)
-                     ];
+      [self insertLinesBeforeLine:update.range.begin.line withDisplay:std::move(update.display)];
     } else if (update.range.begin.line == update.range.end.line) {
       [self updateExpressionInSourceRange:update.range withDisplay:std::move(update.display)];
     } else {
@@ -84,15 +82,13 @@ struct DocumentGetter {
       [self removeLinesFromLine:update.range.begin.line toLine:update.range.end.line];
     }
   }
-    self.frameSize = self.currentSize;
-    [self setNeedsDisplay:YES];
-    [self clearErrors];
-    [self.delegate sourceViewChanged:self];
+  self.frameSize = self.currentSize;
+  [self setNeedsDisplay:YES];
+  [self clearErrors];
+  [self.delegate sourceViewChanged:self];
 }
 
-- (void)insertLinesBeforeLine:(NSUInteger)line
-                  withDisplay:(marlin::format::display)display
-                  {
+- (void)insertLinesBeforeLine:(NSUInteger)line withDisplay:(marlin::format::display)display {
   auto lineIndex = line - 1;
   if (lineIndex > _strings.count) {
     lineIndex = _strings.count;
@@ -178,7 +174,7 @@ struct DocumentGetter {
   if (_selection.has_value()) {
     auto updates = _selection->set_new_array_elements_count(count);
     [self performUpdates:std::move(updates)];
-    [self updateDuplicateAndEditorViewControllersForSelection];
+    [self updateDuplicateViewControllerForSelection:*_selection];
   }
 }
 
@@ -189,7 +185,7 @@ struct DocumentGetter {
     auto updates = _selection->set_color_literal(
         [color colorLiteralWithMode:_selection->get_color_literal().mode]);
     [self performUpdates:std::move(updates)];
-    [self updateDuplicateAndEditorViewControllersForSelection];
+    [self updateDuplicateViewControllerForSelection:*_selection];
   }
 }
 
@@ -198,9 +194,13 @@ struct DocumentGetter {
 - (void)performDeleteForDuplicateViewController:(DuplicateViewController*)vc {
   if (_selection.has_value()) {
     NSAssert(_selection->is_removable(), @"");
+    [self.delegate dismissEditorViewControllerForSourceView:self];
     auto updates = (*std::move(_selection)).remove_from_document();
     [self performUpdates:std::move(updates.source_updates)];
     self.selection = std::move(updates.selection_update);
+    if (_selection.has_value()) {
+      [self showEditorViewControllersForSelection:*_selection];
+    }
   }
 }
 
@@ -241,10 +241,14 @@ struct DocumentGetter {
 }
 
 - (void)setSelection:(optional_source_selection)selection {
-  _selection = std::nullopt;
-  [self updateDuplicateAndEditorViewControllersForSelection];
-  _selection = std::move(selection);
-  [self updateDuplicateAndEditorViewControllersForSelection];
+  _selection = selection;
+  if (_selection.has_value()) {
+    [self updateDuplicateViewControllerForSelection:*_selection];
+    // show editor view controller after set selection if needed
+  } else {
+    [self.delegate dismissDuplicateViewControllerForSourceView:self];
+    [self.delegate dismissEditorViewControllerForSourceView:self];
+  }
 }
 
 - (CGSize)currentSize {
@@ -354,45 +358,51 @@ struct DocumentGetter {
 
 - (void)touchDownAtLocation:(CGPoint)location {
   NSAssert(self.dataSource.document != nil, @"");
-  self.selection = {{self.dataSource.document.content, [self sourceLocationOfPoint:location]}};
+  // selection by touch point first
+  auto selection = optional_source_selection{
+      {self.dataSource.document.content, [self sourceLocationOfPoint:location]}};
+  // update selection by finishing editing
+  [self.delegate dismissDuplicateViewControllerForSourceView:self];
+  [self.delegate dismissEditorViewControllerForSourceView:self];
+  // set selection
+  self.selection = selection;
+  [self showEditorViewControllersForSelection:*_selection];
   [self setNeedsDisplay:YES];
 }
 
-- (void)updateDuplicateAndEditorViewControllersForSelection {
-  if (_selection.has_value()) {
-    if (auto type = _selection->dragging_type(true)) {
-      auto string = [self snapshotOfSelection:*_selection];
-      auto draggingData = DraggingData{*type, [NSData dataWithDataView:_selection->get_data(true)]};
-      [self.delegate showDuplicateViewControllerForSourceView:self
-                                                   withString:string
-                                                 draggingData:draggingData];
-    } else {
-      [self.delegate dismissDuplicateViewControllerForSourceView:self];
-    }
-    if (_selection->is_literal()) {
-      auto [type, data] = _selection->get_literal_content();
-      [self.delegate showEditorViewControllerForSourceView:self withType:type data:data];
-    } else if (_selection->is_function_signature()) {
-      [self.delegate showFunctionViewControllerForSourceView:self
-                                       withFunctionSignature:_selection->get_function_signature()];
-    } else if (_selection->is_new_array()) {
-      [self.delegate
-          showArrayViewControllerForSourceView:self
-                                     withCount:_selection->get_new_array_element_count()
-                                  minimalCount:_selection->get_new_array_minimum_count()];
-    } else if (_selection->is_color_literal()) {
-      auto colorLiteral = _selection->get_color_literal();
-      auto showAlpha = colorLiteral.mode == marlin::ast::color_mode::rgba ||
-                       colorLiteral.mode == marlin::ast::color_mode::hsla;
-      [self.delegate
-          showColorViewControllerForSourceView:self
-                                     withColor:[Color colorWithColorLiteral:std::move(colorLiteral)]
-                                     showAlpha:showAlpha];
-    } else {
-      [self.delegate dismissEditorViewControllerForSourceView:self];
-    }
+- (void)updateDuplicateViewControllerForSelection:
+    (const marlin::control::source_selection&)selection {
+  if (auto type = selection.dragging_type(true)) {
+    auto string = [self snapshotOfSelection:selection];
+    auto draggingData = DraggingData{*type, [NSData dataWithDataView:selection.get_data(true)]};
+    [self.delegate showDuplicateViewControllerForSourceView:self
+                                                 withString:string
+                                               draggingData:draggingData];
   } else {
     [self.delegate dismissDuplicateViewControllerForSourceView:self];
+  }
+}
+
+- (void)showEditorViewControllersForSelection:(const marlin::control::source_selection&)selection {
+  if (selection.is_literal()) {
+    auto [type, data] = selection.get_literal_content();
+    [self.delegate showEditorViewControllerForSourceView:self withType:type data:data];
+  } else if (selection.is_function_signature()) {
+    [self.delegate showFunctionViewControllerForSourceView:self
+                                     withFunctionSignature:selection.get_function_signature()];
+  } else if (selection.is_new_array()) {
+    [self.delegate showArrayViewControllerForSourceView:self
+                                              withCount:selection.get_new_array_element_count()
+                                           minimalCount:selection.get_new_array_minimum_count()];
+  } else if (selection.is_color_literal()) {
+    auto colorLiteral = selection.get_color_literal();
+    auto showAlpha = colorLiteral.mode == marlin::ast::color_mode::rgba ||
+                     colorLiteral.mode == marlin::ast::color_mode::hsla;
+    [self.delegate
+        showColorViewControllerForSourceView:self
+                                   withColor:[Color colorWithColorLiteral:std::move(colorLiteral)]
+                                   showAlpha:showAlpha];
+  } else {
     [self.delegate dismissEditorViewControllerForSourceView:self];
   }
 }
@@ -496,6 +506,9 @@ struct DocumentGetter {
   const bool result = update.source_updates.size() > 0;
   [self performUpdates:std::move(update.source_updates)];
   self.selection = std::move(update.selection_update);
+  if (_selection.has_value()) {
+    [self showEditorViewControllersForSelection:*_selection];
+  }
   return result;
 }
 
