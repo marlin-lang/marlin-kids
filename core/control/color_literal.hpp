@@ -14,7 +14,7 @@ namespace marlin::control {
 namespace details {
 
 template <typename element_type, size_t max_count>
-static constexpr size_t count_dimension(
+[[nodiscard]] static constexpr size_t count_dimension(
     std::array<std::optional<element_type>, max_count> arr) {
   size_t count{max_count};
   while (!arr[count - 1].has_value()) {
@@ -24,8 +24,8 @@ static constexpr size_t count_dimension(
 }
 
 template <size_t... indices, typename array_type>
-static constexpr auto make_counts(std::index_sequence<indices...>,
-                                  const array_type& array) {
+[[nodiscard]] static constexpr auto make_counts(std::index_sequence<indices...>,
+                                                const array_type& array) {
   return make_array(count_dimension(array[indices])...);
 }
 
@@ -55,23 +55,20 @@ struct color_literal {
   ast::color_mode mode;
 
   color_literal() {}
-  color_literal(ast::color_mode _mode)
-      : mode{_mode} {}
+  color_literal(ast::color_mode _mode) : mode{_mode} {}
 
-            [[nodiscard]] double
-            operator[](size_t i) const {
-    return _data[i];
-  }
+  [[nodiscard]] double operator[](size_t i) const { return _data[i]; }
 
-  constexpr size_t data_dimension() const {
+  [[nodiscard]] constexpr size_t data_dimension() const {
     return _data_dimension[raw_value(mode)];
   }
 
-  constexpr double data_max(size_t dimension) const {
+  [[nodiscard]] constexpr double data_max(size_t dimension) const {
     assert(dimension < data_dimension());
     return _data_restrictions[raw_value(mode)][dimension]->second;
   }
-  constexpr double data_min(size_t dimension) const {
+
+  [[nodiscard]] constexpr double data_min(size_t dimension) const {
     assert(dimension < data_dimension());
     return _data_restrictions[raw_value(mode)][dimension]->first;
   }

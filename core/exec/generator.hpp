@@ -303,6 +303,7 @@ struct generator {
 
   template <typename wrapper_type>
   auto get_jsast(ast::function& function, wrapper_type&& wrapper) {
+    auto block{get_block(function.statements())};
     if (function.signature()->is<ast::function_signature>()) {
       auto& signature{function.signature()->as<ast::function_signature>()};
       jsast::utils::move_vector<jsast::ast::node> params;
@@ -311,7 +312,6 @@ struct generator {
       }
 
       _global_identifiers.clear();
-      auto block{get_block(function.statements())};
 
       auto async{_async_blocks.find(&function) != _async_blocks.end()};
       return wrapper(jsast::ast::function_declaration{
