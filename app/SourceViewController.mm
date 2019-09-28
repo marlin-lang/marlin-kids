@@ -68,6 +68,7 @@
 #pragma mark - SourceViewDelegate
 
 - (void)sourceViewChanged:(SourceView *)view {
+    [self.lineNumberView clearErrors];
   [self.document updateChangeCount:NSChangeDone];
 }
 

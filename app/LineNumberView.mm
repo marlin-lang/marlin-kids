@@ -13,7 +13,7 @@
 @end
 
 @implementation LineNumberView {
-  // NSPopover* _popover;
+  NSPopover* _popover;
 
   NSMutableDictionary* _errors;
 
@@ -50,7 +50,7 @@
   [self setNeedsDisplayInRect:self.bounds];
 }
 
-/*- (void)mouseDown:(NSEvent*)event {
+- (void)mouseDown:(NSEvent*)event {
   [super mouseDown:event];
 
   auto location = [self convertPoint:event.locationInWindow fromView:nil];
@@ -70,7 +70,7 @@
     [_popover showRelativeToRect:errorRect ofView:self preferredEdge:NSMinYEdge];
     vc.messageTextField.stringValue = message;
   }
-}*/
+}
 
 #ifdef IOS
 - (void)drawRect:(CGRect)rect {

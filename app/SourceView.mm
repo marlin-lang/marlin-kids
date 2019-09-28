@@ -59,7 +59,9 @@ struct DocumentGetter {
 }
 
 - (void)initializeWithDisplay:(marlin::format::display)display {
-  [self insertLinesBeforeLine:1 withDisplay:std::move(display) isInitialize:true];
+  [self insertLinesBeforeLine:1 withDisplay:std::move(display)];
+    self.frameSize = self.currentSize;
+    [self setNeedsDisplay:YES];
 }
 
 - (void)performUpdates:(std::vector<marlin::control::source_update>)updates {
@@ -74,7 +76,7 @@ struct DocumentGetter {
     if (update.range.begin == update.range.end) {
       [self insertLinesBeforeLine:update.range.begin.line
                       withDisplay:std::move(update.display)
-                     isInitialize:false];
+                     ];
     } else if (update.range.begin.line == update.range.end.line) {
       [self updateExpressionInSourceRange:update.range withDisplay:std::move(update.display)];
     } else {
@@ -82,11 +84,15 @@ struct DocumentGetter {
       [self removeLinesFromLine:update.range.begin.line toLine:update.range.end.line];
     }
   }
+    self.frameSize = self.currentSize;
+    [self setNeedsDisplay:YES];
+    [self clearErrors];
+    [self.delegate sourceViewChanged:self];
 }
 
 - (void)insertLinesBeforeLine:(NSUInteger)line
                   withDisplay:(marlin::format::display)display
-                 isInitialize:(bool)isInitialize {
+                  {
   auto lineIndex = line - 1;
   if (lineIndex > _strings.count) {
     lineIndex = _strings.count;
@@ -111,11 +117,6 @@ struct DocumentGetter {
     lineBegin = lineEnd + 1;
     ++lineIndex;
   }
-  self.frameSize = self.currentSize;
-  [self setNeedsDisplay:YES];
-  if (!isInitialize) {
-    [self.delegate sourceViewChanged:self];
-  }
 }
 
 - (void)updateExpressionInSourceRange:(marlin::source_range)sourceRange
@@ -128,9 +129,6 @@ struct DocumentGetter {
   [str replaceCharactersInRange:range withString:[NSString stringWithStringView:display.source]];
   range.length = display.source.size();
   applyTheme(currentTheme(), str, range, display.highlights);
-  self.frameSize = self.currentSize;
-  [self setNeedsDisplay:YES];
-  [self.delegate sourceViewChanged:self];
 }
 
 - (void)removeLinesFromLine:(NSUInteger)from toLine:(NSUInteger)to {
@@ -140,9 +138,6 @@ struct DocumentGetter {
   auto indexSet = [NSMutableIndexSet new];
   [indexSet addIndexesInRange:NSMakeRange(from - 1, to - from)];
   [_strings removeObjectsAtIndexes:indexSet];
-  self.frameSize = self.currentSize;
-  [self setNeedsDisplay:YES];
-  [self.delegate sourceViewChanged:self];
 }
 
 - (marlin::source_loc)sourceLocationOfPoint:(CGPoint)point {
