@@ -430,13 +430,33 @@ struct generator {
     }
   }
 
+  [[nodiscard]] bool check_in_loop(ast::base& node) {
+    auto* current{&node};
+    while (current->has_parent()) {
+      current = &current->parent();
+      if (current->is<ast::while_statement>() ||
+          current->is<ast::for_statement>()) {
+        return true;
+      }
+    }
+    return false;
+  }
+
   template <typename wrapper_type>
-  auto get_jsast(ast::break_statement&, wrapper_type&& wrapper) {
+  auto get_jsast(ast::break_statement& statement, wrapper_type&& wrapper) {
+    if (!check_in_loop(statement)) {
+      _errors.emplace_back("Break statement can only appear in a loop!",
+                           statement);
+    }
     return wrapper(jsast::ast::break_statement{});
   }
 
   template <typename wrapper_type>
-  auto get_jsast(ast::continue_statement&, wrapper_type&& wrapper) {
+  auto get_jsast(ast::continue_statement& statement, wrapper_type&& wrapper) {
+    if (!check_in_loop(statement)) {
+      _errors.emplace_back("Continue statement can only appear in a loop!",
+                           statement);
+    }
     return wrapper(jsast::ast::continue_statement{});
   }
 
@@ -445,9 +465,24 @@ struct generator {
     return wrapper(jsast::ast::return_statement{});
   }
 
+  [[nodiscard]] bool check_in_user_function(ast::base& node) {
+    auto* current{&node};
+    while (current->has_parent()) {
+      current = &current->parent();
+      if (current->is<ast::function>()) {
+        return true;
+      }
+    }
+    return false;
+  }
+
   template <typename wrapper_type>
   auto get_jsast(ast::return_result_statement& statement,
                  wrapper_type&& wrapper) {
+    if (!check_in_loop(statement)) {
+      _errors.emplace_back(
+          "Can only return a result in user-defined functions!", statement);
+    }
     return wrapper(jsast::ast::return_statement{get_node(*statement.result())});
   }
 
@@ -602,7 +637,25 @@ struct generator {
 
   template <typename wrapper_type>
   auto get_jsast(ast::number_literal& literal, wrapper_type&& wrapper) {
-    return wrapper(jsast::ast::raw_literal{literal.value});
+    assert(literal.value.size() > 0);
+    auto it{literal.value.begin()};
+    const bool is_negative{*it == '-'};
+    if (is_negative) {
+      it++;
+    }
+    while (it != literal.value.end() && *it == '0') {
+      it++;
+    }
+    if ((it == literal.value.end() || *it == '.') &&
+        it > literal.value.begin() && *(it - 1) == '0') {
+      it--;
+    }
+    std::string result{it, literal.value.end()};
+    if (is_negative) {
+      return wrapper(jsast::ast::raw_literal{"-" + std::move(result)});
+    } else {
+      return wrapper(jsast::ast::raw_literal{std::move(result)});
+    }
   }
 
   template <typename wrapper_type>

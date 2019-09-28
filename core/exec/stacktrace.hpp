@@ -15,6 +15,7 @@ template <typename code_type, typename = std::enable_if_t<
 std::vector<code_type*> parse_stacktrace(std::string_view stacktrace,
                                          std::string_view source_url,
                                          code_type& code);
-}
+
+}  // namespace marlin::exec
 
 #endif  // marlin_exec_stacktrace_hpp
