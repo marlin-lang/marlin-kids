@@ -358,16 +358,40 @@ struct DocumentGetter {
 
 - (void)touchDownAtLocation:(CGPoint)location {
   NSAssert(self.dataSource.document != nil, @"");
-  // selection by touch point first
-  auto selection = optional_source_selection{
-      {self.dataSource.document.content, [self sourceLocationOfPoint:location]}};
-  // update selection by finishing editing
-  [self.delegate dismissDuplicateViewControllerForSourceView:self];
-  [self.delegate dismissEditorViewControllerForSourceView:self];
-  // set selection
-  self.selection = selection;
-  [self showEditorViewControllersForSelection:*_selection];
-  [self setNeedsDisplay:YES];
+  const auto loc = [self sourceLocationOfPoint:location];
+  if (_selection.has_value() && _selection->get_range().contains(loc)) {
+    // Here the click happens at the currently-edited node, so the dismissal of editor may
+    // invalidate the new selection. We must perform the dismissal before re-generating the
+    // selection.
+    marlin::control::source_selection selection{self.dataSource.document.content, loc};
+    auto location = _selection->locate_selection(selection);
+
+    // update selection by finishing editing
+    [self.delegate dismissDuplicateViewControllerForSourceView:self];
+    [self.delegate dismissEditorViewControllerForSourceView:self];
+    // set selection
+    self.selection = _selection->selection_by_location(std::move(location));
+    [self showEditorViewControllersForSelection:*_selection];
+    [self setNeedsDisplay:YES];
+  } else {
+    // Here the click happens outside of the currently-edited node, so we assume that the new
+    // selection will not be invalidated by dismissal of the editor.
+    // Notice that this is currently ensured by the fact that side effects of the editor's dismissal
+    // (e.g. changing the calls when a function signature is changed) will not result in
+    // invalidation of node references.
+    // If such is not to be upheld in the future, it must be reflected here how a click in the side
+    // effect areas are interpreted.
+
+    // selection by touch point first
+    marlin::control::source_selection selection{self.dataSource.document.content, loc};
+    // update selection by finishing editing
+    [self.delegate dismissDuplicateViewControllerForSourceView:self];
+    [self.delegate dismissEditorViewControllerForSourceView:self];
+    // set selection
+    self.selection = std::move(selection);
+    [self showEditorViewControllersForSelection:*_selection];
+    [self setNeedsDisplay:YES];
+  }
 }
 
 - (void)updateDuplicateViewControllerForSelection:
@@ -472,12 +496,13 @@ struct DocumentGetter {
     if (const auto rect = [self rectOfSourceRange:_selection->get_range()];
         !CGRectContainsPoint(rect, location)) {
       _draggingSelection = (*std::move(_selection)).as_dragging_selection();
-      self.selection = std::nullopt;
       if (const auto type = _draggingSelection->dragging_type(false)) {
+        self.selection = std::nullopt;
         data = DraggingData(*type, [NSData dataWithDataView:_draggingSelection->get_data()]);
       } else {
-        _draggingSelection = std::move(_selection);
-        self.selection = std::nullopt;
+        // We assert that non-draggable selections are unchanged through as_dragging_selection(), so
+        // there is no need to refresh the editor.
+        self.selection = std::exchange(_draggingSelection, std::nullopt);
       }
     }
   }

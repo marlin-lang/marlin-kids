@@ -268,6 +268,55 @@ struct source_selection {
     }
   }
 
+  // The following is a temporary way to maintain selections across node
+  // updates. It is currently only used in for literals / color constructors /
+  // function signatures, and not guaranteed to work elsewhere.
+
+  using relative_location = std::vector<size_t>;
+
+  [[nodiscard]] relative_location locate_selection(
+      source_selection& other) const {
+    auto current{other._selection};
+    size_t level_count{0};
+    while (current != _selection && current->has_parent()) {
+      level_count++;
+      current = &current->parent();
+    }
+    assert(current == _selection);
+
+    relative_location result(level_count, 0);
+    current = other._selection;
+    for (size_t i{0}; i < level_count; i++) {
+      if (current->has_parent()) {
+        auto& parent{current->parent()};
+        for (size_t j{0}; j < parent.children().size(); j++) {
+          if (parent.children()[j].get() == current) {
+            result[i] = j;
+            break;
+          }
+        }
+        current = &parent;
+      } else {
+        assert(false);
+        break;
+      }
+    }
+    return result;
+  }
+
+  [[nodiscard]] source_selection selection_by_location(
+      relative_location location) {
+    auto current{_selection};
+    for (auto& index : location) {
+      if (current->children().size() > index) {
+        current = current->children()[index].get();
+      } else {
+        assert(false);
+      }
+    }
+    return {*_doc, *current};
+  }
+
  private:
   document* _doc;
   ast::base* _selection;
