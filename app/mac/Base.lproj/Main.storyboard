@@ -1006,10 +1006,10 @@
             </objects>
             <point key="canvasLocation" x="894" y="331"/>
         </scene>
-        <!--Color View Controller-->
+        <!--Mac Color View Controller-->
         <scene sceneID="OHY-5e-8IX">
             <objects>
-                <viewController storyboardIdentifier="ColorViewController" id="CUX-KE-ydA" customClass="ColorViewController" sceneMemberID="viewController">
+                <viewController storyboardIdentifier="ColorViewController" id="CUX-KE-ydA" customClass="MacColorViewController" sceneMemberID="viewController">
                     <view key="view" id="jyb-8n-Pbo">
                         <rect key="frame" x="0.0" y="0.0" width="200" height="75"/>
                         <autoresizingMask key="autoresizingMask"/>
@@ -1028,9 +1028,6 @@
                                     <constraint firstAttribute="height" constant="30" id="iA0-lZ-6xh"/>
                                 </constraints>
                                 <color key="color" red="0.05813049898" green="0.055541899059999997" blue="1" alpha="1" colorSpace="calibratedRGB"/>
-                                <connections>
-                                    <action selector="colorChanged:" target="CUX-KE-ydA" id="ILg-Wc-NZU"/>
-                                </connections>
                             </colorWell>
                             <button verticalHuggingPriority="750" translatesAutoresizingMaskIntoConstraints="NO" id="yZL-ic-nHQ">
                                 <rect key="frame" x="139" y="39" width="59" height="32"/>

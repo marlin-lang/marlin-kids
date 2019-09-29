@@ -1,7 +1,5 @@
 #import "IosToolboxViewController.h"
 
-#import "NSData+DataView.h"
-#import "NSString+StringView.h"
 #import "ToolboxCell.h"
 
 @interface IosToolboxViewController () <UICollectionViewDataSource, UICollectionViewDragDelegate>

@@ -75,6 +75,7 @@ else(IOS)
       ${HEADERS}
       mac/AppDelegate.h
       mac/ColorWell.h
+      mac/MacColorViewController.h
       mac/MacDocument.h
       mac/MacEditorViewController.h
       mac/MacFunctionViewController.h
@@ -90,6 +91,7 @@ else(IOS)
       ${SOURCES}
       mac/AppDelegate.mm
       mac/ColorWell.mm
+      mac/MacColorViewController.mm
       mac/MacDocument.mm
       mac/MacEditorViewController.mm
       mac/MacFunctionViewController.mm
