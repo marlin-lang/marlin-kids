@@ -4,6 +4,7 @@
 #include <algorithm>
 #include <type_traits>
 #include <unordered_map>
+#include <unordered_set>
 
 #include "base.hpp"
 #include "specs.hpp"
@@ -253,9 +254,18 @@ struct store : base_store::impl<store> {
       throw read_error{"Repeated function name encountered!"};
     } else {
       std::vector<std::string> param_names;
-      for (auto& param : params) {
-        if (param->is<ast::parameter>()) {
-          param_names.emplace_back(param->as<ast::parameter>().name);
+      size_t index{0};
+      std::unordered_set<std::string_view> name_collection;
+      while (index < params.size()) {
+        if (params[index]->is<ast::parameter>()) {
+          std::string_view param_name{params[index]->as<ast::parameter>().name};
+          if (name_collection.find(param_name) == name_collection.end()) {
+            name_collection.emplace(param_name);
+            param_names.emplace_back(std::string{param_name});
+            index++;
+          } else {
+            params.erase(params.begin() + index);
+          }
         } else {
           throw read_error{"Unexpected node, expecting function parameter!"};
         }

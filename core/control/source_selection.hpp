@@ -123,7 +123,6 @@ struct source_selection {
   [[nodiscard]] bool is_literal() const {
     return _selection->is<ast::variable_placeholder>() ||
            _selection->is<ast::expression_placeholder>() ||
-           _selection->is<ast::parameter>() ||
            _selection->is<ast::variable_name>() ||
            _selection->is<ast::number_literal>() ||
            _selection->is<ast::string_literal>() ||
@@ -193,11 +192,11 @@ struct source_selection {
     auto args{_selection->as<ast::new_color>().arguments()};
     for (size_t i{0}; i < args.size(); i++) {
       if (args[i]->is<ast::number_literal>()) {
-          try {
-              literal.set(i, std::stod(args[i]->as<ast::number_literal>().value));
-          } catch (const std::exception& e) {
-              literal.set(i, 0);
-          }
+        try {
+          literal.set(i, std::stod(args[i]->as<ast::number_literal>().value));
+        } catch (const std::exception& e) {
+          literal.set(i, 0);
+        }
       } else if (args[i]->is<ast::expression_placeholder>()) {
         literal.set(i, 0);
       } else {

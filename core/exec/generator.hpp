@@ -307,8 +307,20 @@ struct generator {
     if (function.signature()->is<ast::function_signature>()) {
       auto& signature{function.signature()->as<ast::function_signature>()};
       jsast::utils::move_vector<jsast::ast::node> params;
+      std::unordered_set<std::string_view> param_names;
       for (auto& param : signature.parameters()) {
-        params.emplace_back(get_node(*param));
+        if (param->is<ast::parameter>()) {
+          std::string_view name{param->as<ast::parameter>().name};
+          if (param_names.find(name) == param_names.end()) {
+            param_names.emplace(name);
+            params.emplace_back(get_node(*param));
+          } else {
+            _errors.emplace_back("Repeated function parameter!", *param);
+          }
+        } else {
+          _errors.emplace_back("Unexpected node, expecting function parameter!",
+                               *param);
+        }
       }
 
       _global_identifiers.clear();
@@ -355,7 +367,7 @@ struct generator {
       _global_identifiers.emplace(name);
     } else {
       _errors.emplace_back("Unexpected node, expecting variable name!",
-                           use_global);
+                           *use_global.variable());
     }
     return wrapper(jsast::ast::empty_statement{});
   }
