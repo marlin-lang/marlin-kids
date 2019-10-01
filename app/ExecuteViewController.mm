@@ -47,17 +47,12 @@ constexpr double refreshTimeInMS = 40;
   self.outputTextView.layer.borderColor = Color.blackColor.CGColor;
 }
 
-#ifdef IOS
-- (void)viewDidAppear:(BOOL)animated {
-  [super viewDidAppear:animated];
-#else
-- (void)viewDidAppear {
-  [super viewDidAppear];
-#endif
+VIEWDIDAPPEAR_BEGIN
 
-  _appeared = true;
-  [self tryStartExecute];
-}
+_appeared = true;
+[self tryStartExecute];
+
+VIEWDIDAPPEAR_END
 
 - (void)setExecutable:(NSString*)executable {
   _executableCode = executable;

@@ -1263,10 +1263,10 @@ DQ
             </objects>
             <point key="canvasLocation" x="2120" y="1217"/>
         </scene>
-        <!--Array View Controller-->
+        <!--Mac Array View Controller-->
         <scene sceneID="zOK-yf-4Xx">
             <objects>
-                <viewController storyboardIdentifier="ArrayViewController" id="6As-TM-h0o" customClass="ArrayViewController" sceneMemberID="viewController">
+                <viewController storyboardIdentifier="ArrayViewController" id="6As-TM-h0o" customClass="MacArrayViewController" sceneMemberID="viewController">
                     <view key="view" id="erL-lt-fdE">
                         <rect key="frame" x="0.0" y="0.0" width="200" height="59"/>
                         <autoresizingMask key="autoresizingMask"/>
@@ -1314,7 +1314,7 @@ DQ
                 </viewController>
                 <customObject id="AXQ-vm-Ktq" userLabel="First Responder" customClass="NSResponder" sceneMemberID="firstResponder"/>
             </objects>
-            <point key="canvasLocation" x="1185" y="657"/>
+            <point key="canvasLocation" x="1185" y="315"/>
         </scene>
     </scenes>
 </document>

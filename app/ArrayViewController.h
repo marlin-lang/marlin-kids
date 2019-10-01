@@ -12,11 +12,17 @@ NS_ASSUME_NONNULL_BEGIN
 
 @interface ArrayViewController : ViewController
 
+@property(weak) IBOutlet TextField *countTextField;
+
 @property(weak) id<ArrayViewControllerDelegate> delegate;
+
+@property(getter=isValid) BOOL valid;
 
 - (void)setCount:(NSUInteger)count;
 
 - (void)setMinimalCount:(NSUInteger)minimalCount;
+
+- (void)validate;
 
 @end
 

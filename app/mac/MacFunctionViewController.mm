@@ -27,10 +27,11 @@
   _parameters = [NSMutableArray new];
 }
 
-- (void)viewDidAppear {
-  [super viewDidAppear];
-  [self.nameTextField becomeFirstResponder];
-}
+VIEWDIDAPPEAR_BEGIN
+
+[self.nameTextField becomeFirstResponder];
+
+VIEWDIDAPPEAR_END
 
 - (void)setFunctionSignature:(marlin::function_definition)signature {
   _nameTextField.stringValue = [NSString stringWithStringView:signature.name];

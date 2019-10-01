@@ -18,10 +18,11 @@
   _identifierStr = @"";
 }
 
-- (void)viewDidAppear {
-  [super viewDidAppear];
-  [self.editorTextField becomeFirstResponder];
-}
+VIEWDIDAPPEAR_BEGIN
+
+    [self.editorTextField becomeFirstResponder];
+
+VIEWDIDAPPEAR_END
 
 - (void)setType:(EditorType)type {
   _type = type;

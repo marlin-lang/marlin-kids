@@ -67,6 +67,22 @@
 
 #endif
 
+#ifdef IOS
+
+#define VIEWDIDAPPEAR_BEGIN               \
+  -(void)viewDidAppear : (BOOL)animated { \
+    [super viewDidAppear:animated];
+
+#else
+
+#define VIEWDIDAPPEAR_BEGIN \
+  -(void)viewDidAppear {    \
+    [super viewDidAppear];
+
+#endif
+
+#define VIEWDIDAPPEAR_END }
+
 @interface NSObject (Casting)
 
 + (instancetype)cast:(id)object;
