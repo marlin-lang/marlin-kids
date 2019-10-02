@@ -78,6 +78,7 @@ else(IOS)
       mac/MacArrayViewController.h
       mac/MacColorViewController.h
       mac/MacDocument.h
+      mac/MacDuplicateSourceTextField.h
       mac/MacEditorViewController.h
       mac/MacFunctionViewController.h
       mac/MacSourceView.h
@@ -95,6 +96,7 @@ else(IOS)
       mac/MacArrayViewController.mm
       mac/MacColorViewController.mm
       mac/MacDocument.mm
+      mac/MacDuplicateSourceTextField.mm
       mac/MacEditorViewController.mm
       mac/MacFunctionViewController.mm
       mac/MacSourceView.mm
