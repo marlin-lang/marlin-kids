@@ -81,6 +81,7 @@ else(IOS)
       mac/MacDuplicateSourceTextField.h
       mac/MacEditorViewController.h
       mac/MacFunctionViewController.h
+      mac/MacLineNumberView.h
       mac/MacSourceView.h
       mac/MacSourceViewController.h
       mac/MacToolboxViewController.h
@@ -99,6 +100,7 @@ else(IOS)
       mac/MacDuplicateSourceTextField.mm
       mac/MacEditorViewController.mm
       mac/MacFunctionViewController.mm
+      mac/MacLineNumberView.mm
       mac/MacSourceView.mm
       mac/MacSourceViewController.mm
       mac/MacToolboxViewController.mm

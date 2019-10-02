@@ -1,7 +1,6 @@
 #import "LineNumberView.h"
 
 #import "DrawHelper.h"
-#import "MessageViewController.h"
 #import "Theme.h"
 
 @interface LineNumberView ()
@@ -13,10 +12,7 @@
 @end
 
 @implementation LineNumberView {
-  NSPopover* _popover;
-
   NSMutableDictionary* _errors;
-
   CGFloat _inset;
 }
 
@@ -34,6 +30,17 @@
   }
   return self;
 }
+    
+    - (NSUInteger)lineNumberOfLocation:(CGPoint)loc {
+      auto* sourceView = (SourceView*)self.clientView;
+      auto sourceViewLocation = [self convertPoint:loc toView:sourceView];
+      auto [line, column] = [sourceView sourceLocationOfPoint:sourceViewLocation];
+      return line;
+    }
+
+    - (NSString *)errorMessageOfLine:(NSUInteger)line {
+        return [_errors objectForKey:[NSNumber numberWithInteger:line]];
+    }
 
 - (void)addError:(NSString*)message atLine:(NSUInteger)line {
   auto* number = [NSNumber numberWithInteger:line];
@@ -48,28 +55,6 @@
 - (void)clearErrors {
   [_errors removeAllObjects];
   [self setNeedsDisplayInRect:self.bounds];
-}
-
-- (void)mouseDown:(NSEvent*)event {
-  [super mouseDown:event];
-
-  auto location = [self convertPoint:event.locationInWindow fromView:nil];
-  auto lineNumber = [self lineNumberOfLocation:location];
-  if (NSString* message = [_errors objectForKey:[NSNumber numberWithInteger:lineNumber]]) {
-    auto* storyboard = [NSStoryboard storyboardWithName:@"Main" bundle:nil];
-    MessageViewController* vc =
-        [storyboard instantiateControllerWithIdentifier:@"MessageViewController"];
-    _popover = [NSPopover new];
-    _popover.behavior = NSPopoverBehaviorTransient;
-    _popover.contentViewController = vc;
-      auto* textView = (SourceView*)self.clientView;
-    auto offset = [self convertPoint:NSZeroPoint fromView:textView];
-    auto y = [textView lineTopOfNumber:lineNumber] + offset.y;
-    auto size = textView.lineHeight - _inset * 2;
-    auto errorRect = NSMakeRect(_inset, y + _inset, size, size);
-    [_popover showRelativeToRect:errorRect ofView:self preferredEdge:NSMinYEdge];
-    vc.messageTextField.stringValue = message;
-  }
 }
 
 #ifdef IOS
@@ -110,13 +95,6 @@
   if ([_errors objectForKey:[NSNumber numberWithInteger:number]]) {
     drawOval(rect, Color.redColor);
   }
-}
-
-- (NSUInteger)lineNumberOfLocation:(CGPoint)loc {
-  auto* sourceView = (SourceView*)self.clientView;
-  auto sourceViewLocation = [self convertPoint:loc toView:sourceView];
-  auto [line, column] = [sourceView sourceLocationOfPoint:sourceViewLocation];
-  return line;
 }
 
 @end

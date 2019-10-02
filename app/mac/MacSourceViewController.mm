@@ -1,6 +1,6 @@
 #import "MacSourceViewController.h"
 
-#import "LineNumberView.h"
+#import "MacLineNumberView.h"
 #import "MacFunctionViewController.h"
 
 @interface MacSourceViewController ()
@@ -25,7 +25,7 @@
   self.sourceView.enclosingScrollView.rulersVisible = YES;
   self.sourceView.enclosingScrollView.hasHorizontalRuler = NO;
   self.sourceView.enclosingScrollView.hasVerticalRuler = YES;
-  auto lineNumberView = [[LineNumberView alloc] initWithSourceView:self.sourceView];
+  auto lineNumberView = [[MacLineNumberView alloc] initWithSourceView:self.sourceView];
   self.lineNumberView = lineNumberView;
   self.sourceView.enclosingScrollView.verticalRulerView = lineNumberView;
 }

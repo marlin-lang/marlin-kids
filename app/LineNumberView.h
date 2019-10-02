@@ -12,7 +12,11 @@ NS_ASSUME_NONNULL_BEGIN
 
 - (instancetype)initWithSourceView:(SourceView*)view;
 
+- (NSUInteger)lineNumberOfLocation:(CGPoint)loc;
+
 - (void)addError:(NSString*)message atLine:(NSUInteger)line;
+
+- (NSString*)errorMessageOfLine:(NSUInteger)line;
 
 - (void)clearErrors;
 
