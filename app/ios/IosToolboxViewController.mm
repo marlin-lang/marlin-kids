@@ -36,8 +36,8 @@
                   cellForItemAtIndexPath:(NSIndexPath *)indexPath {
   ToolboxCell *cell = [collectionView dequeueReusableCellWithReuseIdentifier:@"ToolboxCell"
                                                                 forIndexPath:indexPath];
-  cell.textLabel.text =
-      [NSString stringWithStringView:self.model.current_category_prototype(indexPath.item).name];
+  cell.textLabel.text = [NSString
+      stringWithStringView:self.model.current_category_prototype(indexPath.item).display.source];
   return cell;
 }
 
