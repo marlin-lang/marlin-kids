@@ -117,7 +117,35 @@
 
 @end
 
+#pragma mark - ios implementation of mac interface
+
 #ifdef IOS
+
+@interface UIColor (MacInterface)
+
++ (UIColor *)colorWithCalibratedRed:(CGFloat)red
+                              green:(CGFloat)green
+                               blue:(CGFloat)blue
+                              alpha:(CGFloat)alpha;
+
++ (UIColor *)colorWithCalibratedHue:(CGFloat)hue
+                         saturation:(CGFloat)saturation
+                         brightness:(CGFloat)brightness
+                              alpha:(CGFloat)alpha;
+
+@end
+
+@interface UIStoryboard (MacInterface)
+
+- (UIViewController *)instantiateControllerWithIdentifier:(NSString *)identifier;
+
+@end
+
+@interface UIView (MacInterface)
+
+- (void)setFrameSize:(CGSize)size;
+
+@end
 
 @interface UISegmentedControl (MacInterface)
 
@@ -127,15 +155,15 @@
 
 @interface UITextField (MacInterface)
 
-- (NSString*)stringValue;
+- (NSString *)stringValue;
 
-- (void)setStringValue:(NSString*)stringValue;
+- (void)setStringValue:(NSString *)stringValue;
 
 @end
 
 @interface UITextView (MacInterface)
 
-- (NSString*)string;
+- (NSString *)string;
 
 @end
 

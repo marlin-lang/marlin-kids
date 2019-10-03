@@ -29,7 +29,7 @@
 
 - (NSInteger)collectionView:(UICollectionView *)collectionView
      numberOfItemsInSection:(NSInteger)section {
-  return self.sizeOfCurrentCategory;
+  return self.model.current_category_size();
 }
 
 - (UICollectionViewCell *)collectionView:(UICollectionView *)collectionView

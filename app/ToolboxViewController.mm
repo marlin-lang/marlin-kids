@@ -47,8 +47,8 @@ using ToolIndex = std::pair<NSInteger, NSInteger>;
                                    withCount:(NSUInteger)count
                                 minimalCount:(NSUInteger)minimalCount {
   [self dismissEditorViewController];
-  ArrayViewController *vc =
-      [self.storyboard instantiateControllerWithIdentifier:@"ArrayViewController"];
+  auto vc = [ArrayViewController
+      cast:[self.storyboard instantiateControllerWithIdentifier:@"ArrayViewController"]];
   vc.delegate = view;
 
   [self addChildViewController:vc inView:self.editorView];
@@ -62,8 +62,8 @@ using ToolIndex = std::pair<NSInteger, NSInteger>;
                                    withColor:(Color *)color
                                    showAlpha:(BOOL)showAlpha {
   [self dismissEditorViewController];
-  ColorViewController *vc =
-      [self.storyboard instantiateControllerWithIdentifier:@"ColorViewController"];
+  auto vc = [ColorViewController
+      cast:[self.storyboard instantiateControllerWithIdentifier:@"ColorViewController"]];
   vc.delegate = view;
 
   [self addChildViewController:vc inView:self.editorView];
@@ -76,8 +76,8 @@ using ToolIndex = std::pair<NSInteger, NSInteger>;
                                       withString:(NSString *)string
                                     draggingData:(const DraggingData &)draggingData {
   [self dismissDuplicateViewController];
-  DuplicateViewController *vc =
-      [self.storyboard instantiateControllerWithIdentifier:@"DuplicateViewController"];
+  auto vc = [DuplicateViewController
+      cast:[self.storyboard instantiateControllerWithIdentifier:@"DuplicateViewController"]];
   vc.delegate = view;
   [self addChildViewController:vc inView:self.duplicateView];
   vc.sourceString = string;
@@ -89,8 +89,8 @@ using ToolIndex = std::pair<NSInteger, NSInteger>;
                                      withType:(EditorType)type
                                          data:(std::string_view)data {
   [self dismissEditorViewController];
-  EditorViewController *vc =
-      [self.storyboard instantiateControllerWithIdentifier:@"EditorViewController"];
+  auto vc = [EditorViewController
+      cast:[self.storyboard instantiateControllerWithIdentifier:@"EditorViewController"]];
   vc.delegate = view;
 
   [self addChildViewController:vc inView:self.editorView];
@@ -103,8 +103,8 @@ using ToolIndex = std::pair<NSInteger, NSInteger>;
 - (void)showFunctionViewControllerForSourceView:(SourceView *)view
                           withFunctionSignature:(marlin::function_definition)signature {
   [self dismissEditorViewController];
-  MacFunctionViewController *vc =
-      [self.storyboard instantiateControllerWithIdentifier:@"FunctionViewController"];
+  auto vc = [FunctionViewController
+      cast:[self.storyboard instantiateControllerWithIdentifier:@"FunctionViewController"]];
   vc.delegate = view;
 
   [self addChildViewController:vc inView:self.editorView];

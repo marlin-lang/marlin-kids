@@ -1,7 +1,5 @@
 #import "IosDocument.h"
 
-#import "NSData+DataView.h"
-
 @implementation IosDocument
 
 - (id)contentsForType:(NSString *)typeName error:(NSError **)errorPtr {

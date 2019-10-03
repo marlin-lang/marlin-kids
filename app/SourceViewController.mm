@@ -35,9 +35,11 @@
 }
 
 - (void)prepareForSegue:(StoryboardSegue *)segue sender:(id)sender {
+#ifndef IOS
   NSWindowController *windowController = segue.destinationController;
   auto vc = [ExecuteViewController cast:windowController.window.contentViewController];
   vc.executable = _executableCode;
+#endif
 }
 
 - (void)execute {
@@ -68,8 +70,10 @@
 #pragma mark - SourceViewDelegate
 
 - (void)sourceViewChanged:(SourceView *)view {
-    [self.lineNumberView clearErrors];
+  [self.lineNumberView clearErrors];
+#ifndef IOS
   [self.document updateChangeCount:NSChangeDone];
+#endif
 }
 
 - (void)showArrayViewControllerForSourceView:(SourceView *)view

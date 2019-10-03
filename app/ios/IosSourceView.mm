@@ -1,6 +1,5 @@
 #import "IosSourceView.h"
 
-#import "NSString+StringView.h"
 #import "Pasteboard.h"
 
 @interface IosSourceView () <UIDropInteractionDelegate>
@@ -32,10 +31,6 @@
 - (void)touchesBegan:(NSSet<UITouch*>*)touches withEvent:(UIEvent*)event {
   auto location = [[touches anyObject] locationInView:self];
   [self touchDownAtLocation:location];
-}
-
-- (void)touchesEnded:(NSSet<UITouch*>*)touches withEvent:(UIEvent*)event {
-  [self touchUp];
 }
 
 - (void)showEditorViewControllerFromRect:(CGRect)rect

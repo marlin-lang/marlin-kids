@@ -61,7 +61,7 @@ struct DocumentGetter {
 - (void)initializeWithDisplay:(marlin::format::display)display {
   [self insertLinesBeforeLine:1 withDisplay:std::move(display)];
   self.frameSize = self.currentSize;
-  [self setNeedsDisplay:YES];
+  [self setNeedsDisplayInRect:self.bounds];
 }
 
 - (void)performUpdates:(std::vector<marlin::control::source_update>)updates {
@@ -83,7 +83,7 @@ struct DocumentGetter {
     }
   }
   self.frameSize = self.currentSize;
-  [self setNeedsDisplay:YES];
+  [self setNeedsDisplayInRect:self.bounds];
   [self clearErrors];
   [self.delegate sourceViewChanged:self];
 }
@@ -160,12 +160,12 @@ struct DocumentGetter {
 
 - (void)addErrorInSourceRange:(marlin::source_range)range {
   _errors.push_back(range);
-  [self setNeedsDisplay:YES];
+  [self setNeedsDisplayInRect:self.bounds];
 }
 
 - (void)clearErrors {
   _errors.clear();
-  [self setNeedsDisplay:YES];
+  [self setNeedsDisplayInRect:self.bounds];
 }
 
 #pragma mark - ArrayViewControllerDelegate
@@ -372,7 +372,7 @@ struct DocumentGetter {
     // set selection
     self.selection = _selection->selection_by_location(std::move(location));
     [self showEditorViewControllersForSelection:*_selection];
-    [self setNeedsDisplay:YES];
+    [self setNeedsDisplayInRect:self.bounds];
   } else {
     // Here the click happens outside of the currently-edited node, so we assume that the new
     // selection will not be invalidated by dismissal of the editor.
@@ -390,7 +390,7 @@ struct DocumentGetter {
     // set selection
     self.selection = std::move(selection);
     [self showEditorViewControllersForSelection:*_selection];
-    [self setNeedsDisplay:YES];
+    [self setNeedsDisplayInRect:self.bounds];
   }
 }
 
@@ -554,12 +554,12 @@ struct DocumentGetter {
 
 - (void)resetDraggingDestination {
   _inserter->reset_all();
-  [self setNeedsDisplay:YES];
+  [self setNeedsDisplayInRect:self.bounds];
 }
 
 - (void)resetDraggingSource {
   _draggingSelection.reset();
-  [self setNeedsDisplay:YES];
+  [self setNeedsDisplayInRect:self.bounds];
 }
 
 @end

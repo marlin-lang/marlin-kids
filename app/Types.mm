@@ -147,7 +147,43 @@ inline ColorElements hsbFromHSL(const ColorElements& hsl) {
 
 @end
 
+#pragma mark - ios implementation of mac interface
+
 #ifdef IOS
+
+@implementation UIColor (MacInterface)
+
++ (UIColor*)colorWithCalibratedRed:(CGFloat)red
+                             green:(CGFloat)green
+                              blue:(CGFloat)blue
+                             alpha:(CGFloat)alpha {
+  return [UIColor colorWithRed:red green:green blue:blue alpha:alpha];
+}
+
++ (UIColor*)colorWithCalibratedHue:(CGFloat)hue
+                        saturation:(CGFloat)saturation
+                        brightness:(CGFloat)brightness
+                             alpha:(CGFloat)alpha {
+  return [UIColor colorWithHue:hue saturation:saturation brightness:brightness alpha:alpha];
+}
+
+@end
+
+@implementation UIStoryboard (MacInterface)
+
+- (UIViewController*)instantiateControllerWithIdentifier:(NSString*)identifier {
+  return [self instantiateViewControllerWithIdentifier:identifier];
+}
+
+@end
+
+@implementation UIView (MacInterface)
+
+- (void)setFrameSize:(CGSize)size {
+  self.frame = CGRectMake(self.frame.origin.x, self.frame.origin.y, size.width, size.height);
+}
+
+@end
 
 @implementation UISegmentedControl (MacInterface)
 

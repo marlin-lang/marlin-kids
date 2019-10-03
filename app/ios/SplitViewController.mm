@@ -2,7 +2,6 @@
 
 #import "IosSourceViewController.h"
 #import "IosToolboxViewController.h"
-#import "NSObject+Casting.h"
 
 @interface SplitViewController ()
 

@@ -4,8 +4,6 @@
 
 #import "IosDocument.h"
 #import "IosSourceViewController.h"
-#import "NSData+DataView.h"
-#import "NSObject+Casting.h"
 #import "SplitViewController.h"
 
 @interface DocumentBrowserViewController () <UIDocumentBrowserViewControllerDelegate>

@@ -2,11 +2,9 @@
 
 #import "IosSourceView.h"
 #import "LineNumberView.h"
-#import "NSData+DataView.h"
-#import "NSString+StringView.h"
 #import "Pasteboard.h"
 
-@interface IosSourceViewController () <UIScrollViewDelegate, SourceViewDelegate>
+@interface IosSourceViewController () <UIScrollViewDelegate>
 
 @property(strong, nonatomic) IosSourceView *sourceView;
 
@@ -31,7 +29,6 @@
   self.scrollView.delegate = self;
   self.sourceView = [[IosSourceView alloc] initWithEnclosingScrollView:self.scrollView
                                                             dataSource:self];
-  self.sourceView.delegate = self;
   [self.scrollView addSubview:self.sourceView];
 
   auto *lineNumberView = [[LineNumberView alloc] initWithSourceView:self.sourceView];
