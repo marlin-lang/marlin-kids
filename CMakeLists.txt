@@ -12,8 +12,10 @@ set(APP_NAME "marlin")
 
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_LIST_DIR}/cmake")
 
-enable_testing()
-
 add_subdirectory(app)
 add_subdirectory(core)
-add_subdirectory(test)
+
+if(NOT IOS)
+  enable_testing()
+  add_subdirectory(test)
+endif(NOT IOS)

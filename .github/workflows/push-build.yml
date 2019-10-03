@@ -14,13 +14,13 @@ jobs:
         mkdir build
         cd build
         cmake -GXcode ..
-        cmake --build .
+        xcodebuild
     - name: ios build
       run: |
         mkdir build.ios
         cd build.ios
         cmake -GXcode -DCMAKE_TOOLCHAIN_FILE=../cmake/ios.toolchain.cmake -DPLATFORM=OS64 ..
-        cmake --build .
+        xcodebuild CODE_SIGNING_ALLOWED=NO
     - name: test
       run: |
         cd build
