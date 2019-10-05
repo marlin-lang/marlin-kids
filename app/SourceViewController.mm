@@ -20,9 +20,14 @@
 - (void)viewDidLoad {
   [super viewDidLoad];
 
-  self.sourceView.delegate = self;
   setCurrentTheme([DefaultTheme new]);
 }
+
+VIEWWILLAPPEAR_BEGIN
+
+self.sourceView.delegate = self;
+
+VIEWWILLAPPEAR_END
 
 - (Document *)document {
   NSAssert(NO, @"Implemented by subclass");
@@ -71,9 +76,7 @@
 
 - (void)sourceViewChanged:(SourceView *)view {
   [self.lineNumberView clearErrors];
-#ifndef IOS
-  [self.document updateChangeCount:NSChangeDone];
-#endif
+  [self.document updateChangeCount:DocumentChangeDone];
 }
 
 - (void)showArrayViewControllerForSourceView:(SourceView *)view

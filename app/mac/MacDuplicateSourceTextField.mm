@@ -6,10 +6,6 @@
 
 @implementation MacDuplicateSourceTextField
 
-- (void)setSourceString:(NSString *)sourceString {
-  self.stringValue = sourceString;
-}
-
 - (void)mouseDragged:(NSEvent *)event {
   [super mouseDragged:event];
 

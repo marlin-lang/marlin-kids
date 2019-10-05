@@ -213,4 +213,16 @@ inline ColorElements hsbFromHSL(const ColorElements& hsl) {
 
 @end
 
+#else
+
+@implementation NSViewController (IosInterface)
+
+- (void)willMoveToParentViewController:(NSViewController*)vc {
+}
+
+- (void)didMoveToParentViewController:(NSViewController*)vc {
+}
+
+@end
+
 #endif

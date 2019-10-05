@@ -16,6 +16,7 @@
   [self addChildViewControllerForView:self.leftView identifier:@"ToolboxViewController"];
   [self addChildViewControllerForView:self.rightView identifier:@"SourceViewController"];
   NSAssert(self.childViewControllers.count > 0, @"Should has child view controllers");
+  self.sourceViewController.toolboxViewController = self.toolboxViewController;
 }
 
 - (void)addChildViewControllerForView:(UIView *)view identifier:(NSString *)identifier {

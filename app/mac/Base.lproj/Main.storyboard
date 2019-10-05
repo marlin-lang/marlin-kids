@@ -965,7 +965,7 @@
                                 </textFieldCell>
                             </textField>
                             <segmentedControl verticalHuggingPriority="750" translatesAutoresizingMaskIntoConstraints="NO" id="SYm-sg-hJ1">
-                                <rect key="frame" x="89" y="36" width="22" height="23"/>
+                                <rect key="frame" x="89.5" y="36" width="22" height="23"/>
                                 <segmentedCell key="cell" borderStyle="border" alignment="left" style="capsule" trackingMode="selectOne" id="vOc-rD-gO6">
                                     <font key="font" metaFont="system"/>
                                     <segments>
@@ -1085,7 +1085,7 @@ DQ
                 </windowController>
                 <customObject id="dqq-XN-A5Y" userLabel="First Responder" customClass="NSResponder" sceneMemberID="firstResponder"/>
             </objects>
-            <point key="canvasLocation" x="2120" y="420"/>
+            <point key="canvasLocation" x="1964" y="1225"/>
         </scene>
         <!--Mac Function View Controller-->
         <scene sceneID="sQh-R1-erl">
@@ -1261,7 +1261,7 @@ DQ
                 </viewController>
                 <customObject id="HgP-j0-79P" userLabel="First Responder" customClass="NSResponder" sceneMemberID="firstResponder"/>
             </objects>
-            <point key="canvasLocation" x="2120" y="1217"/>
+            <point key="canvasLocation" x="1964" y="2137"/>
         </scene>
         <!--Mac Array View Controller-->
         <scene sceneID="zOK-yf-4Xx">

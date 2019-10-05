@@ -22,20 +22,15 @@
   return self;
 }
 
-- (void)setFrame:(CGRect)frame {
-  [super setFrame:frame];
-  self.enclosingScrollView.contentSize = frame.size;
+- (void)setFrameSize:(CGSize)size {
+  [super setFrameSize:size];
+  self.enclosingScrollView.contentSize = size;
   [self.lineNumberView setNeedsDisplay];
 }
 
 - (void)touchesBegan:(NSSet<UITouch*>*)touches withEvent:(UIEvent*)event {
   auto location = [[touches anyObject] locationInView:self];
   [self touchDownAtLocation:location];
-}
-
-- (void)showEditorViewControllerFromRect:(CGRect)rect
-                                withType:(EditorType)type
-                                    data:(std::string_view)data {
 }
 
 - (BOOL)dropInteraction:(UIDropInteraction*)interaction

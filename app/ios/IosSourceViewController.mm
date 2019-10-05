@@ -60,30 +60,4 @@
   [self.lineNumberView setNeedsDisplay];
 }
 
-#pragma mark - SourceViewDelegate
-
-- (void)sourceViewChanged:(SourceView *)view {
-  [self.document updateChangeCount:UIDocumentChangeDone];
-}
-
-- (void)showEditorViewControllerForSourceView:(SourceView *)view
-                                     fromRect:(CGRect)rect
-                                     withType:(EditorType)type
-                                         data:(std::string_view)data {
-  EditorViewController *vc =
-      [self.storyboard instantiateViewControllerWithIdentifier:@"EditorViewController"];
-  vc.delegate = view;
-  vc.modalPresentationStyle = UIModalPresentationPopover;
-  vc.popoverPresentationController.permittedArrowDirections = UIMenuControllerArrowUp;
-  vc.popoverPresentationController.sourceView = view;
-  vc.popoverPresentationController.sourceRect = rect;
-  [self presentViewController:vc animated:YES completion:nil];
-  vc.type = type;
-  vc.editorTextField.text = [NSString stringWithStringView:data];
-}
-
-- (void)dismissEditorViewControllerForSourceView:(SourceView *)view {
-  [self dismissViewControllerAnimated:YES completion:nil];
-}
-
 @end

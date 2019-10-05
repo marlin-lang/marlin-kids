@@ -115,14 +115,14 @@ using ToolIndex = std::pair<NSInteger, NSInteger>;
 
 - (void)dismissDuplicateViewController {
   if (_duplicateViewController) {
-    [self removeChildViewController:_duplicateViewController];
+    [self dismissChildViewController:_duplicateViewController];
     _duplicateViewController = nil;
   }
 }
 
 - (void)dismissEditorViewController {
   if (_editorViewController) {
-    [self removeChildViewController:_editorViewController];
+    [self dismissChildViewController:_editorViewController];
     _editorViewController = nil;
   }
 }
@@ -145,15 +145,11 @@ using ToolIndex = std::pair<NSInteger, NSInteger>;
   [vc.view.rightAnchor constraintEqualToAnchor:view.rightAnchor].active = YES;
   [vc.view.topAnchor constraintEqualToAnchor:view.topAnchor].active = YES;
   [vc.view.bottomAnchor constraintEqualToAnchor:view.bottomAnchor].active = YES;
-#ifdef IOS
   [vc didMoveToParentViewController:self];
-#endif
 }
 
-- (void)removeChildViewController:(ViewController *)vc {
-#ifdef IOS
+- (void)dismissChildViewController:(ViewController *)vc {
   [vc willMoveToParentViewController:nil];
-#endif
   [vc.view removeFromSuperview];
   [vc removeFromParentViewController];
 }

@@ -12,6 +12,7 @@
 #ifdef IOS
 
 #define AppleDocument UIDocument
+#define DocumentChangeDone UIDocumentChangeDone
 
 #define Color UIColor
 #define Font UIFont
@@ -40,6 +41,7 @@
 #else
 
 #define AppleDocument NSDocument
+#define DocumentChangeDone NSChangeDone
 
 #define Color NSColor
 #define Font NSFont
@@ -69,17 +71,27 @@
 
 #ifdef IOS
 
+#define VIEWWILLAPPEAR_BEGIN               \
+  -(void)viewWillAppear : (BOOL)animated { \
+    [super viewWillAppear:animated];
+
 #define VIEWDIDAPPEAR_BEGIN               \
   -(void)viewDidAppear : (BOOL)animated { \
     [super viewDidAppear:animated];
 
 #else
 
+#define VIEWWILLAPPEAR_BEGIN \
+  -(void)viewWillAppear {    \
+    [super viewWillAppear];
+
 #define VIEWDIDAPPEAR_BEGIN \
   -(void)viewDidAppear {    \
     [super viewDidAppear];
 
 #endif
+
+#define VIEWWILLAPPEAR_END }
 
 #define VIEWDIDAPPEAR_END }
 
@@ -164,6 +176,16 @@
 @interface UITextView (MacInterface)
 
 - (NSString *)string;
+
+@end
+
+#else
+
+@interface NSViewController (IosInterface)
+
+- (void)willMoveToParentViewController:(NSViewController*)vc;
+
+- (void)didMoveToParentViewController:(NSViewController*)vc;
 
 @end
 

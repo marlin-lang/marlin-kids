@@ -3,7 +3,7 @@
 @implementation DuplicateSourceTextField
 
 - (void)setSourceString:(NSString *)sourceString {
-  NSAssert(NO, @"Implemented by subclass");
+  self.stringValue = sourceString;
 }
 
 @end
