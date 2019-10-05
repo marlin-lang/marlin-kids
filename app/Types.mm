@@ -193,6 +193,18 @@ inline ColorElements hsbFromHSL(const ColorElements& hsl) {
 
 @end
 
+@implementation UILabel (MacInterface)
+
+- (NSString*)stringValue {
+  return self.text;
+}
+
+- (void)setStringValue:(NSString*)stringValue {
+  self.text = stringValue;
+}
+
+@end
+
 @implementation UITextField (MacInterface)
 
 - (NSString*)stringValue {

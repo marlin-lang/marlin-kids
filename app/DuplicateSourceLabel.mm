@@ -1,6 +1,6 @@
-#import "DuplicateSourceTextField.h"
+#import "DuplicateSourceLabel.h"
 
-@implementation DuplicateSourceTextField
+@implementation DuplicateSourceLabel
 
 - (void)setSourceString:(NSString *)sourceString {
   self.stringValue = sourceString;

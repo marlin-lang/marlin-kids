@@ -323,13 +323,14 @@
                                 <nil key="textColor"/>
                                 <nil key="highlightedColor"/>
                             </label>
-                            <textField opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="left" contentVerticalAlignment="center" textAlignment="natural" minimumFontSize="17" translatesAutoresizingMaskIntoConstraints="NO" id="eLd-Gw-nK0" customClass="DuplicateSourceTextField">
-                                <rect key="frame" x="185.5" y="49" width="4" height="17"/>
-                                <fontDescription key="fontDescription" type="system" pointSize="14"/>
-                                <textInputTraits key="textInputTraits"/>
-                            </textField>
+                            <label opaque="NO" userInteractionEnabled="NO" contentMode="left" text="Label" textAlignment="natural" lineBreakMode="tailTruncation" numberOfLines="0" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="gzx-nd-7bI" customClass="DuplicateSourceLabel">
+                                <rect key="frame" x="166.5" y="49" width="42" height="20.5"/>
+                                <fontDescription key="fontDescription" type="system" pointSize="17"/>
+                                <nil key="textColor"/>
+                                <nil key="highlightedColor"/>
+                            </label>
                             <button opaque="NO" contentMode="scaleToFill" verticalHuggingPriority="750" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="roundedRect" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="504-mh-I29">
-                                <rect key="frame" x="8" y="74" width="359" height="30"/>
+                                <rect key="frame" x="8" y="77.5" width="359" height="30"/>
                                 <state key="normal" title="Delete"/>
                                 <connections>
                                     <action selector="deleteButtonPressed:" destination="vID-Sj-kBk" eventType="touchUpInside" id="KK6-St-pIs"/>
@@ -338,20 +339,22 @@
                         </subviews>
                         <color key="backgroundColor" systemColor="systemBackgroundColor" cocoaTouchSystemColor="whiteColor"/>
                         <constraints>
+                            <constraint firstItem="V9x-Wp-LFN" firstAttribute="trailing" relation="greaterThanOrEqual" secondItem="gzx-nd-7bI" secondAttribute="trailing" constant="8" id="3e2-TE-Bhl"/>
+                            <constraint firstItem="504-mh-I29" firstAttribute="top" secondItem="gzx-nd-7bI" secondAttribute="bottom" constant="8" symbolic="YES" id="6Wk-dL-9ff"/>
                             <constraint firstItem="u4A-Zs-eyR" firstAttribute="leading" secondItem="V9x-Wp-LFN" secondAttribute="leading" constant="16" id="7tk-8C-RY8"/>
-                            <constraint firstItem="504-mh-I29" firstAttribute="top" secondItem="eLd-Gw-nK0" secondAttribute="bottom" constant="8" symbolic="YES" id="Azb-nC-CWd"/>
-                            <constraint firstItem="eLd-Gw-nK0" firstAttribute="top" secondItem="u4A-Zs-eyR" secondAttribute="bottom" constant="8" id="Dkq-hG-4pq"/>
+                            <constraint firstItem="gzx-nd-7bI" firstAttribute="centerX" secondItem="0jB-pe-fax" secondAttribute="centerX" id="F2F-mB-hbu"/>
                             <constraint firstItem="V9x-Wp-LFN" firstAttribute="bottom" relation="greaterThanOrEqual" secondItem="504-mh-I29" secondAttribute="bottom" constant="8" id="GCs-v2-oYG"/>
                             <constraint firstItem="V9x-Wp-LFN" firstAttribute="trailing" secondItem="504-mh-I29" secondAttribute="trailing" constant="8" id="GfF-Jv-IzV"/>
+                            <constraint firstItem="gzx-nd-7bI" firstAttribute="leading" relation="greaterThanOrEqual" secondItem="V9x-Wp-LFN" secondAttribute="leading" constant="8" id="OWF-Vw-v9k"/>
                             <constraint firstItem="u4A-Zs-eyR" firstAttribute="top" secondItem="V9x-Wp-LFN" secondAttribute="top" constant="20" id="b7g-DF-oqP"/>
                             <constraint firstItem="V9x-Wp-LFN" firstAttribute="trailing" relation="greaterThanOrEqual" secondItem="u4A-Zs-eyR" secondAttribute="trailing" symbolic="YES" id="fsw-b2-qhR"/>
                             <constraint firstItem="504-mh-I29" firstAttribute="leading" secondItem="V9x-Wp-LFN" secondAttribute="leading" constant="8" id="hMo-cK-Imo"/>
-                            <constraint firstItem="eLd-Gw-nK0" firstAttribute="centerX" secondItem="0jB-pe-fax" secondAttribute="centerX" id="uoW-jZ-ufm"/>
+                            <constraint firstItem="gzx-nd-7bI" firstAttribute="top" secondItem="u4A-Zs-eyR" secondAttribute="bottom" constant="8" symbolic="YES" id="qZE-iD-J28"/>
                         </constraints>
                         <viewLayoutGuide key="safeArea" id="V9x-Wp-LFN"/>
                     </view>
                     <connections>
-                        <outlet property="sourceTextField" destination="eLd-Gw-nK0" id="Wgw-aK-gv9"/>
+                        <outlet property="sourceLabel" destination="gzx-nd-7bI" id="Bvx-Hk-a7i"/>
                     </connections>
                 </viewController>
                 <placeholder placeholderIdentifier="IBFirstResponder" id="fKz-Ae-dPS" userLabel="First Responder" customClass="UIResponder" sceneMemberID="firstResponder"/>

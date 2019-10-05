@@ -4,7 +4,7 @@
 
 NS_ASSUME_NONNULL_BEGIN
 
-@interface DuplicateSourceTextField : TextField
+@interface DuplicateSourceLabel : Label
 
 @property DraggingData draggingData;
 

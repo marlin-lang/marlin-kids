@@ -22,6 +22,7 @@
 #define EdgeInsetsMake UIEdgeInsetsMake
 
 #define Button UIButton
+#define Label UILabel
 #define TextField UITextField
 #define TextFieldDelegate UITextFieldDelegate
 #define SegmentedControl UISegmentedControl
@@ -51,6 +52,7 @@
 #define EdgeInsetsMake NSEdgeInsetsMake
 
 #define Button NSButton
+#define Label NSTextField
 #define TextField NSTextField
 #define TextFieldDelegate NSTextFieldDelegate
 #define SegmentedControl NSSegmentedControl
@@ -162,6 +164,14 @@
 @interface UISegmentedControl (MacInterface)
 
 - (NSUInteger)selectedSegment;
+
+@end
+
+@interface UILabel (MacInterface)
+
+- (NSString *)stringValue;
+
+- (void)setStringValue:(NSString *)stringValue;
 
 @end
 

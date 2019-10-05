@@ -1,10 +1,10 @@
-#import "MacDuplicateSourceTextField.h"
+#import "MacDuplicateSourceLabel.h"
 
-@interface MacDuplicateSourceTextField () <NSDraggingSource>
+@interface MacDuplicateSourceLabel () <NSDraggingSource>
 
 @end
 
-@implementation MacDuplicateSourceTextField
+@implementation MacDuplicateSourceLabel
 
 - (void)mouseDragged:(NSEvent *)event {
   [super mouseDragged:event];

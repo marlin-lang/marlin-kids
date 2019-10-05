@@ -3,7 +3,7 @@ set(HEADERS
     ColorViewController.h
     Document.h
     DrawHelper.h
-    DuplicateSourceTextField.h
+    DuplicateSourceLabel.h
     DuplicateViewController.h
     EditorViewController.h
     ExecuteViewController.h
@@ -22,7 +22,7 @@ set(SOURCES
     ArrayViewController.mm
     ColorViewController.mm
     Document.mm
-    DuplicateSourceTextField.mm
+    DuplicateSourceLabel.mm
     DuplicateViewController.mm
     EditorViewController.mm
     ExecuteViewController.mm
@@ -78,7 +78,7 @@ else(IOS)
       mac/MacArrayViewController.h
       mac/MacColorViewController.h
       mac/MacDocument.h
-      mac/MacDuplicateSourceTextField.h
+      mac/MacDuplicateSourceLabel.h
       mac/MacEditorViewController.h
       mac/MacFunctionViewController.h
       mac/MacLineNumberView.h
@@ -97,7 +97,7 @@ else(IOS)
       mac/MacArrayViewController.mm
       mac/MacColorViewController.mm
       mac/MacDocument.mm
-      mac/MacDuplicateSourceTextField.mm
+      mac/MacDuplicateSourceLabel.mm
       mac/MacEditorViewController.mm
       mac/MacFunctionViewController.mm
       mac/MacLineNumberView.mm

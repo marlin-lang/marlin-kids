@@ -907,7 +907,7 @@
                                     <color key="backgroundColor" name="textBackgroundColor" catalog="System" colorSpace="catalog"/>
                                 </textFieldCell>
                             </textField>
-                            <textField horizontalCompressionResistancePriority="250" translatesAutoresizingMaskIntoConstraints="NO" id="9TP-Y1-Sm3" customClass="MacDuplicateSourceTextField">
+                            <textField horizontalCompressionResistancePriority="250" translatesAutoresizingMaskIntoConstraints="NO" id="9TP-Y1-Sm3" customClass="MacDuplicateSourceLabel">
                                 <rect key="frame" x="82" y="37" width="37" height="18"/>
                                 <textFieldCell key="cell" lineBreakMode="truncatingTail" alignment="left" title="Label" id="pHn-Af-FbV">
                                     <font key="font" metaFont="system"/>
@@ -941,7 +941,7 @@
                         </constraints>
                     </view>
                     <connections>
-                        <outlet property="sourceTextField" destination="9TP-Y1-Sm3" id="Dsy-6y-bnH"/>
+                        <outlet property="sourceLabel" destination="9TP-Y1-Sm3" id="9Vf-gs-bcr"/>
                     </connections>
                 </viewController>
                 <customObject id="99o-2Y-cwe" userLabel="First Responder" customClass="NSResponder" sceneMemberID="firstResponder"/>
